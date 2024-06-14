@@ -58,11 +58,11 @@ int main(int argc, char **argv){
     auto node = rclcpp::Node::make_shared("hyyRobotControl");
     auto executor = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
 
-    hyy_robot_control::HyyRobotControl hyyExternalDeviceControl(node);
-    if (!hyyExternalDeviceControl.init("hyy_external_device_controller", 1)){
-        RCLCPP_ERROR(node->get_logger(), "hyydebug client initialize falied");
-        return -1;
-    }
+    // hyy_robot_control::HyyRobotControl hyyExternalDeviceControl(node);
+    // if (!hyyExternalDeviceControl.init("hyy_external_device_controller", 1)){
+    //     RCLCPP_ERROR(node->get_logger(), "hyydebug client initialize falied");
+    //     return -1;
+    // }
     hyy_robot_control::HyyRobotControl hyyRobotLeftArmControl(node);
     if (!hyyRobotLeftArmControl.init("hyy_left_arm_controller", 0)){
         RCLCPP_ERROR(node->get_logger(), "hyyRobotLeftArmControl client initialize falied");
@@ -91,7 +91,7 @@ int main(int argc, char **argv){
         }
     );
 
-    hyyExternalDeviceControl.Gripper_initialize();
+    // hyyExternalDeviceControl.Gripper_initialize();
 
     /***************************************************************************/
     /*                                                                         */
@@ -120,17 +120,22 @@ int main(int argc, char **argv){
     hyyRobotHeadControl.moveA("A1_J0", A1_VEL, zone, tool, wobj);
     hyyRobotLeftArmControl.moveA("R0_J0", R0_VEL, zone, tool, wobj);
     hyyRobotRightArmControl.moveA("R1_J0", R1_VEL, zone, tool, wobj);
-    hyyExternalDeviceControl.Gripper_fullopen();
-    hyyExternalDeviceControl.hand_fullopen();
+    // hyyExternalDeviceControl.Gripper_fullopen();
+    // hyyExternalDeviceControl.hand_fullopen();
     blockhere(2, hyyRobotLeftArmControl.ask_status(), hyyRobotRightArmControl.ask_status());
 
     //  STEP 2 (Grip)
     hyyRobotBodyControl.moveA("A0_J1", A0_VEL, zone, tool, wobj);
-    hyyRobotLeftArmControl.moveL("R0_P2", R0_VEL, zone, tool, wobj);
-    hyyRobotRightArmControl.moveL("R1_P2", R1_VEL, zone, tool, wobj);
+    hyyRobotLeftArmControl.moveA("R0_J2", R0_VEL, zone, tool, wobj);
+    hyyRobotRightArmControl.moveA("R1_J2", R1_VEL, zone, tool, wobj);
     blockhere(2, hyyRobotLeftArmControl.ask_status(), hyyRobotRightArmControl.ask_status());
-    hyyExternalDeviceControl.Gripper_fullclose();
-    hyyExternalDeviceControl.hand_SetAngle(angle_grip);
+    // hyyExternalDeviceControl.Gripper_fullclose();
+    // hyyExternalDeviceControl.hand_SetAngle(angle_grip);
+ 
+    // collision test
+    hyyRobotLeftArmControl.moveA("R0_J3", R0_VEL, zone, tool, wobj);
+    hyyRobotRightArmControl.moveA("R1_J3", R1_VEL, zone, tool, wobj);
+    blockhere(2, hyyRobotLeftArmControl.ask_status(), hyyRobotRightArmControl.ask_status());
 
     //  STEP 3 (Move and Drop)
     hyyRobotBodyControl.moveA("A0_J0", A0_VEL, zone, tool, wobj);    
@@ -138,12 +143,12 @@ int main(int argc, char **argv){
     hyyRobotHeadControl.moveA("A1_J0", A1_VEL, zone, tool, wobj);
     hyyRobotBodyControl.moveA("A0_J2", A0_VEL, zone, tool, wobj);
     hyyRobotBodyControl.moveA("A0_J3", A0_VEL, zone, tool, wobj);
-    hyyExternalDeviceControl.Gripper_fullopen();
-    hyyExternalDeviceControl.hand_fullopen();
+    // hyyExternalDeviceControl.Gripper_fullopen();
+    // hyyExternalDeviceControl.hand_fullopen();
 
     //  STEP 4 (Back to Initial)
-    hyyRobotLeftArmControl.moveL("R0_P0", R0_VEL, zone, tool, wobj);
-    hyyRobotRightArmControl.moveL("R1_P0", R1_VEL, zone, tool, wobj);
+    hyyRobotLeftArmControl.moveA("R0_J0", R0_VEL, zone, tool, wobj);
+    hyyRobotRightArmControl.moveA("R1_J0", R1_VEL, zone, tool, wobj);
     blockhere(2, hyyRobotLeftArmControl.ask_status(), hyyRobotRightArmControl.ask_status());
     hyyRobotBodyControl.moveA("A0_J2", A0_VEL, zone, tool, wobj);
     hyyRobotBodyControl.moveA("A0_J0", A0_VEL, zone, tool, wobj);

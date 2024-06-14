@@ -55,21 +55,22 @@
       <xacro:joint_interface Joint_Name="H-J1" initial_pos="0.0" initial_vel="0.0" initial_effort="0.0"/>
       <xacro:joint_interface Joint_Name="H-J2" initial_pos="0.0" initial_vel="0.0" initial_effort="0.0"/>
 
-      <xacro:macro name ="external_device_joint_interface" params="Joint_Name initial_pos ">
-        <joint name="${Joint_Name}">
-            <state_interface name="position">
-                <param name="initial_value">${initial_pos}</param>
-            </state_interface>
-        </joint>
-      </xacro:macro>
-
-      <xacro:external_device_joint_interface Joint_Name="hand_joint1" initial_pos="0.0" />
-      <xacro:external_device_joint_interface Joint_Name="hand_joint2" initial_pos="0.0" />
-      <xacro:external_device_joint_interface Joint_Name="hand_joint3" initial_pos="0.0" />
-      <xacro:external_device_joint_interface Joint_Name="hand_joint4" initial_pos="0.0" />
-      <xacro:external_device_joint_interface Joint_Name="hand_joint5" initial_pos="0.0" />
-      <xacro:external_device_joint_interface Joint_Name="hand_joint6" initial_pos="0.0" />
-      <xacro:external_device_joint_interface Joint_Name="gripper_joint" initial_pos="0.0" />
+      <xacro:if value="${if_add_external_device}">
+        <xacro:macro name ="external_device_joint_interface" params="Joint_Name initial_pos ">
+          <joint name="${Joint_Name}">
+              <state_interface name="position">
+                  <param name="initial_value">${initial_pos}</param>
+              </state_interface>
+          </joint>
+        </xacro:macro>
+        <xacro:external_device_joint_interface Joint_Name="hand_joint1" initial_pos="0.0" />
+        <xacro:external_device_joint_interface Joint_Name="hand_joint2" initial_pos="0.0" />
+        <xacro:external_device_joint_interface Joint_Name="hand_joint3" initial_pos="0.0" />
+        <xacro:external_device_joint_interface Joint_Name="hand_joint4" initial_pos="0.0" />
+        <xacro:external_device_joint_interface Joint_Name="hand_joint5" initial_pos="0.0" />
+        <xacro:external_device_joint_interface Joint_Name="hand_joint6" initial_pos="0.0" />
+        <xacro:external_device_joint_interface Joint_Name="gripper_joint" initial_pos="0.0" />
+      </xacro:if>
 
     </ros2_control>
   </xacro:macro>

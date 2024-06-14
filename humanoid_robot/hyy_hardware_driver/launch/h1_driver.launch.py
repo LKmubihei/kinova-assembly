@@ -10,6 +10,7 @@ from launch.substitutions import (
     FindExecutable,
     LaunchConfiguration,
     PathJoinSubstitution,
+    PythonExpression,
 )
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
@@ -20,15 +21,7 @@ def generate_launch_description():
     declared_arguments = []
     declared_arguments.append(
         DeclareLaunchArgument(
-            "runtime_config_package",
-            default_value="hyy_hardware_driver",
-            description='Package with the controller\'s configuration in "config" folder. \
-        Usually the argument is not set, it enables use of a custom setup.',
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "controllers_file",
+            "controllers_config_file",
             default_value="h1_controller.yaml",
             description="YAML file with the controllers configuration.",
         )
@@ -44,7 +37,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "description_file",
-            default_value="h1_robot.xacro",
+            default_value="h1.xacro",
             description="URDF/XACRO description file with the robot.",
         )
     )
@@ -57,78 +50,26 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "sim_flag",
-            default_value="false",
-            description="If true robot run in simulation.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
             "communication_time",
             default_value="1000000",
             description="communication time",
         )
     )
-    # declared_arguments.append(
-    #     DeclareLaunchArgument(
-    #         "if_additionaxis",
-    #         default_value="false",
-    #         description="condition of addition axis group",
-    #     )
-    # )
-    # declared_arguments.append(
-    #     DeclareLaunchArgument(
-    #         "system_arg",
-    #         default_value="--path /home/robot/Work/system/robot_config --iscopy true",
-    #         description="args for system initialize ",
-    #     )
-    # )
-    # declared_arguments.append(
-    #     DeclareLaunchArgument(
-    #         "prefix",
-    #         default_value='""',
-    #         description="Prefix of the joint names, useful for \
-    #     multi-robot setup. If changed than also joint names in the controllers' configuration \
-    #     have to be updated.",
-    #     )
-    # )
-    # declared_arguments.append(
-    #     DeclareLaunchArgument(
-    #         "use_mock_hardware",
-    #         default_value="true",
-    #         description="Start robot with fake hardware mirroring command to its states.",
-    #     )
-    # )
-    # declared_arguments.append(
-    #     DeclareLaunchArgument(
-    #         "mock_sensor_commands",
-    #         default_value="false",
-    #         description="Enable fake command interfaces for sensors used for simple simulations. \
-    #         Used only if 'use_mock_hardware' parameter is true.",
-    #     )
-    # )
-    # declared_arguments.append(
-    #     DeclareLaunchArgument(
-    #         "robot_controller",
-    #         default_value="forward_position_controller",
-    #         choices=["forward_position_controller", "joint_trajectory_controller"],
-    #         description="Robot controller to start.",
-    #     )
-    # )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "add_external_devices",
+            default_value="false",
+            description="If true, add external devices to the robot description.",
+        )
+    )
 
     # Initialize Arguments
-    runtime_config_package = LaunchConfiguration("runtime_config_package")
-    controllers_file = LaunchConfiguration("controllers_file")
+    controllers_config_file = LaunchConfiguration("controllers_config_file")
     description_package = LaunchConfiguration("description_package")
     description_file = LaunchConfiguration("description_file")
     use_default_controllers = LaunchConfiguration("use_default_controllers")
     communication_time = LaunchConfiguration("communication_time")
-    # system_arg = LaunchConfiguration("system_arg")
-    # sim_flag = LaunchConfiguration("sim_flag")
-    # prefix = LaunchConfiguration("prefix")
-    # use_mock_hardware = LaunchConfiguration("use_mock_hardware")
-    # mock_sensor_commands = LaunchConfiguration("mock_sensor_commands")
-    # robot_controller = LaunchConfiguration("robot_controller")
+    add_external_devices = LaunchConfiguration("add_external_devices")
 
     # Get URDF via xacro
     robot_description_content = Command(
@@ -137,40 +78,34 @@ def generate_launch_description():
             " ",
             PathJoinSubstitution(
                 [FindPackageShare(description_package), "urdf", description_file]
-            )
+            ),
         ]
     )
 
     robot_description = {"robot_description": robot_description_content}
 
     robot_controllers = PathJoinSubstitution(
-        [FindPackageShare(runtime_config_package), "config", controllers_file]
+        [FindPackageShare("hyy_hardware_driver"), "config", controllers_config_file]
     )
 
-    # control_node = Node(
-    #     package="controller_manager",
-    #     executable="ros2_control_node",
-    #     output="both",
-    #     parameters=[robot_description, robot_controllers],
-    # )
-
     control_node = Node(
-        package=runtime_config_package,
-        executable=runtime_config_package,
+        package="hyy_hardware_driver",
+        executable="hyy_hardware_driver",
         output="both",
         parameters=[
                     {'communication_time':communication_time},
                     robot_description,
                     robot_controllers
                     ],
-        # prefix="gdb --args"
     )
+
     robot_state_pub_node = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="both",
         parameters=[robot_description]
     )
+    
     rviz_node = Node(
         package="rviz2",
         executable="rviz2",
@@ -182,8 +117,6 @@ def generate_launch_description():
         package="controller_manager",
         executable="spawner",
         arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
-        # emulate_tty=True,
-        # additional_env ={'RCUTILS_LOGGING_SEVERITY_THRESHOLD':"DEBUG"}
     )
         
     load_default_left_arm_controller = Node(
@@ -220,12 +153,14 @@ def generate_launch_description():
         arguments=['hyy_head_controller',"-c", "/controller_manager"],
         condition=UnlessCondition(use_default_controllers)
     )
-
+    
+    # if add_external_devices & !use_default_controllers
     load_hyy_external_device_controller = Node(
         package="controller_manager",
         executable="spawner",
         arguments=['hyy_external_device_controller',"-c", "/controller_manager"],
-        condition=UnlessCondition(use_default_controllers)
+        # condition=IfCondition(PythonExpression([add_external_devices, ' and not ', use_default_controllers]))
+        condition= UnlessCondition(use_default_controllers) and IfCondition(add_external_devices)
     )
 
     # Delay loading and activation of `joint_state_broadcaster` after start of ros2_control_node

@@ -12,7 +12,12 @@
   <depend>rclcpp</depend>
   <depend>hyy_message</depend>
   <depend>sensor_msgs</depend>
-  
+  <depend>kdl_parser</depend>
+  <depend>orocos_kdl</depend>
+  <depend>fcl</depend>
+  <depend>ccd</depend>
+  <depend>pkg-config</depend>
+
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
 

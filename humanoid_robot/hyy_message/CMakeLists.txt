@@ -32,6 +32,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/Getcurrentact.srv"
   "srv/Geterror.srv"
   "srv/Gettemp.srv"
+  "msg/Detect.msg"
   DEPENDENCIES std_msgs
 )
 

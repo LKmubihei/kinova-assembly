@@ -1479,7 +1479,6 @@ bool HyyRobotControl::Gripper_Move(){
 
 	auto res = hyyGripMoveClient->async_send_request(GripMoveReq);
 	if (res.wait_for(std::chrono::seconds(10)) == std::future_status::ready) {
-		int gripper_joint_degree = Gripper_GetPos();
 		return res.get()->result;
 	} else {
 		RCLCPP_ERROR_STREAM(node_->get_logger(), "Gripper: failed to call service " << hyyGripMoveClient->get_service_name());
