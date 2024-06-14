@@ -1,0 +1,9 @@
+<library path="hyy_controller">
+  <class name="hyy_controller/HyyController"
+         type="hyy_controller::HyyController"
+         base_class_type="controller_interface::ControllerInterface">
+    <description>
+      The ros2_control controller for xmate robot.
+    </description>
+  </class>
+</library>

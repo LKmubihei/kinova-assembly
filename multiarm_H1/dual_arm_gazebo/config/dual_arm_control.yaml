@@ -1,0 +1,115 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 1000  
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    right_arm_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+    left_arm_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+    body_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+    head_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+right_arm_controller:
+  ros__parameters:
+    joints: 
+      - L-J1
+      - L-J2
+      - L-J3
+      - L-J4
+      - L-J5
+      - L-J6
+      - L-J7
+
+    interface_name:
+      - position
+
+    command_interfaces:
+      - position
+
+    state_interfaces:
+      - position
+      - velocity
+
+    position_pid:
+      R-J1: { p: 80.0, i: 0.05, d: 8.0 }
+      R-J2: { p: 80.0, i: 0.05, d: 8.0 }
+      R-J3: { p: 80.0, i: 0.05, d: 8.0 }
+      R-J4: { p: 80.0, i: 0.05, d: 8.0 }
+      R-J5: { p: 80.0, i: 0.05, d: 8.0 }
+      R-J6: { p: 80.0, i: 0.05, d: 8.0 }
+      R-J7: { p: 80.0, i: 0.05, d: 8.0 }
+
+left_arm_controller:
+  ros__parameters:
+    joints: 
+      - R-J1
+      - R-J2
+      - R-J3
+      - R-J4
+      - R-J5
+      - R-J6
+      - R-J7
+
+    interface_name:
+      - position
+
+    command_interfaces:
+      - position
+
+    state_interfaces:
+      - position
+      - velocity
+
+    position_pid:
+      L-J1: { p: 80.0, i: 0.05, d: 8.0 }
+      L-J2: { p: 80.0, i: 0.05, d: 8.0 }
+      L-J3: { p: 80.0, i: 0.05, d: 8.0 }
+      L-J4: { p: 80.0, i: 0.05, d: 8.0 }
+      L-J5: { p: 80.0, i: 0.05, d: 8.0 }
+      L-J6: { p: 80.0, i: 0.05, d: 8.0 }
+      L-J7: { p: 80.0, i: 0.05, d: 8.0 }
+
+body_controller:
+  ros__parameters:
+    joints: 
+      - J1
+      - Body
+
+    interface_name:
+      - position_pid
+
+    command_interfaces:
+      - position
+
+    state_interfaces:
+      - position
+      - velocity
+
+    position_pid:
+      J1: { p: 80.0, i: 0.05, d: 8.0 }
+      Body: { p: 80.0, i: 0.05, d: 8.0 }
+
+head_controller:
+  ros__parameters:
+    joints: 
+      - H-J1
+      - H-J2
+        
+    interface_name:
+      - position
+
+    command_interfaces:
+      - position
+
+    state_interfaces:
+      - position
+      - velocity
+
+    position_pid:
+      H-J1: { p: 80.0, i: 0.05, d: 8.0 }
+      H-J2: { p: 80.0, i: 0.05, d: 8.0 }
+

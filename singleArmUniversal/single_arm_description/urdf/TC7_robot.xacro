@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot name="TC7_robot" xmlns:xacro="http://wiki.ros.org/xacro" >
+
+  <xacro:include filename="$(find single_arm_description)/urdf/TC7.urdf.xacro"/>
+
+  <xacro:arg name="sim_gazebo_classic" default="false" />
+  <xacro:arg name="device_mode" default="8" />
+  <xacro:arg name="sim_flag" default="false" />
+  <xacro:arg name="system_arg" default="--path /home/robot/Work/system/robot_config --iscopy true" />
+  
+  <xacro:include filename="$(find single_arm_description)/urdf/TC7_ros2_control.xacro"/>
+  <xacro:TC7_ros2_control_config 
+    sim_gazebo_classic="$(arg sim_gazebo_classic)" 
+    device_mode="$(arg device_mode)" 
+    sim_flag="$(arg sim_flag)"
+    system_arg="$(arg system_arg)"
+  />
+
+</robot>

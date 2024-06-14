@@ -1,0 +1,51 @@
+trajectory_execution:
+  allowed_execution_duration_scaling: 1.2
+  allowed_goal_duration_margin: 0.5
+  allowed_start_tolerance: 0.01
+
+moveit_controller_manager: moveit_simple_controller_manager/MoveItSimpleControllerManager
+
+controller_names:
+  - right_arm_controller
+  - left_arm_controller
+  - body_controller
+  - head_controller
+
+right_arm_controller:
+  type: FollowJointTrajectory
+  action_ns: follow_joint_trajectory
+  default: true
+  joints:
+    - L-J1
+    - L-J2
+    - L-J3
+    - L-J4
+    - L-J5
+    - L-J6
+    - L-J7
+left_arm_controller:
+  type: FollowJointTrajectory
+  action_ns: follow_joint_trajectory
+  default: true
+  joints:
+    - R-J1
+    - R-J2
+    - R-J3
+    - R-J4
+    - R-J5
+    - R-J6
+    - R-J7
+body_controller:
+  type: FollowJointTrajectory
+  action_ns: follow_joint_trajectory
+  default: true
+  joints:
+    - J1
+    - Body
+head_controller:
+  type: FollowJointTrajectory
+  action_ns: follow_joint_trajectory
+  default: true
+  joints:
+    - H-J1
+    - H-J2

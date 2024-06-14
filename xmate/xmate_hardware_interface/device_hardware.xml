@@ -1,0 +1,9 @@
+<library path="xmate_hardware_interface">
+  <class name="xmate_hardware_interface/XmateHardwareInterface"
+         type="xmate_hardware_interface::XmateHardwareInterface"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+      The ros2_control hardware interface for xmate robot.
+    </description>
+  </class>
+</library>
