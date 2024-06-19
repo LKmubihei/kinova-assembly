@@ -1,0 +1,21 @@
+# Default initial positions for h1_robot's ros2_control fake system
+
+initial_positions:
+  Body: 0
+  H-J1: 0
+  H-J2: 0
+  J1: 0
+  L-J1: 0
+  L-J2: 0
+  L-J3: 0
+  L-J4: 0
+  L-J5: 0
+  L-J6: 0
+  L-J7: 0
+  R-J1: 0
+  R-J2: 0
+  R-J3: 0
+  R-J4: 0
+  R-J5: 0
+  R-J6: 0
+  R-J7: 0

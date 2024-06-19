@@ -1,6 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <robot xmlns:xacro="http://wiki.ros.org/xacro">
   <xacro:macro name="h1_robot_ros2_control_config" params="sim_gazebo_classic device_mode sim_flag system_arg if_add_axisgroups if_add_external_device external_device_dof">
+    <xacro:if value="${sim_gazebo_classic}">
+      <gazebo>
+        <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
+          <parameters>$(find hyy_hardware_driver)/config/h1_controller.yaml</parameters>
+        </plugin>
+      </gazebo>
+      <xacro:macro name ="link_reference" params="link_name material_">
+        <gazebo reference="${link_name}">
+          <material>${material_}</material>
+        </gazebo>
+      </xacro:macro>
+      <xacro:link_reference link_name="base_link" material_= "Gazebo/DarkGrey"/>
+      <xacro:link_reference link_name="link-J1" material_= "Gazebo/Orange"/>
+      <xacro:link_reference link_name="link-Body" material_= "Gazebo/DarkGrey"/>
+      <xacro:link_reference link_name="link-L0" material_= "Gazebo/White"/>
+      <xacro:link_reference link_name="link-L1" material_= "Gazebo/Grey"/>
+      <xacro:link_reference link_name="link-L2" material_= "Gazebo/White"/>
+      <xacro:link_reference link_name="link-L3" material_= "Gazebo/Grey"/>
+      <xacro:link_reference link_name="link-L4" material_= "Gazebo/White"/>
+      <xacro:link_reference link_name="link-L5" material_= "Gazebo/Grey"/>
+      <xacro:link_reference link_name="link-L6" material_= "Gazebo/White"/>
+      <xacro:link_reference link_name="link-L7" material_= "Gazebo/Grey"/>
+      <xacro:link_reference link_name="link-R0" material_= "Gazebo/White"/>
+      <xacro:link_reference link_name="link-R1" material_= "Gazebo/Grey"/>
+      <xacro:link_reference link_name="link-R2" material_= "Gazebo/White"/>
+      <xacro:link_reference link_name="link-R3" material_= "Gazebo/Grey"/>
+      <xacro:link_reference link_name="link-R4" material_= "Gazebo/White"/>
+      <xacro:link_reference link_name="link-R5" material_= "Gazebo/Grey"/>
+      <xacro:link_reference link_name="link-R6" material_= "Gazebo/White"/>
+      <xacro:link_reference link_name="link-R7" material_= "Gazebo/Grey"/>
+      <xacro:link_reference link_name="link-H0" material_= "Gazebo/White"/>
+      <xacro:link_reference link_name="link-H1" material_= "Gazebo/Grey"/>
+    </xacro:if>
+
     <ros2_control name="h1_robot_ros2_control" type="system">
       <hardware>
         <xacro:if value="${sim_gazebo_classic}">

@@ -4,6 +4,7 @@
      For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
 <robot name="h1_robot" xmlns:xacro="http://ros.org/wiki/xacro">
   <xacro:property name = "pkg_address" value = "file://$(find h1_description)"/>
+
   <link name="fake_link">
       <visual>
           <origin xyz="0 0 0" rpy="0 0 0" />
@@ -34,8 +35,11 @@
         izz="0.00589788150834425" />
     </inertial>
     <visual>
-      <origin
+      <!-- <origin
         xyz="0 0 0"
+        rpy="0 0 0" /> -->
+      <origin
+        xyz="0 0 0.2605"
         rpy="0 0 0" />
       <geometry>
         <mesh
@@ -48,8 +52,11 @@
       </material>
     </visual>
     <collision>
-      <origin
+      <!-- <origin
         xyz="0 0 0"
+        rpy="0 0 0" /> -->
+      <origin
+        xyz="0 0 0.2605"
         rpy="0 0 0" />
       <geometry>
         <mesh
@@ -100,8 +107,11 @@
   <joint
     name="J1"
     type="revolute">
-    <origin
+    <!-- <origin
       xyz="0 0 0"
+      rpy="0 0 0" /> -->
+    <origin
+      xyz="0 0 0.2605"
       rpy="0 0 0" />
     <parent
       link="base_link" />
@@ -159,7 +169,7 @@
     name="Body"
     type="revolute">
     <origin
-      xyz="0 0 0"
+      xyz="0 0  0"
       rpy="1.5708 0 0" />
     <parent
       link="link-J1" />
@@ -1230,6 +1240,16 @@
         <origin xyz="0 0 0" rpy="-1.57 0 1.57" />
         <parent link="link-R7"/>
         <child link="R_hand_base_link"/>
+      </joint>
+    </xacro:if>
+  </xacro:macro>
+
+  <xacro:macro name="gazebo_urdf_config" params="sim_gazebo_classic">
+    <xacro:if value="${sim_gazebo_classic}">
+      <link name="world"/>
+      <joint name="fixed" type="fixed">
+        <parent link="world"/>
+        <child link="fake_link"/>
       </joint>
     </xacro:if>
   </xacro:macro>

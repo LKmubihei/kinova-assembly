@@ -6,6 +6,12 @@ controller_manager:
       type: joint_state_broadcaster/JointStateBroadcaster
     default_left_arm_controller:
       type: joint_trajectory_controller/JointTrajectoryController
+    default_right_arm_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+    default_head_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+    default_body_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
     hyy_left_arm_controller:
       type: hyy_controller/HyyController
     hyy_right_arm_controller:
@@ -31,11 +37,50 @@ default_left_arm_controller:
 
     command_interfaces:
       - position
-      - velocity
 
     state_interfaces:
       - position
-      - velocity
+
+default_right_arm_controller:
+  ros__parameters:
+    joints: 
+      - R-J1
+      - R-J2
+      - R-J3
+      - R-J4
+      - R-J5
+      - R-J6
+      - R-J7
+
+    command_interfaces:
+      - position
+
+    state_interfaces:
+      - position
+
+default_body_controller:
+  ros__parameters:
+    joints: 
+      - Body
+      - J1
+
+    command_interfaces:
+      - position
+
+    state_interfaces:
+      - position
+
+default_head_controller:
+  ros__parameters:
+    joints: 
+      - H-J1
+      - H-J2
+
+    command_interfaces:
+      - position
+
+    state_interfaces:
+      - position
 
 # hyy controller
 hyy_left_arm_controller:

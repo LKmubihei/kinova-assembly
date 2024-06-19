@@ -133,9 +133,9 @@ int main(int argc, char **argv){
     // hyyExternalDeviceControl.hand_SetAngle(angle_grip);
  
     // collision test 
-    hyyRobotLeftArmControl.moveA("R0_J3", R0_VEL, zone, tool, wobj);
-    hyyRobotRightArmControl.moveA("R1_J3", R1_VEL, zone, tool, wobj);
-    blockhere(2, hyyRobotLeftArmControl.ask_status(), hyyRobotRightArmControl.ask_status());
+    // hyyRobotLeftArmControl.moveA("R0_J3", R0_VEL, zone, tool, wobj);
+    // hyyRobotRightArmControl.moveA("R1_J3", R1_VEL, zone, tool, wobj);
+    // blockhere(2, hyyRobotLeftArmControl.ask_status(), hyyRobotRightArmControl.ask_status());
 
     //  STEP 3 (Move and Drop)
     hyyRobotBodyControl.moveA("A0_J0", A0_VEL, zone, tool, wobj);    

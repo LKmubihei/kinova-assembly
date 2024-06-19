@@ -3,6 +3,7 @@ from launch.actions import (
     DeclareLaunchArgument,
     RegisterEventHandler,
     TimerAction,
+    ExecuteProcess
 )
 from launch.event_handlers import OnProcessExit, OnProcessStart
 from launch.substitutions import (
@@ -19,13 +20,6 @@ from launch.conditions import IfCondition, UnlessCondition
 def generate_launch_description():
     # Declare arguments
     declared_arguments = []
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "controllers_config_file",
-            default_value="h1_controller.yaml",
-            description="YAML file with the controllers configuration.",
-        )
-    )
     declared_arguments.append(
         DeclareLaunchArgument(
             "description_package",
@@ -57,11 +51,9 @@ def generate_launch_description():
     )
 
     # Initialize Arguments
-    controllers_config_file = LaunchConfiguration("controllers_config_file")
     description_package = LaunchConfiguration("description_package")
     description_file = LaunchConfiguration("description_file")
     use_default_controllers = LaunchConfiguration("use_default_controllers")
-    communication_time = LaunchConfiguration("communication_time")
     add_external_devices = LaunchConfiguration("add_external_devices")
 
     # Get URDF via xacro
@@ -77,19 +69,16 @@ def generate_launch_description():
 
     robot_description = {"robot_description": robot_description_content}
 
-    robot_controllers = PathJoinSubstitution(
-        [FindPackageShare("hyy_hardware_driver"), "config", controllers_config_file]
-    )
+    # 启动gazebo
+    start_gazebo_cmd =  ExecuteProcess(
+        cmd=['gazebo', '--verbose','-s', 'libgazebo_ros_init.so', '-s', 'libgazebo_ros_factory.so'],
+        output='both')
 
-    control_node = Node(
-        package="hyy_hardware_driver",
-        executable="hyy_hardware_driver",
-        output="both",
-        parameters=[
-                    {'communication_time':communication_time},
-                    robot_description,
-                    robot_controllers
-                    ],
+    spawn_entity = Node(
+        package='gazebo_ros', 
+        executable='spawn_entity.py',
+        arguments=['-topic', 'robot_description','-entity', "h1_robot"],
+        output='screen'
     )
 
     robot_state_pub_node = Node(
@@ -116,6 +105,24 @@ def generate_launch_description():
         package="controller_manager",
         executable="spawner",
         arguments=['default_left_arm_controller',"-c", "/controller_manager"],
+        condition=IfCondition(use_default_controllers)
+    )
+    load_default_right_arm_controller = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=['default_right_arm_controller',"-c", "/controller_manager"],
+        condition=IfCondition(use_default_controllers)
+    )
+    load_default_body_controller = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=['default_body_controller',"-c", "/controller_manager"],
+        condition=IfCondition(use_default_controllers)
+    )
+    load_default_head_controller = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=['default_head_controller',"-c", "/controller_manager"],
         condition=IfCondition(use_default_controllers)
     )
     
@@ -152,16 +159,15 @@ def generate_launch_description():
         package="controller_manager",
         executable="spawner",
         arguments=['hyy_external_device_controller',"-c", "/controller_manager"],
-        # condition=IfCondition(PythonExpression([add_external_devices, ' and not ', use_default_controllers]))
         condition= UnlessCondition(use_default_controllers) and IfCondition(add_external_devices)
     )
 
     # Delay loading and activation of `joint_state_broadcaster` after start of ros2_control_node
     delay_joint_state_broadcaster_spawner_after_ros2_control_node = (
         RegisterEventHandler(
-            event_handler=OnProcessStart(
-                target_action=control_node,
-                on_start=[
+            event_handler=OnProcessExit(
+                target_action=spawn_entity,
+                on_exit = [
                     TimerAction(
                         period=2.0,
                         actions=[joint_state_broadcaster_spawner],
@@ -188,11 +194,14 @@ def generate_launch_description():
                     period=3.0,
                     actions=[
                             load_default_left_arm_controller, 
-                             load_hyy_left_arm_controller,
-                             load_hyy_right_arm_controller,
-                             load_hyy_body_controller,
-                             load_hyy_head_controller,
-                             load_hyy_external_device_controller
+                            load_default_right_arm_controller,
+                            load_default_body_controller,
+                            load_default_head_controller,
+                            load_hyy_left_arm_controller,
+                            load_hyy_right_arm_controller,
+                            load_hyy_body_controller,
+                            load_hyy_head_controller,
+                            load_hyy_external_device_controller
                              ]
                 )
             ]
@@ -202,10 +211,11 @@ def generate_launch_description():
     return LaunchDescription(
         declared_arguments
         + [
-            control_node,
+            start_gazebo_cmd,
             robot_state_pub_node,
+            spawn_entity,
             delay_joint_state_broadcaster_spawner_after_ros2_control_node,
             delay_rviz_after_joint_state_broadcaster_spawner,
-            delay_robot_controller_spawners_after_joint_state_broadcaster_spawner
+            delay_robot_controller_spawners_after_joint_state_broadcaster_spawner,
         ]
     )
