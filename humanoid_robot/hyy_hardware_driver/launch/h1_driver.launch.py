@@ -50,6 +50,13 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
+            "communication_time",
+            default_value="1000000",
+            description="communication time(ns)",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
             "add_external_devices",
             default_value="false",
             description="If true, add external devices to the robot description.",
