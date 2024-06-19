@@ -92,6 +92,7 @@
       <xacro:if value="${if_add_external_device}">
         <xacro:macro name ="external_device_joint_interface" params="Joint_Name initial_pos ">
           <joint name="${Joint_Name}">
+              <command_interface name="position"/>
               <state_interface name="position">
                   <param name="initial_value">${initial_pos}</param>
               </state_interface>
