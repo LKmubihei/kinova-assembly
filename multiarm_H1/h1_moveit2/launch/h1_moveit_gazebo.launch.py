@@ -6,7 +6,8 @@ from launch.actions import (
     DeclareLaunchArgument,
     RegisterEventHandler,
     TimerAction,
-    ExecuteProcess
+    ExecuteProcess,
+    IncludeLaunchDescription
 )
 from launch.event_handlers import OnProcessExit, OnProcessStart
 from launch.substitutions import (
@@ -14,12 +15,12 @@ from launch.substitutions import (
     FindExecutable,
     LaunchConfiguration,
     PathJoinSubstitution,
-    PythonExpression,
 )
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 from launch.conditions import IfCondition, UnlessCondition
 from ament_index_python.packages import get_package_share_directory
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 def load_file(package_name, file_path):
     package_path = get_package_share_directory(package_name)
@@ -46,146 +47,39 @@ def generate_launch_description():
     declared_arguments = []
     declared_arguments.append(
         DeclareLaunchArgument(
-            "description_package",
-            default_value="h1_description",
-            description="Description package with robot URDF/xacro files. Usually the argument \
-        is not set, it enables use of a custom description.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "description_file",
-            default_value="h1.xacro",
-            description="URDF/XACRO description file with the robot.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "use_default_controllers",
+            "sim_gazebo_classic",
             default_value="true",
-            description="If true then use default controllers, otherwise use HYY controllers.",
+            description="Use simulation (Gazebo).",
         )
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "add_external_devices",
-            default_value="false",
-            description="If true, add external devices to the robot description.",
+            "load_rviz",
+            default_value="true",
+            description="if load rviz file.",
         )
     )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "load_rviz", 
-            default_value="true", 
-            description="If true, load RVIZ file."
-        )
-    )
-    # Initialize Arguments
-    description_package = LaunchConfiguration("description_package")
-    description_file = LaunchConfiguration("description_file")
-    use_default_controllers = LaunchConfiguration("use_default_controllers")
-    add_external_devices = LaunchConfiguration("add_external_devices")
-    load_rviz = LaunchConfiguration("load_rviz")
+    sim_gazebo_classic = LaunchConfiguration('sim_gazebo_classic')
+    load_rviz = LaunchConfiguration('load_rviz')
 
-    # Get URDF via xacro
+    h1_driver_launch_file = os.path.join(get_package_share_directory('hyy_hardware_driver'), 'launch', 'h1_driver.launch.py')
+
+    gazebo_driver = IncludeLaunchDescription(PythonLaunchDescriptionSource(h1_driver_launch_file),
+        launch_arguments={'sim_gazebo_classic': sim_gazebo_classic}.items())
+
     robot_description_content = Command(
         [
-            PathJoinSubstitution([FindExecutable(name="xacro")]),
+            PathJoinSubstitution([FindExecutable(name = "xacro")]),
             " ",
             PathJoinSubstitution(
-                [FindPackageShare(description_package), "urdf", description_file]
+                [FindPackageShare("h1_description"), "urdf", "h1.xacro"]
             ),
+            ' sim_gazebo_classic:=', sim_gazebo_classic,
         ]
     )
-
     robot_description = {"robot_description": robot_description_content}
 
-    # 启动gazebo
-    start_gazebo_cmd =  ExecuteProcess(
-        cmd=['gazebo', '--verbose','-s', 'libgazebo_ros_init.so', '-s', 'libgazebo_ros_factory.so'],
-        output='both')
 
-    spawn_entity = Node(
-        package='gazebo_ros', 
-        executable='spawn_entity.py',
-        arguments=['-topic', 'robot_description','-entity', "h1_robot"],
-        output='screen'
-    )
-
-    robot_state_pub_node = Node(
-        package="robot_state_publisher",
-        executable="robot_state_publisher",
-        output="both",
-        parameters=[robot_description]
-    )
-
-    joint_state_broadcaster_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
-    )
-        
-    load_default_left_arm_controller = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=['default_left_arm_controller',"-c", "/controller_manager"],
-        condition=IfCondition(use_default_controllers)
-    )
-    load_default_right_arm_controller = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=['default_right_arm_controller',"-c", "/controller_manager"],
-        condition=IfCondition(use_default_controllers)
-    )
-    load_default_body_controller = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=['default_body_controller',"-c", "/controller_manager"],
-        condition=IfCondition(use_default_controllers)
-    )
-    load_default_head_controller = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=['default_head_controller',"-c", "/controller_manager"],
-        condition=IfCondition(use_default_controllers)
-    )
-    
-    load_hyy_left_arm_controller = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=['hyy_left_arm_controller',"-c", "/controller_manager"],
-        condition=UnlessCondition(use_default_controllers)
-    )
-
-    load_hyy_right_arm_controller = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=['hyy_right_arm_controller',"-c", "/controller_manager"],
-        condition=UnlessCondition(use_default_controllers)
-    )
-
-    load_hyy_body_controller = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=['hyy_body_controller',"-c", "/controller_manager"],
-        condition=UnlessCondition(use_default_controllers)
-    )
-
-    load_hyy_head_controller = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=['hyy_head_controller',"-c", "/controller_manager"],
-        condition=UnlessCondition(use_default_controllers)
-    )
-    
-    # if add_external_devices & !use_default_controllers
-    load_hyy_external_device_controller = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=['hyy_external_device_controller',"-c", "/controller_manager"],
-        condition= UnlessCondition(use_default_controllers) and IfCondition(add_external_devices)
-    )
-    
     # *** PLANNING CONTEXT *** #
     # Robot description, SRDF:
     robot_description_semantic_config = load_file("h1_moveit2", "config/h1_robot.srdf")
@@ -243,7 +137,6 @@ def generate_launch_description():
     )
 
     # RVIZ:
-    
     rviz_base = os.path.join(get_package_share_directory("dual_arm_moveit"), "config")
     rviz_full_config = os.path.join(rviz_base, "moveit.rviz")
     rviz_node_full = Node(
@@ -262,54 +155,15 @@ def generate_launch_description():
     )
 
     # Delay loading and activation of `joint_state_broadcaster` after start of ros2_control_node
-    delay_joint_state_broadcaster_spawner_after_ros2_control_node = (
-        RegisterEventHandler(
-            event_handler=OnProcessExit(
-                target_action=spawn_entity,
-                on_exit = [
-                    TimerAction(
-                        period=5.0,
-                        actions=[
-                            rviz_node_full,
-                            run_move_group_node
-                        ]
-                    ),
-                    joint_state_broadcaster_spawner
-                ],
-            )
-        )
-    )
-
-    # Delay loading and activation of robot_controller after `joint_state_broadcaster`
-    delay_robot_controller_spawners_after_joint_state_broadcaster_spawner = RegisterEventHandler(
-        event_handler=OnProcessExit(
-            target_action=joint_state_broadcaster_spawner,
-            on_exit=[
-                TimerAction(
-                    period=3.0,
-                    actions=[
-                            load_default_left_arm_controller, 
-                            load_default_right_arm_controller,
-                            load_default_body_controller,
-                            load_default_head_controller,
-                            load_hyy_left_arm_controller,
-                            load_hyy_right_arm_controller,
-                            load_hyy_body_controller,
-                            load_hyy_head_controller,
-                            load_hyy_external_device_controller
-                             ]
-                )
-            ]
-        )
+    delay_move_group_after_gazebo_driver = TimerAction(
+        period=10.0,
+        actions=[run_move_group_node, rviz_node_full]
     )
 
     return LaunchDescription(
-        declared_arguments
-        + [
-            start_gazebo_cmd,
-            robot_state_pub_node,
-            spawn_entity,
-            delay_joint_state_broadcaster_spawner_after_ros2_control_node,
-            delay_robot_controller_spawners_after_joint_state_broadcaster_spawner,
+        declared_arguments+
+        [
+            gazebo_driver,
+            delay_move_group_after_gazebo_driver
         ]
     )

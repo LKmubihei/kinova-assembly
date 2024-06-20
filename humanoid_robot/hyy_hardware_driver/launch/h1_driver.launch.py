@@ -144,9 +144,9 @@ def generate_launch_description():
         condition = UnlessCondition(sim_gazebo_classic)
     )
     start_gazebo_cmd =  ExecuteProcess(
-        cmd=['gazebo', '--verbose','-s', 'libgazebo_ros_init.so', '-s', 'libgazebo_ros_factory.so'],
+        cmd=['gazebo', '--verbose', '/usr/share/gazebo-11/worlds/empty.world', '-s', 'libgazebo_ros_init.so', '-s', 'libgazebo_ros_factory.so'],
         output='both',
-        condition =IfCondition(sim_gazebo_classic)
+        condition =IfCondition(sim_gazebo_classic),
     )
     spawn_entity = Node(
         package='gazebo_ros', 
@@ -167,7 +167,7 @@ def generate_launch_description():
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
+        arguments=["joint_state_broadcaster", "-c", "/controller_manager"],
     )
         
     load_default_left_arm_controller = Node(
@@ -247,7 +247,7 @@ def generate_launch_description():
             target_action=control_node,
             on_start=[
                 TimerAction(
-                    period=2.0,
+                    period=3.0,
                     actions=[joint_state_broadcaster_spawner],
                 ),
             ],
@@ -255,11 +255,25 @@ def generate_launch_description():
         condition = UnlessCondition(sim_gazebo_classic)
     )
     
+    # Delay spawn_entity after start of gazebo
+    delay_spawn_entity_after_start_gazebo_cmd = RegisterEventHandler(
+        event_handler=OnProcessStart(
+            target_action=start_gazebo_cmd,
+            on_start=[
+                TimerAction(
+                    period=5.0,
+                    actions=[spawn_entity],
+                ),
+            ],
+        ),
+        condition = IfCondition(sim_gazebo_classic)
+    )
+    
     # Delay loading and activation of `joint_state_broadcaster` after start of spawn_entity
     delay_joint_state_broadcaster_spawner_after_spawn_entity = RegisterEventHandler(
-        event_handler=OnProcessStart(
+        event_handler=OnProcessExit(
             target_action=spawn_entity,
-            on_start=[
+            on_exit=[
                 TimerAction(
                     period=2.0,
                     actions=[joint_state_broadcaster_spawner],
@@ -269,13 +283,16 @@ def generate_launch_description():
         condition = IfCondition(sim_gazebo_classic)
     )
        
-    
-
     # Delay rviz start after Joint State Broadcaster to avoid unnecessary warning output.
     delay_rviz_after_joint_state_broadcaster_spawner = RegisterEventHandler(
         event_handler=OnProcessExit(
             target_action=joint_state_broadcaster_spawner,
-            on_exit=[rviz_node],
+            on_exit=[
+                TimerAction(
+                    period=2.0,
+                    actions=[rviz_node],
+                ),
+            ],
         )
     )
 
@@ -305,12 +322,12 @@ def generate_launch_description():
         [set_use_default_controllers, set_if_add_external_device] +
         [
             start_gazebo_cmd,
-            spawn_entity,
             control_node,
             robot_state_pub_node,
+            delay_spawn_entity_after_start_gazebo_cmd,
             delay_joint_state_broadcaster_spawner_after_spawn_master_driver_node,
             delay_joint_state_broadcaster_spawner_after_spawn_entity,
-            delay_rviz_after_joint_state_broadcaster_spawner,
+            # delay_rviz_after_joint_state_broadcaster_spawner,
             delay_robot_controller_spawners_after_joint_state_broadcaster_spawner
         ]
     )
