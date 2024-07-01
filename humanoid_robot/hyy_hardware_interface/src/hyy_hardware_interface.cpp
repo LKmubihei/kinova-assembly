@@ -345,6 +345,8 @@ hardware_interface::CallbackReturn HyyHardwareInterface::on_activate(const rclcp
     }
 
     HYYRobotBase::set_robot_run_type(_sim_flag);
+    int runmode = HYYRobotBase::get_robot_run_type();
+    RCLCPP_INFO(logger_, "robot current run type: %s(%d)", runmode ? "inSim" : "inReal", runmode);
 
     for (int i = 0; i < robots_num; i++){
         HYYRobotBase::RobotPower(robots[i]._index);

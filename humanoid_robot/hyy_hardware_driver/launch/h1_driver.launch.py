@@ -85,6 +85,13 @@ def generate_launch_description():
             description='external devices DOF'
         )
     )
+    declared_arguments.append( 
+        DeclareLaunchArgument(
+            'ifstartRviz', 
+            default_value='false', 
+            description='if true then start Rviz'
+        )
+    )
 
     # Initialize Arguments
     sim_gazebo_classic = LaunchConfiguration('sim_gazebo_classic')
@@ -96,6 +103,7 @@ def generate_launch_description():
     if_add_axisgroups = LaunchConfiguration('if_add_axisgroups')
     if_add_external_device = LaunchConfiguration('if_add_external_device')
     external_device_dof = LaunchConfiguration('external_device_dof')
+    ifstartRviz = LaunchConfiguration('ifstartRviz')
 
     # Only the default controller is supported.
     set_use_default_controllers = SetLaunchConfiguration(
@@ -188,14 +196,14 @@ def generate_launch_description():
         package="controller_manager",
         executable="spawner",
         arguments=['default_body_controller',"-c", "/controller_manager"],
-        condition=IfCondition(use_default_controllers)
+        condition=IfCondition(use_default_controllers) 
     )
     
     load_default_head_controller = Node(
         package="controller_manager",
         executable="spawner",
         arguments=['default_head_controller',"-c", "/controller_manager"],
-        condition=IfCondition(use_default_controllers)
+        condition=IfCondition(use_default_controllers) 
     )
     
     load_hyy_left_arm_controller = Node(
@@ -216,21 +224,21 @@ def generate_launch_description():
         package="controller_manager",
         executable="spawner",
         arguments=['hyy_body_controller',"-c", "/controller_manager"],
-        condition=UnlessCondition(use_default_controllers)
+        condition=UnlessCondition(use_default_controllers) 
     )
 
     load_hyy_head_controller = Node(
         package="controller_manager",
         executable="spawner",
         arguments=['hyy_head_controller',"-c", "/controller_manager"],
-        condition=UnlessCondition(use_default_controllers)
+        condition=UnlessCondition(use_default_controllers) 
     )
     
     load_hyy_external_device_controller = Node(
         package="controller_manager",
         executable="spawner",
         arguments=['hyy_external_device_controller',"-c", "/controller_manager"],
-        condition= UnlessCondition(use_default_controllers) and IfCondition(if_add_external_device)
+        condition= IfCondition(if_add_external_device)
     )
 
     # Start rviz2
@@ -293,7 +301,8 @@ def generate_launch_description():
                     actions=[rviz_node],
                 ),
             ],
-        )
+        ),
+        condition = IfCondition(ifstartRviz)
     )
 
     # Delay loading and activation of robot_controller after `joint_state_broadcaster`
@@ -305,16 +314,29 @@ def generate_launch_description():
                     period=3.0,
                     actions=[load_default_left_arm_controller, 
                              load_default_right_arm_controller,
-                             load_default_body_controller,
-                             load_default_head_controller,
                              load_hyy_left_arm_controller,
                              load_hyy_right_arm_controller,
-                             load_hyy_body_controller,
-                             load_hyy_head_controller,
                              load_hyy_external_device_controller]
                 )
             ]
         )
+    )
+    # Delay loading and activation of robot_controller after `joint_state_broadcaster`
+    delay_addaxis_controller_spawners_after_joint_state_broadcaster_spawner = RegisterEventHandler(
+        event_handler=OnProcessExit(
+            target_action=joint_state_broadcaster_spawner,
+            on_exit=[
+                TimerAction(
+                    period=3.0,
+                    actions=[
+                             load_default_body_controller,
+                             load_default_head_controller,
+                             load_hyy_body_controller,
+                             load_hyy_head_controller]
+                            )
+            ]
+        ),
+        condition = IfCondition(if_add_axisgroups)
     )
 
     return LaunchDescription(
@@ -327,7 +349,8 @@ def generate_launch_description():
             delay_spawn_entity_after_start_gazebo_cmd,
             delay_joint_state_broadcaster_spawner_after_spawn_master_driver_node,
             delay_joint_state_broadcaster_spawner_after_spawn_entity,
-            # delay_rviz_after_joint_state_broadcaster_spawner,
-            delay_robot_controller_spawners_after_joint_state_broadcaster_spawner
+            delay_rviz_after_joint_state_broadcaster_spawner,
+            delay_robot_controller_spawners_after_joint_state_broadcaster_spawner,
+            delay_addaxis_controller_spawners_after_joint_state_broadcaster_spawner
         ]
     )

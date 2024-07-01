@@ -84,12 +84,15 @@
       <xacro:joint_interface Joint_Name="R-J5" initial_pos="0.0" initial_vel="0.0" initial_effort="0.0"/>
       <xacro:joint_interface Joint_Name="R-J6" initial_pos="0.0" initial_vel="0.0" initial_effort="0.0"/>
       <xacro:joint_interface Joint_Name="R-J7" initial_pos="0.0" initial_vel="0.0" initial_effort="0.0"/>
-      <xacro:joint_interface Joint_Name="Body" initial_pos="0.0" initial_vel="0.0" initial_effort="0.0"/>
-      <xacro:joint_interface Joint_Name="J1" initial_pos="0.0" initial_vel="0.0" initial_effort="0.0"/>
-      <xacro:joint_interface Joint_Name="H-J1" initial_pos="0.0" initial_vel="0.0" initial_effort="0.0"/>
-      <xacro:joint_interface Joint_Name="H-J2" initial_pos="0.0" initial_vel="0.0" initial_effort="0.0"/>
 
-      <xacro:if value="${if_add_external_device}">
+      <xacro:if value= "${if_add_axisgroups}">
+        <xacro:joint_interface Joint_Name="Body" initial_pos="0.0" initial_vel="0.0" initial_effort="0.0"/>
+        <xacro:joint_interface Joint_Name="J1" initial_pos="0.0" initial_vel="0.0" initial_effort="0.0"/>
+        <xacro:joint_interface Joint_Name="H-J1" initial_pos="0.0" initial_vel="0.0" initial_effort="0.0"/>
+        <xacro:joint_interface Joint_Name="H-J2" initial_pos="0.0" initial_vel="0.0" initial_effort="0.0"/>
+      </xacro:if>
+
+      <xacro:if value= "${if_add_external_device}">
         <xacro:macro name ="external_device_joint_interface" params="Joint_Name initial_pos ">
           <joint name="${Joint_Name}">
               <command_interface name="position"/>
