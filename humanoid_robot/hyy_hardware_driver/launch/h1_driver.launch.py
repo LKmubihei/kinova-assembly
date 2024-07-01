@@ -275,7 +275,7 @@ def generate_launch_description():
             target_action=spawn_entity,
             on_exit=[
                 TimerAction(
-                    period=2.0,
+                    period=5.0,
                     actions=[joint_state_broadcaster_spawner],
                 ),
             ],

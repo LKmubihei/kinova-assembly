@@ -4,7 +4,7 @@ from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription
-from launch.conditions import IfCondition
+from launch.conditions import IfCondition, UnlessCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.actions import Node
@@ -22,7 +22,7 @@ def generate_launch_description():
     
     # Launch configuration variables specific to simulation
     use_robot_state_pub = LaunchConfiguration('use_robot_state_pub')
-    use_joint_state_pub = LaunchConfiguration('use_joint_state_pub')
+    use_joint_state_pub_gui = LaunchConfiguration('use_joint_state_pub_gui')
     use_rviz = LaunchConfiguration('use_rviz')
     
     declare_use_robot_state_pub_cmd = DeclareLaunchArgument(
@@ -30,8 +30,8 @@ def generate_launch_description():
         default_value='True',
         description='Whether to start the robot state publisher')
     declare_use_joint_state_pub_cmd = DeclareLaunchArgument(
-        'use_joint_state_pub',
-        default_value='True',
+        'use_joint_state_pub_gui',
+        default_value='false',
         description='Whether to start the joint state publisher')
     declare_use_rviz_cmd = DeclareLaunchArgument(
         'use_rviz',
@@ -44,16 +44,23 @@ def generate_launch_description():
         executable='robot_state_publisher',
         name='robot_state_publisher',
         output='screen',
-        # arguments=[urdf_file]
         parameters=[robot_description_xml]
     )
     
-    start_joint_state_publisher_cmd = Node(
-        condition=IfCondition(use_joint_state_pub),
+    start_joint_state_publisher_gui_cmd = Node(
         package='joint_state_publisher_gui',
         executable='joint_state_publisher_gui',
         name='joint_state_publisher_gui',
         output='screen',
+        condition=IfCondition(use_joint_state_pub_gui),
+    )
+    
+    start_joint_state_publisher_cmd = Node(
+        package='xmate_description',
+        executable='publisher',
+        name='publisher',
+        output='screen',
+        condition=UnlessCondition(use_joint_state_pub_gui),
     )
     
     rviz_cmd = Node(
@@ -74,6 +81,7 @@ def generate_launch_description():
 
 
     # Add any conditioned actions
+    ld.add_action(start_joint_state_publisher_gui_cmd)
     ld.add_action(start_joint_state_publisher_cmd)
     ld.add_action(start_robot_state_publisher_cmd)
     ld.add_action(rviz_cmd)

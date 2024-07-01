@@ -2,7 +2,7 @@
 <!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
      Commit Version: 1.5.1-0-g916b5db  Build Version: 1.5.7152.31018
      For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
-<robot name="h1_robot" xmlns:xacro="http://ros.org/wiki/xacro">
+<robot name="h1" xmlns:xacro="http://ros.org/wiki/xacro">
   <xacro:property name = "pkg_address" value = "file://$(find h1_description)"/>
 
   <link name="fake_link">
@@ -1222,36 +1222,4 @@
       effort="0"
       velocity="0" />
   </joint>
-
-  <xacro:macro name="h1_robot_urdf_config" params="if_add_external_device">
-    <xacro:if value="${if_add_external_device}">
-      <xacro:include filename="$(find inspire_hand_description)/urdf/inspire_hand.urdf.xacro"/>
-      <xacro:include filename="$(find robotiq_gripper_description)/urdf/robotiq_gripper.urdf.xacro"/>
-
-      <joint name="gripper_connect_joint" type="fixed">
-        <origin xyz="0 0 0" rpy="0 0 0" />
-        <!-- <origin xyz="0 0 0.00695" rpy="0 0 0" /> -->
-        <parent link="link-L7"/>
-        <child link="hand_e_link"/>
-      </joint>
-
-      <joint name="hand_connect_joint" type="fixed">
-        <!-- <origin xyz="0 0 0" rpy="-1.57 0 -1.57" /> -->
-        <origin xyz="0 0 0" rpy="-1.57 0 1.57" />
-        <parent link="link-R7"/>
-        <child link="R_hand_base_link"/>
-      </joint>
-    </xacro:if>
-  </xacro:macro>
-
-  <xacro:macro name="gazebo_urdf_config" params="sim_gazebo_classic">
-    <xacro:if value="${sim_gazebo_classic}">
-      <link name="world"/>
-      <joint name="fixed" type="fixed">
-        <parent link="world"/>
-        <child link="fake_link"/>
-      </joint>
-    </xacro:if>
-  </xacro:macro>
-
 </robot>

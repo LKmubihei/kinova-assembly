@@ -21,6 +21,8 @@ find_package(orocos_kdl REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(fcl REQUIRED)
 find_package(ccd REQUIRED)
+find_package(moveit_ros_planning_interface REQUIRED)
+find_package(moveit_visual_tools REQUIRED)
 
 #***************************************************************************/
 #*                                                                         */
@@ -69,6 +71,22 @@ target_link_libraries(
 
 #***************************************************************************/
 #*                                                                         */
+#*   Standard application structure   moveit motion planning configure     */
+#*                                                                         */
+#***************************************************************************/
+
+add_executable(motion_plan_demo src/motion_plan_demo.cpp)
+ament_target_dependencies(
+  motion_plan_demo 
+  PUBLIC
+  rclcpp 
+  std_msgs 
+  moveit_ros_planning_interface 
+  moveit_visual_tools
+)
+
+#***************************************************************************/
+#*                                                                         */
 #*   Standard application structure   install                              */
 #*                                                                         */
 #***************************************************************************/
@@ -81,7 +99,7 @@ install(
   
 #Specifies the directory where runtime components of executable files and dynamic libraries should be installed.
 install( 
-  TARGETS ${PROJECT_NAME} collision_detect
+  TARGETS ${PROJECT_NAME} collision_detect motion_plan_demo
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 

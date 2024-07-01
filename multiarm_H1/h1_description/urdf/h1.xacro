@@ -6,13 +6,14 @@
   <xacro:arg name="sim_flag" default="false" />
   <xacro:arg name="system_arg" default="--path /home/robot/Work/system/robot_config --iscopy true" />
   <xacro:arg name="if_add_axisgroups" default="true" />
-  <xacro:arg name="if_add_external_device" default="false" />
+  <xacro:arg name="if_add_external_device" default="true" />
   <xacro:arg name="external_device_dof" default="7" />
 
   <xacro:include filename="$(find h1_description)/urdf/h1.urdf.xacro"/>
-  <xacro:h1_robot_urdf_config if_add_external_device="$(arg if_add_external_device)"/>
-  <xacro:gazebo_urdf_config sim_gazebo_classic="$(arg sim_gazebo_classic)"/>
-
+  <xacro:include filename="$(find h1_description)/urdf/gazebo_config.xacro"/>
+  <xacro:include filename="$(find h1_description)/urdf/external_devices_config.xacro"/>
+  <xacro:external_device_config if_add_external_device="$(arg if_add_external_device)"/>
+  <xacro:gazebo_config sim_gazebo_classic="$(arg sim_gazebo_classic)"/>
 
   <xacro:include filename="$(find h1_description)/urdf/h1_ros2_control.xacro"/>
   <xacro:h1_robot_ros2_control_config 

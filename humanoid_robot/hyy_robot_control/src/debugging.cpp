@@ -5,7 +5,7 @@ using namespace std;
 extern std::atomic<bool> stop;
 
 void handle_sigint(int sig) {
-    std::cout << "Signal " << sig << " received." << std::endl;
+    printf("ros2 shut down, node exit 0.\n");
     stop.store(true);
     rclcpp::shutdown();
     exit(0);
@@ -55,6 +55,7 @@ int main(int argc, char **argv){
     /***************************************************************************/
 
     rclcpp::init(argc, argv);
+    signal(SIGINT, handle_sigint);
     auto node = rclcpp::Node::make_shared("hyyRobotControl");
     auto executor = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
 
