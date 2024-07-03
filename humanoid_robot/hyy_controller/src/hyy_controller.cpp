@@ -673,11 +673,11 @@ void HyyController::robotgrip_command_callback(const std::shared_ptr<hyy_message
 			ret = ControlGrip(req->type.c_str(), req->value);
 			RCLCPP_INFO(get_node()->get_logger(),"Grip: control grip");
 		}
+		res->result = ret;
 		if (ret != 0){
 			RCLCPP_ERROR(get_node()->get_logger(), "Grip: execute grip failed");
 			return;
 		}
-		res->result = ret;
 	}else{
 		RCLCPP_ERROR(get_node()->get_logger(), "Grip: please start controller");
 		res->result = ERR_CONTROLLER_INACTIVE;

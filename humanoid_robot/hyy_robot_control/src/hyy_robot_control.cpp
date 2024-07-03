@@ -133,9 +133,9 @@ bool HyyRobotControl::init(std::string controller_name, int type)
 		}
 
 	}
-
+	sleep(5);
 	RCLCPP_INFO(node_->get_logger(), "All service clients created successfully.");
-	
+
 	init_flag = true;
 	return true;
 }
@@ -677,26 +677,50 @@ std::vector<double> HyyRobotControl::offsrel(std::vector<double>& target, double
 
 int HyyRobotControl::grip_create(const std::string& name)
 {
+
+	if (!init_flag){
+		RCLCPP_ERROR(node_->get_logger(), "please init()");
+		return -1;
+	}
+	if (!robotGripClient->wait_for_service(std::chrono::seconds(10))) {
+		RCLCPP_ERROR(node_->get_logger(), "Service %s is not available.", robotGripClient->get_service_name());
+		return -1;
+	}
+
 	gripReq->type = name;
 	gripReq->value = 2;
+
 	auto res = robotGripClient->async_send_request(gripReq);
 	if (res.wait_for(std::chrono::seconds(10)) == std::future_status::ready) {
-		RCLCPP_INFO(node_->get_logger(), "%s received response: %d", robotGripClient->get_service_name(), res.get()->result);
-		return res.get()->result;
+		auto result_ = res.get()->result;
+		RCLCPP_INFO(node_->get_logger(), "grip_create received response: %d", result_);
+		return result_;
 	} else {
 		RCLCPP_ERROR_STREAM(node_->get_logger(), "grip_create: failed to call service " << robotGripClient->get_service_name());
 		return -1;
 	}
+
 }
 
 int HyyRobotControl::grip_control(const std::string& name, double position)
 {
+
+	if (!init_flag){
+		RCLCPP_ERROR(node_->get_logger(), "please init()");
+		return -1;
+	}
+	if (!robotGripClient->wait_for_service(std::chrono::seconds(10))) {
+		RCLCPP_ERROR(node_->get_logger(), "Service %s is not available.", robotGripClient->get_service_name());
+		return -1;
+	}
+
 	gripReq->type = name;
 	gripReq->value = position;
 	auto res = robotGripClient->async_send_request(gripReq);
 	if (res.wait_for(std::chrono::seconds(10)) == std::future_status::ready) {
-		RCLCPP_INFO(node_->get_logger(), "%s received response: %d", robotGripClient->get_service_name(), res.get()->result);
-		return res.get()->result;
+		auto result_ = res.get()->result;
+		RCLCPP_INFO(node_->get_logger(), "grip_control received response: %d", result_);
+		return result_;
 	} else {
 		RCLCPP_ERROR_STREAM(node_->get_logger(), "grip_control: failed to call service " << robotGripClient->get_service_name());
 		return -1;
@@ -705,12 +729,23 @@ int HyyRobotControl::grip_control(const std::string& name, double position)
 
 int HyyRobotControl::grip_destroy(const std::string& name)
 {
+
+	if (!init_flag){
+		RCLCPP_ERROR(node_->get_logger(), "please init()");
+		return -1;
+	}
+	if (!robotGripClient->wait_for_service(std::chrono::seconds(10))) {
+		RCLCPP_ERROR(node_->get_logger(), "Service %s is not available.", robotGripClient->get_service_name());
+		return -1;
+	}
+
 	gripReq->type = name;
 	gripReq->value = -1;
 	auto res = robotGripClient->async_send_request(gripReq);
 	if (res.wait_for(std::chrono::seconds(10)) == std::future_status::ready) {
-		RCLCPP_INFO(node_->get_logger(), "%s received response: %d", robotGripClient->get_service_name(), res.get()->result);
-		return res.get()->result;
+		auto result_ = res.get()->result;
+		RCLCPP_INFO(node_->get_logger(), "grip_destroy received response: %d", result_);
+		return result_;
 	} else {
 		RCLCPP_ERROR_STREAM(node_->get_logger(), "grip_destroy: failed to call service " << robotGripClient->get_service_name());
 		return -1;
