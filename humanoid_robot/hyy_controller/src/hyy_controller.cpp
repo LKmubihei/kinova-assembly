@@ -521,6 +521,7 @@ void HyyController::robotio_command_callback(const std::shared_ptr<hyy_message::
 		std::string DO = "DO";
 		if (DI == req->type){
 			res->result = HYYRobotBase::GetDi(req->index);
+			RCLCPP_INFO_STREAM(get_node()->get_logger(), "type:" << req->type << "; index:" << req->index << "; value:" << res->result);
 		}else if(DO == req->type){
 			int value = req->value ? 1 : 0;
 			HYYRobotBase::SetDo(req->index, value);
@@ -545,6 +546,7 @@ void HyyController::robotmovedata_command_callback(const std::shared_ptr<hyy_mes
 	using namespace HYYRobotBase;
 	if (start_controller){
 		if (!req->type.empty()){
+      		RCLCPP_INFO(get_node()->get_logger(), "Start processing robotdata");
 			string _cartesian = "cartesian";
 			string _joint = "joint";
 			string _cur_cartesian = "cartesian_current";
