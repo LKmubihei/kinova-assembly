@@ -1169,12 +1169,12 @@ void HyyExternalController::controlgripper_callback(const hyyGripMsg::Request::S
             RCLCPP_INFO(get_node()->get_logger(), "Gripper: get gripper position %d", response->result);
         }else{
             RCLCPP_ERROR(get_node()->get_logger(), "Gripper: control command isn't exist.");
-            response->result = ERR_MOVETYPE;
+            response->result = ERR_TYPE;
             return;
         }
     }else{
         RCLCPP_ERROR(get_node()->get_logger(), "Gripper: control type is empty, please check.");
-        response->result = ERR_MOVETYPE_EMPTY;
+        response->result = ERR_TYPE_EMPTY;
         return;
     }
     }

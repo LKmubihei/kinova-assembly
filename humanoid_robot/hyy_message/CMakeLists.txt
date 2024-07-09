@@ -18,6 +18,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/Robotio.srv"
   "srv/Robotmove.srv"
   "srv/Robotmovedata.srv" 
+  "srv/Robotgeneralcontrol.srv"
   "srv/Setangle.srv"
   "srv/Getangleact.srv"
   "srv/Getangleset.srv"

@@ -8,6 +8,7 @@
 #include "hyy_message/srv/robotgrip.hpp"
 #include "hyy_message/srv/robotmovedata.hpp"
 #include "hyy_message/srv/robotio.hpp"
+#include "hyy_message/srv/robotgeneralcontrol.hpp"
 
 #include "hyy_message/srv/setangle.hpp"
 #include "hyy_message/srv/getangleact.hpp"
@@ -35,6 +36,7 @@ using hyyMoveMsg = hyy_message::srv::Robotmove;
 using hyyIoMsg = hyy_message::srv::Robotio;
 using hyyMoveDataMsg = hyy_message::srv::Robotmovedata;
 using hyyGripMsg = hyy_message::srv::Robotgrip;
+using hyyGeneralControlMsg = hyy_message::srv::Robotgeneralcontrol;
 
 using  hyySetangleMsg = hyy_message::srv::Setangle;
 using  hyySetposMsg = hyy_message::srv::Setpos;
@@ -248,17 +250,37 @@ public:
      */
     int ask_status();
 
+    /**
+     * @brief 停止所有子设备运行，不下电，可继续执行后续命令
+     * @return int 0：正常，<0:异常
+     */
+    int stopDeviceRun();
+
+    /**
+     * @brief 停止机器人运行，不下电，可继续执行后续命令
+     * @return int 0：正常，<0:异常
+     */
+    int stopRobotRun(std::vector<int> robotindex);
+
+    /**
+     * @brief 停止附加轴组运行，不下电，可继续执行后续命令
+     * @return int 0：正常，<0:异常
+     */
+    int stopAddaxisRun(std::vector<int> addaxisindex);
+
 private:
     std::shared_ptr<rclcpp::Node> node_;
-    std::string MoveSrvName_, IoSrvName_, MoveDataSrvName_, GripSrvName_;
+    std::string MoveSrvName_, IoSrvName_, MoveDataSrvName_, GripSrvName_, GeneralControlSrvName_;
     rclcpp::Client<hyyMoveMsg>::SharedPtr robotMoveClient;
     rclcpp::Client<hyyIoMsg>::SharedPtr robotIoClient;
     rclcpp::Client<hyyMoveDataMsg>::SharedPtr robotMoveDataClient;
     rclcpp::Client<hyyGripMsg>::SharedPtr robotGripClient;
+    rclcpp::Client<hyyGeneralControlMsg>::SharedPtr robotGeneralControlClient;
     std::shared_ptr<hyyMoveMsg::Request> moveReq;
     std::shared_ptr<hyyIoMsg::Request> ioReq;
     std::shared_ptr<hyyMoveDataMsg::Request> moveDataReq;
     std::shared_ptr<hyyGripMsg::Request> gripReq;
+    std::shared_ptr<hyyGeneralControlMsg::Request> generalControlReq;
     bool init_flag, block_flag;
 
     int wait_move_finish(rclcpp::Client<hyy_robot_control::hyyMoveMsg>::FutureAndRequestId &resp);

@@ -183,6 +183,14 @@ controller_interface::CallbackReturn HyyController::on_configure(const rclcpp_li
 		RCLCPP_INFO_STREAM(get_node()->get_logger(), "Service " << get_node()->get_name() << "/hyyRobotIoSrv is now ready.");
     }
 
+	auto generalcontrol_callback = std::bind(&HyyController::robotgeneralcontrol_command_callback, this, std::placeholders::_1, std::placeholders::_2);
+    hyyGeneralControlSrv = get_node()->create_service<hyyGeneralControlMsg>("~/hyyRobotGeneralControlSrv", generalcontrol_callback);
+    if(!hyyGeneralControlSrv){
+        RCLCPP_ERROR(get_node()->get_logger(), "Failed to create service hyyGeneralControlSrv.");
+    }else{
+		RCLCPP_INFO_STREAM(get_node()->get_logger(), "Service " << get_node()->get_name() << "/hyyRobotGeneralControlSrv is now ready.");
+    }
+
     return controller_interface::CallbackReturn::SUCCESS;
 }
 
@@ -496,12 +504,12 @@ void HyyController::robotmove_command_callback(const std::shared_ptr<hyy_message
 				return;
 			}else{
 				RCLCPP_ERROR(get_node()->get_logger(), "Move: robot command isn't exist.");
-				res->result = ERR_MOVETYPE;
+				res->result = ERR_TYPE;
 				return;
 			}
 		}else{
 			RCLCPP_ERROR(get_node()->get_logger(), "Move: move type is empty, please check.");
-			res->result = ERR_MOVETYPE_EMPTY;
+			res->result = ERR_TYPE_EMPTY;
 			return;
 		}
 	}else{
@@ -528,7 +536,7 @@ void HyyController::robotio_command_callback(const std::shared_ptr<hyy_message::
 			res->result = 1;
 			RCLCPP_INFO_STREAM(get_node()->get_logger(), "type:" << req->type << "; index:" << req->index << "; value:" << value);
 		}else{
-			res->result = ERR_MOVETYPE;
+			res->result = ERR_TYPE;
 			return;
 		}
 	}else{
@@ -683,6 +691,48 @@ void HyyController::robotgrip_command_callback(const std::shared_ptr<hyy_message
 		res->result = ERR_CONTROLLER_INACTIVE;
 		return;
 	}
+}
+
+void HyyController::robotgeneralcontrol_command_callback(const std::shared_ptr<hyyGeneralControlMsg::Request> req,
+								std::shared_ptr<hyyGeneralControlMsg::Response> res){
+
+	using namespace HYYRobotBase;
+	using namespace std;
+	if (start_controller)
+	{
+		if (!req->type.empty()){
+		
+			string _deviceStop = "deviceStop";
+			string _robotStop = "robotStop";
+			string _addaxisStop = "addaxisStop";
+			if(req->type == _deviceStop){
+				DeviceStopRun();
+				res->result = 0;
+				return;
+			}else if(req->type == _robotStop){
+				for (int i = 0; i < req->robotindex.size(); i++){
+					RobotStopRun(req->robotindex.at(i));
+				}
+				res->result = 0;
+				return;
+			}else if(req->type == _addaxisStop){
+				for (int i = 0; i < req->addaxisindex.size(); i++){
+					AdditionStopRun(req->addaxisindex.at(i));
+				}
+				res->result = 0;
+				return;
+			}else{
+				RCLCPP_ERROR(get_node()->get_logger(), "robotcontrol: control type isn't exist.");
+				res->result = ERR_TYPE;
+				return;
+			}
+		}else{
+			RCLCPP_ERROR(get_node()->get_logger(), "robotcontrol: control type is empty, please check.");
+			res->result = ERR_TYPE_EMPTY;
+			return;
+		}
+	}
+
 }
 
 double HyyController::velocity_data_type(const std::string& velocity)

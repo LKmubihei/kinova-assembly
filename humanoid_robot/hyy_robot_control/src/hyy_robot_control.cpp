@@ -13,8 +13,9 @@ block_flag(true)
 	ioReq = std::make_shared<hyyIoMsg::Request>();
 	moveDataReq = std::make_shared<hyyMoveDataMsg::Request>();
 	gripReq = std::make_shared<hyyGripMsg::Request>();
+	generalControlReq = std::make_shared<hyyGeneralControlMsg::Request>();
 
-    SetangleReq = std::make_shared<hyySetangleMsg::Request>();
+	SetangleReq = std::make_shared<hyySetangleMsg::Request>();
     SetposReq = std::make_shared<hyySetposMsg::Request>();
     SetspeedReq = std::make_shared<hyySetspeedMsg::Request>();
     SetforceReq = std::make_shared<hyySetforceMsg::Request>();
@@ -117,13 +118,15 @@ bool HyyRobotControl::init(std::string controller_name, int type)
 		IoSrvName_ = "/" + controller_name + "/hyyRobotIoSrv";
 		MoveDataSrvName_ = "/" + controller_name + "/hyyRobotMoveDataSrv";
 		GripSrvName_ = "/" + controller_name + "/hyyRobotGripSrv";
+		GeneralControlSrvName_ = "/" + controller_name + "/hyyRobotGeneralControlSrv";
 
 		robotMoveClient = node_->create_client<hyyMoveMsg>(MoveSrvName_);
 		robotIoClient = node_->create_client<hyyIoMsg>(IoSrvName_);
 		robotMoveDataClient = node_->create_client<hyyMoveDataMsg>(MoveDataSrvName_);
 		robotGripClient = node_->create_client<hyyGripMsg>(GripSrvName_);
+		robotGeneralControlClient = node_->create_client<hyyGeneralControlMsg>(GeneralControlSrvName_);
 
-		std::vector<rclcpp::ClientBase::SharedPtr> clients = {robotMoveClient, robotIoClient, robotMoveDataClient, robotGripClient};
+		std::vector<rclcpp::ClientBase::SharedPtr> clients = {robotMoveClient, robotIoClient, robotMoveDataClient, robotGripClient, robotGeneralControlClient};
 
 		for (const auto &client : clients){
 			if (!client) {
@@ -138,6 +141,84 @@ bool HyyRobotControl::init(std::string controller_name, int type)
 
 	init_flag = true;
 	return true;
+}
+
+int HyyRobotControl::stopDeviceRun(){
+
+	if (!init_flag){
+		RCLCPP_ERROR(node_->get_logger(), "please init()");
+		return -1;
+	}
+	if (!robotGeneralControlClient->wait_for_service(std::chrono::seconds(10))) {
+		RCLCPP_ERROR(node_->get_logger(), "Service %s is not available.", robotGeneralControlClient->get_service_name());
+		return -1;
+	}
+
+	generalControlReq->type = "deviceStop";
+	generalControlReq->robotindex.clear();
+	generalControlReq->addaxisindex.clear();
+
+	auto res = robotGeneralControlClient->async_send_request(generalControlReq);
+	if (res.wait_for(std::chrono::seconds(10)) == std::future_status::ready) {
+		// RCLCPP_INFO_STREAM(node_->get_logger(), robotGeneralControlClient->get_service_name()<< " response: " << res.get()->result);
+		return res.get()->result;
+	} else {
+		RCLCPP_ERROR_STREAM(node_->get_logger(), "stopDeviceRun: failed to call service " << robotGeneralControlClient->get_service_name());
+		return -1;
+	}
+
+}
+
+int HyyRobotControl::stopRobotRun(std::vector<int> robotindex_){
+
+	if (!init_flag){
+		RCLCPP_ERROR(node_->get_logger(), "please init()");
+		return -1;
+	}
+	if (!robotGeneralControlClient->wait_for_service(std::chrono::seconds(10))) {
+		RCLCPP_ERROR(node_->get_logger(), "Service %s is not available.", robotGeneralControlClient->get_service_name());
+		return -1;
+	}
+
+	generalControlReq->type = "robotStop";
+	generalControlReq->robotindex = robotindex_;
+	generalControlReq->addaxisindex.clear();
+
+	auto res = robotGeneralControlClient->async_send_request(generalControlReq);
+	if (res.wait_for(std::chrono::seconds(10)) == std::future_status::ready) {
+		// RCLCPP_INFO_STREAM(node_->get_logger(), robotGeneralControlClient->get_service_name()<< " response: " << res.get()->result);
+		return res.get()->result;
+	} else {
+		RCLCPP_ERROR_STREAM(node_->get_logger(), "stopRobotRun: failed to call service " << robotGeneralControlClient->get_service_name());
+		return -1;
+	}
+
+}
+
+int HyyRobotControl::stopAddaxisRun(std::vector<int> addaxisindex_){
+	
+	if (!init_flag){
+		RCLCPP_ERROR(node_->get_logger(), "please init()");
+		return -1;
+	}
+	if (!robotGeneralControlClient->wait_for_service(std::chrono::seconds(10))) {
+		RCLCPP_ERROR(node_->get_logger(), "Service %s is not available.", robotGeneralControlClient->get_service_name());
+		return -1;
+	}
+
+	generalControlReq->type = "robotStop";
+	generalControlReq->robotindex.clear();
+	generalControlReq->addaxisindex = addaxisindex_;
+
+	auto res = robotGeneralControlClient->async_send_request(generalControlReq);
+	if (res.wait_for(std::chrono::seconds(10)) == std::future_status::ready) {
+		// RCLCPP_INFO_STREAM(node_->get_logger(), robotGeneralControlClient->get_service_name()<< " response: " << res.get()->result);
+		return res.get()->result;
+	} else {
+		RCLCPP_ERROR_STREAM(node_->get_logger(), "stopRobotRun: failed to call service " << robotGeneralControlClient->get_service_name());
+		return -1;
+	}
+
 }
 
 int HyyRobotControl::moveA(const std::string& target,const std::string& velocity,const std::string& zone,const std::string& tool,const std::string& wobj)

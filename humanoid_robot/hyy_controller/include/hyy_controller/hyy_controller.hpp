@@ -24,6 +24,7 @@
 #include "hyy_message/srv/robotgrip.hpp"
 #include "hyy_message/srv/robotmovedata.hpp"
 #include "hyy_message/srv/robotio.hpp"
+#include "hyy_message/srv/robotgeneralcontrol.hpp"
 
 #include "hyy_controller_parameters.hpp"
 
@@ -36,6 +37,7 @@ namespace hyy_controller
   using hyyGripMsg = hyy_message::srv::Robotgrip;
   using hyyMoveDataMsg = hyy_message::srv::Robotmovedata;
   using hyyIoMsg = hyy_message::srv::Robotio;
+  using hyyGeneralControlMsg = hyy_message::srv::Robotgeneralcontrol;
 
   class HyyController : public controller_interface::ControllerInterface
   {
@@ -86,6 +88,10 @@ namespace hyy_controller
     void robotgrip_command_callback(const std::shared_ptr<hyy_message::srv::Robotgrip::Request> req,
                                     std::shared_ptr<hyy_message::srv::Robotgrip::Response> res);
 
+    HYY_CONTROLLER_PUBLIC
+    void robotgeneralcontrol_command_callback(const std::shared_ptr<hyyGeneralControlMsg::Request> req,
+                                    std::shared_ptr<hyyGeneralControlMsg::Response> res);
+
     HYYRobotBase::robjoint rjoint_;
     HYYRobotBase::robpose rpose_;
     HYYRobotBase::robpose rpose_mid_;
@@ -109,6 +115,7 @@ namespace hyy_controller
     rclcpp::Service<hyyGripMsg>::SharedPtr hyyGripSrv;
     rclcpp::Service<hyyMoveDataMsg>::SharedPtr hyyMoveDataSrv;
     rclcpp::Service<hyyIoMsg>::SharedPtr hyyIoSrv;
+    rclcpp::Service<hyyGeneralControlMsg>::SharedPtr hyyGeneralControlSrv;
 
     double velocity_data_type(const std::string &velocity);
 

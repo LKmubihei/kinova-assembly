@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot name = "h1" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:macro name="gazebo_config" params="sim_gazebo_classic">
+    <xacro:if value="${sim_gazebo_classic}">
+      <link name="world"/>
+      <joint name="fixed" type="fixed">
+        <parent link="world"/>
+        <child link="fake_link"/>
+      </joint>
+    </xacro:if>
+  </xacro:macro>
+</robot>
