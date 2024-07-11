@@ -1,12 +1,19 @@
 #include "hyy_robot_control/hyy_robot_control.h"
+#include <atomic>
+#include <csignal>
+#include <cstdarg>
+#include <iostream>
+#include <thread>
 
 using namespace std;
 
 extern std::atomic<bool> stop;
+std::shared_ptr<hyy_robot_control::HyyRobotControl> hyyRobotLeftArmControl;
 
 void handle_sigint(int sig) {
-    printf("ros2 shut down, node exit 0.\n");
+    printf("ros2 关闭，节点退出 0。\n");
     stop.store(true);
+    hyyRobotLeftArmControl->stopDeviceRun();
     rclcpp::shutdown();
     exit(0);
 }
@@ -17,11 +24,12 @@ void blockhere(int num_args, ...) {
 
     while (1) {
         if (stop.load()) {
-            std::cout << "Caught signal " << SIGINT << ", exiting..." << std::endl;
+            std::cout << "捕获信号 " << SIGINT << "，正在退出..." << std::endl;
+            hyyRobotLeftArmControl->stopDeviceRun();
             break;
         }
 
-        bool all_zero = true;  // 假设所有参数都为0
+        bool all_zero = true;
 
         va_list args_copy;
         va_copy(args_copy, args);
@@ -44,7 +52,6 @@ void blockhere(int num_args, ...) {
 
     va_end(args);
 }
-
 int main(int argc, char **argv){
     
     

@@ -45,7 +45,7 @@ HyyRobotControl::HyyRobotControl(){}
 
 bool HyyRobotControl::init(std::string controller_name, int type)
 {
-
+	RCLCPP_INFO(node_->get_logger(), "Preparing all service clients, please wait.");
     if (type == 1) {
 
 		SetangleSrvName_ = "/" + controller_name + "/Setangle";
@@ -136,6 +136,7 @@ bool HyyRobotControl::init(std::string controller_name, int type)
 		}
 
 	}
+	
 	sleep(5);
 	RCLCPP_INFO(node_->get_logger(), "All service clients created successfully.");
 
