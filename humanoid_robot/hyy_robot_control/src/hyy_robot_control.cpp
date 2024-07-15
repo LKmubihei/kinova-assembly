@@ -136,8 +136,7 @@ bool HyyRobotControl::init(std::string controller_name, int type)
 		}
 
 	}
-	
-	sleep(5);
+	sleep(1);
 	RCLCPP_INFO(node_->get_logger(), "All service clients created successfully.");
 
 	init_flag = true;
@@ -207,7 +206,7 @@ int HyyRobotControl::stopAddaxisRun(std::vector<int> addaxisindex_){
 		return -1;
 	}
 
-	generalControlReq->type = "robotStop";
+	generalControlReq->type = "addaxisStop";
 	generalControlReq->robotindex.clear();
 	generalControlReq->addaxisindex = addaxisindex_;
 
@@ -509,7 +508,7 @@ int HyyRobotControl::wait_move_finish(rclcpp::Client<hyy_robot_control::hyyMoveM
         const int max_retries = 10;  // Maximum number of retries
         int retry_count = 0;        // Current retry attempt
 
-        while (true) {
+        while (true && rclcpp::ok()) {
             // Send the request to get the current state of the robot
             auto res = robotMoveClient->async_send_request(moveReq);
             // Wait for the response from the service

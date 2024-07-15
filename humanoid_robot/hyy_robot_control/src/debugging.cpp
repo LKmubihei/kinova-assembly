@@ -11,9 +11,14 @@ extern std::atomic<bool> stop;
 std::shared_ptr<hyy_robot_control::HyyRobotControl> hyyRobotLeftArmControl;
 
 void handle_sigint(int sig) {
-    printf("ros2 关闭，节点退出 0。\n");
+    printf("ros2 shutdown, exit 0.\n");
     stop.store(true);
-    hyyRobotLeftArmControl->stopDeviceRun();
+    std::vector<int> robotindex;
+    robotindex.push_back(0);
+    robotindex.push_back(1);
+    // hyyRobotLeftArmControl->stopDeviceRun();
+    hyyRobotLeftArmControl->stopAddaxisRun(robotindex);
+    hyyRobotLeftArmControl->stopRobotRun(robotindex);
     rclcpp::shutdown();
     exit(0);
 }
@@ -24,8 +29,6 @@ void blockhere(int num_args, ...) {
 
     while (1) {
         if (stop.load()) {
-            std::cout << "捕获信号 " << SIGINT << "，正在退出..." << std::endl;
-            hyyRobotLeftArmControl->stopDeviceRun();
             break;
         }
 
@@ -67,39 +70,40 @@ int main(int argc, char **argv){
     auto executor = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
 
     // hyy_robot_control::HyyRobotControl hyyExternalDeviceControl(node);
-    // if (!hyyExternalDeviceControl.init("hyy_external_device_controller", 1)){
+    // if (!hyyExternalDeviceControl->init("hyy_external_device_controller", 1)){
     //     RCLCPP_ERROR(node->get_logger(), "hyydebug client initialize falied");
     //     return -1;
     // }
-    hyy_robot_control::HyyRobotControl hyyRobotLeftArmControl(node);
-    if (!hyyRobotLeftArmControl.init("hyy_left_arm_controller", 0)){
+    
+    hyyRobotLeftArmControl = std::make_shared<hyy_robot_control::HyyRobotControl>(node);
+    if (!hyyRobotLeftArmControl->init("hyy_left_arm_controller", 0)){
         RCLCPP_ERROR(node->get_logger(), "hyyRobotLeftArmControl client initialize falied");
         return -1;
     }
-    // hyy_robot_control::HyyRobotControl hyyRobotRightArmControl(node);
-    // if (!hyyRobotRightArmControl.init("hyy_right_arm_controller", 0)){
-    //     RCLCPP_ERROR(node->get_logger(), "hyyRobotRightArmControl client initialize falied");
-    //     return -1;
-    // }
-    // hyy_robot_control::HyyRobotControl hyyRobotBodyControl(node);
-    // if (!hyyRobotBodyControl.init("hyy_body_controller", 0)){
-    //     RCLCPP_ERROR(node->get_logger(), "hyyRobotBodyControl initialize falied");
-    //     return -1;
-    // }
-    // hyy_robot_control::HyyRobotControl hyyRobotHeadControl(node);
-    // if (!hyyRobotHeadControl.init("hyy_head_controller", 0)){
-    //     RCLCPP_ERROR(node->get_logger(), "hyyRobotHeadControl client initialize falied");
-    //     return -1;
-    // }
-    
+    auto hyyRobotRightArmControl = std::make_shared<hyy_robot_control::HyyRobotControl>(node);
+    if (!hyyRobotRightArmControl->init("hyy_right_arm_controller", 0)){
+        RCLCPP_ERROR(node->get_logger(), "hyyRobotRightArmControl client initialize falied");
+        return -1;
+    }
+    auto hyyRobotBodyControl = std::make_shared<hyy_robot_control::HyyRobotControl>(node);
+    if (!hyyRobotBodyControl->init("hyy_body_controller", 0)){
+        RCLCPP_ERROR(node->get_logger(), "hyyRobotBodyControl initialize falied");
+        return -1;
+    }
+    auto hyyRobotHeadControl = std::make_shared<hyy_robot_control::HyyRobotControl>(node);
+    if (!hyyRobotHeadControl->init("hyy_head_controller", 0)){
+        RCLCPP_ERROR(node->get_logger(), "hyyRobotHeadControl client initialize falied");
+        return -1;
+    }
     executor->add_node(node);
     std::thread spinner([executor]()
         { 
             executor->spin(); 
         }
     );
+    sleep(3);
 
-    // hyyExternalDeviceControl.Gripper_initialize();
+    // hyyExternalDeviceControl->Gripper_initialize();
 
     /***************************************************************************/
     /*                                                                         */
@@ -118,48 +122,48 @@ int main(int argc, char **argv){
     string tool = "tool0";
     string wobj = "wobj0";
 
-    // hyyRobotRightArmControl.isblock(false);
-    hyyRobotLeftArmControl.isblock(true);
-    // hyyRobotBodyControl.isblock(true);
-    // hyyRobotHeadControl.isblock(true);
+    hyyRobotRightArmControl->isblock(false);
+    hyyRobotLeftArmControl->isblock(false);
+    hyyRobotBodyControl->isblock(true);
+    hyyRobotHeadControl->isblock(true);
 
     //  STEP 1 (Initialize)
-    // hyyRobotBodyControl.moveA("A0_J0", A0_VEL, zone, tool, wobj);    
-    // hyyRobotHeadControl.moveA("A1_J0", A1_VEL, zone, tool, wobj);
-    hyyRobotLeftArmControl.moveA("R0_J0", R0_VEL, zone, tool, wobj);
-    // hyyRobotRightArmControl.moveA("R1_J0", R1_VEL, zone, tool, wobj);
-    // hyyExternalDeviceControl.Gripper_fullopen();
-    // hyyExternalDeviceControl.hand_fullopen();
-    // blockhere(2, hyyRobotLeftArmControl.ask_status(), hyyRobotRightArmControl.ask_status());
+    hyyRobotBodyControl->moveA("A0_J0", A0_VEL, zone, tool, wobj);    
+    hyyRobotHeadControl->moveA("A1_J0", A1_VEL, zone, tool, wobj);
+    hyyRobotLeftArmControl->moveA("R0_J0", R0_VEL, zone, tool, wobj);
+    hyyRobotRightArmControl->moveA("R1_J0", R1_VEL, zone, tool, wobj);
+    // hyyExternalDeviceControl->Gripper_fullopen();
+    // hyyExternalDeviceControl->hand_fullopen();
+    blockhere(2, hyyRobotLeftArmControl->ask_status(), hyyRobotRightArmControl->ask_status());
 
     //  STEP 2 (Grip)
-    // hyyRobotBodyControl.moveA("A0_J1", A0_VEL, zone, tool, wobj);
-    hyyRobotLeftArmControl.moveA("R0_J2", R0_VEL, zone, tool, wobj);
-    // hyyRobotRightArmControl.moveA("R1_J2", R1_VEL, zone, tool, wobj);
-    // blockhere(2, hyyRobotLeftArmControl.ask_status(), hyyRobotRightArmControl.ask_status());
-    // hyyExternalDeviceControl.Gripper_fullclose();
-    // hyyExternalDeviceControl.hand_SetAngle(angle_grip);
+    hyyRobotBodyControl->moveA("A0_J1", A0_VEL, zone, tool, wobj);
+    hyyRobotLeftArmControl->moveA("R0_J2", R0_VEL, zone, tool, wobj);
+    hyyRobotRightArmControl->moveA("R1_J2", R1_VEL, zone, tool, wobj);
+    blockhere(2, hyyRobotLeftArmControl->ask_status(), hyyRobotRightArmControl->ask_status());
+    // hyyExternalDeviceControl->Gripper_fullclose();
+    // hyyExternalDeviceControl->hand_SetAngle(angle_grip);
  
     // collision test 
-    // hyyRobotLeftArmControl.moveA("R0_J3", R0_VEL, zone, tool, wobj);
-    // hyyRobotRightArmControl.moveA("R1_J3", R1_VEL, zone, tool, wobj);
-    // blockhere(2, hyyRobotLeftArmControl.ask_status(), hyyRobotRightArmControl.ask_status());
+    // hyyRobotLeftArmControl->moveA("R0_J3", R0_VEL, zone, tool, wobj);
+    // hyyRobotRightArmControl->moveA("R1_J3", R1_VEL, zone, tool, wobj);
+    // blockhere(2, hyyRobotLeftArmControl->ask_status(), hyyRobotRightArmControl->ask_status());
 
     //  STEP 3 (Move and Drop)
-    // hyyRobotBodyControl.moveA("A0_J0", A0_VEL, zone, tool, wobj);    
-    // hyyRobotHeadControl.moveA("A1_J1", A1_VEL, zone, tool, wobj);
-    // hyyRobotHeadControl.moveA("A1_J0", A1_VEL, zone, tool, wobj);
-    // hyyRobotBodyControl.moveA("A0_J2", A0_VEL, zone, tool, wobj);
-    // hyyRobotBodyControl.moveA("A0_J3", A0_VEL, zone, tool, wobj);
-    // hyyExternalDeviceControl.Gripper_fullopen();
-    // hyyExternalDeviceControl.hand_fullopen();
+    hyyRobotBodyControl->moveA("A0_J0", A0_VEL, zone, tool, wobj);    
+    hyyRobotHeadControl->moveA("A1_J1", A1_VEL, zone, tool, wobj);
+    hyyRobotHeadControl->moveA("A1_J0", A1_VEL, zone, tool, wobj);
+    hyyRobotBodyControl->moveA("A0_J2", A0_VEL, zone, tool, wobj);
+    hyyRobotBodyControl->moveA("A0_J3", A0_VEL, zone, tool, wobj);
+    // hyyExternalDeviceControl->Gripper_fullopen();
+    // hyyExternalDeviceControl->hand_fullopen();
 
     //  STEP 4 (Back to Initial)
-    hyyRobotLeftArmControl.moveA("R0_J0", R0_VEL, zone, tool, wobj);
-    // hyyRobotRightArmControl.moveA("R1_J0", R1_VEL, zone, tool, wobj);
-    // blockhere(2, hyyRobotLeftArmControl.ask_status(), hyyRobotRightArmControl.ask_status());
-    // hyyRobotBodyControl.moveA("A0_J2", A0_VEL, zone, tool, wobj);
-    // hyyRobotBodyControl.moveA("A0_J0", A0_VEL, zone, tool, wobj);
+    hyyRobotLeftArmControl->moveA("R0_J0", R0_VEL, zone, tool, wobj);
+    hyyRobotRightArmControl->moveA("R1_J0", R1_VEL, zone, tool, wobj);
+    blockhere(2, hyyRobotLeftArmControl->ask_status(), hyyRobotRightArmControl->ask_status());
+    hyyRobotBodyControl->moveA("A0_J2", A0_VEL, zone, tool, wobj);
+    hyyRobotBodyControl->moveA("A0_J0", A0_VEL, zone, tool, wobj);
 
     /***************************************************************************/
     /*                                                                         */
