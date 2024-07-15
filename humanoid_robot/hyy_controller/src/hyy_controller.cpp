@@ -701,24 +701,26 @@ void HyyController::robotgeneralcontrol_command_callback(const std::shared_ptr<h
 	if (start_controller)
 	{
 		if (!req->type.empty()){
-		
 			string _deviceStop = "deviceStop";
 			string _robotStop = "robotStop";
 			string _addaxisStop = "addaxisStop";
 			if(req->type == _deviceStop){
 				DeviceStopRun();
+				RCLCPP_INFO(get_node()->get_logger(), "robotcontrol: detect DeviceStopRun.");
 				res->result = 0;
 				return;
 			}else if(req->type == _robotStop){
 				for (int i = 0; i < req->robotindex.size(); i++){
 					RobotStopRun(req->robotindex.at(i));
 				}
+				RCLCPP_INFO(get_node()->get_logger(), "robotcontrol: detect RobotStopRun.");
 				res->result = 0;
 				return;
 			}else if(req->type == _addaxisStop){
 				for (int i = 0; i < req->addaxisindex.size(); i++){
 					AdditionStopRun(req->addaxisindex.at(i));
 				}
+				RCLCPP_INFO(get_node()->get_logger(), "robotcontrol: detect AdditionStopRun.");
 				res->result = 0;
 				return;
 			}else{
