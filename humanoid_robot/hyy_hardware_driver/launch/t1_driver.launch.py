@@ -124,7 +124,7 @@ def generate_launch_description():
             PathJoinSubstitution([FindExecutable(name = "xacro")]),
             " ",
             PathJoinSubstitution(
-                [FindPackageShare("h1_description"), "urdf", "t1.xacro"]
+                [FindPackageShare("multi_arm_description"), "urdf", "t1.xacro"]
             ),
             ' sim_gazebo_classic:=', sim_gazebo_classic,
             ' device_mode:=', device_mode,

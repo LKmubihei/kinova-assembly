@@ -53,7 +53,7 @@ def generate_launch_description():
     declared_arguments.append( 
         DeclareLaunchArgument(
             'sim_flag', 
-            default_value='false', 
+            default_value='true', 
             description='if true, robot run in simulation mode'
         )
     )
