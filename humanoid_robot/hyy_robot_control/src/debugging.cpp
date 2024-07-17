@@ -8,19 +8,25 @@
 using namespace std;
 
 extern std::atomic<bool> stop;
+std::shared_ptr<hyy_robot_control::HyyRobotControl> hyyRobotRightArmControl;
 std::shared_ptr<hyy_robot_control::HyyRobotControl> hyyRobotLeftArmControl;
+std::shared_ptr<hyy_robot_control::HyyRobotControl> hyyRobotBodyControl;
+std::shared_ptr<hyy_robot_control::HyyRobotControl> hyyRobotHeadControl;
+// std::shared_ptr<hyy_robot_control::HyyRobotControl> hyyExternalDeviceControl;
 
 void handle_sigint(int sig) {
-    printf("ros2 shutdown, exit 0.\n");
+    printf("\nros2 shutdown, wait seconds to exit 0.\n");
     stop.store(true);
-    std::vector<int> robotindex;
-    robotindex.push_back(0);
-    robotindex.push_back(1);
-    // hyyRobotLeftArmControl->stopDeviceRun();
-    hyyRobotLeftArmControl->stopAddaxisRun(robotindex);
-    hyyRobotLeftArmControl->stopRobotRun(robotindex);
-    rclcpp::shutdown();
-    exit(0);
+    // hyyRobotRightArmControl->stopDeviceRun();
+    hyyRobotRightArmControl->stopRobotRun();
+    hyyRobotLeftArmControl->stopRobotRun();
+    hyyRobotBodyControl->stopAddaxisRun();
+    hyyRobotHeadControl->stopAddaxisRun();
+    if (rclcpp::shutdown())
+    {
+        sleep(2);
+        exit(0);
+    }
 }
 
 void blockhere(int num_args, ...) {
@@ -60,7 +66,7 @@ int main(int argc, char **argv){
     
     /***************************************************************************/
     /*                                                                         */
-    /*   Standard application structure   Robot Initialize!!                   */
+    /*   Standard application structure   Client Initialize!!                   */
     /*                                                                         */
     /***************************************************************************/
 
@@ -69,7 +75,7 @@ int main(int argc, char **argv){
     auto node = rclcpp::Node::make_shared("hyyRobotControl");
     auto executor = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
 
-    // hyy_robot_control::HyyRobotControl hyyExternalDeviceControl(node);
+    // hyyExternalDeviceControl = std::make_shared<hyy_robot_control::HyyRobotControl>(node);
     // if (!hyyExternalDeviceControl->init("hyy_external_device_controller", 1)){
     //     RCLCPP_ERROR(node->get_logger(), "hyydebug client initialize falied");
     //     return -1;
@@ -80,17 +86,17 @@ int main(int argc, char **argv){
         RCLCPP_ERROR(node->get_logger(), "hyyRobotLeftArmControl client initialize falied");
         return -1;
     }
-    auto hyyRobotRightArmControl = std::make_shared<hyy_robot_control::HyyRobotControl>(node);
+    hyyRobotRightArmControl = std::make_shared<hyy_robot_control::HyyRobotControl>(node);
     if (!hyyRobotRightArmControl->init("hyy_right_arm_controller", 0)){
         RCLCPP_ERROR(node->get_logger(), "hyyRobotRightArmControl client initialize falied");
         return -1;
     }
-    auto hyyRobotBodyControl = std::make_shared<hyy_robot_control::HyyRobotControl>(node);
+    hyyRobotBodyControl = std::make_shared<hyy_robot_control::HyyRobotControl>(node);
     if (!hyyRobotBodyControl->init("hyy_body_controller", 0)){
         RCLCPP_ERROR(node->get_logger(), "hyyRobotBodyControl initialize falied");
         return -1;
     }
-    auto hyyRobotHeadControl = std::make_shared<hyy_robot_control::HyyRobotControl>(node);
+    hyyRobotHeadControl = std::make_shared<hyy_robot_control::HyyRobotControl>(node);
     if (!hyyRobotHeadControl->init("hyy_head_controller", 0)){
         RCLCPP_ERROR(node->get_logger(), "hyyRobotHeadControl client initialize falied");
         return -1;
@@ -101,13 +107,14 @@ int main(int argc, char **argv){
             executor->spin(); 
         }
     );
+
     sleep(3);
 
     // hyyExternalDeviceControl->Gripper_initialize();
 
     /***************************************************************************/
     /*                                                                         */
-    /*   Standard application structure   Robot movement!!                     */
+    /*   Standard application structure   Get Variables!!                      */
     /*                                                                         */
     /***************************************************************************/
 	
@@ -121,6 +128,12 @@ int main(int argc, char **argv){
     string zone = "zone0";
     string tool = "tool0";
     string wobj = "wobj0";
+
+    /***************************************************************************/
+    /*                                                                         */
+    /*   Standard application structure   Robot Movement!!                     */
+    /*                                                                         */
+    /***************************************************************************/
 
     hyyRobotRightArmControl->isblock(false);
     hyyRobotLeftArmControl->isblock(false);
@@ -167,7 +180,7 @@ int main(int argc, char **argv){
 
     /***************************************************************************/
     /*                                                                         */
-    /*   Standard application structure   Robot destroy!!                      */
+    /*   Standard application structure   Ros2 destroy!!                       */
     /*                                                                         */
     /***************************************************************************/
 

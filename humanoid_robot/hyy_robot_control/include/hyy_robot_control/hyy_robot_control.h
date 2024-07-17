@@ -260,13 +260,13 @@ public:
      * @brief 停止机器人运行，不下电，可继续执行后续命令
      * @return int 0：正常，<0:异常
      */
-    int stopRobotRun(std::vector<int> robotindex);
+    int stopRobotRun();
 
     /**
      * @brief 停止附加轴组运行，不下电，可继续执行后续命令
      * @return int 0：正常，<0:异常
      */
-    int stopAddaxisRun(std::vector<int> addaxisindex);
+    int stopAddaxisRun();
 
 private:
     std::shared_ptr<rclcpp::Node> node_;

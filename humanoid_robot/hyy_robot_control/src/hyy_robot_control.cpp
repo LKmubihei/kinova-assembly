@@ -169,7 +169,7 @@ int HyyRobotControl::stopDeviceRun(){
 
 }
 
-int HyyRobotControl::stopRobotRun(std::vector<int> robotindex_){
+int HyyRobotControl::stopRobotRun(){
 
 	if (!init_flag){
 		RCLCPP_ERROR(node_->get_logger(), "please init()");
@@ -181,7 +181,7 @@ int HyyRobotControl::stopRobotRun(std::vector<int> robotindex_){
 	}
 
 	generalControlReq->type = "robotStop";
-	generalControlReq->robotindex = robotindex_;
+	generalControlReq->robotindex.clear();
 	generalControlReq->addaxisindex.clear();
 
 	auto res = robotGeneralControlClient->async_send_request(generalControlReq);
@@ -195,7 +195,7 @@ int HyyRobotControl::stopRobotRun(std::vector<int> robotindex_){
 
 }
 
-int HyyRobotControl::stopAddaxisRun(std::vector<int> addaxisindex_){
+int HyyRobotControl::stopAddaxisRun(){
 	
 	if (!init_flag){
 		RCLCPP_ERROR(node_->get_logger(), "please init()");
@@ -208,7 +208,7 @@ int HyyRobotControl::stopAddaxisRun(std::vector<int> addaxisindex_){
 
 	generalControlReq->type = "addaxisStop";
 	generalControlReq->robotindex.clear();
-	generalControlReq->addaxisindex = addaxisindex_;
+	generalControlReq->addaxisindex.clear();
 
 	auto res = robotGeneralControlClient->async_send_request(generalControlReq);
 	if (res.wait_for(std::chrono::seconds(10)) == std::future_status::ready) {
