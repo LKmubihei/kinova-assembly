@@ -18,6 +18,7 @@
 #include "device_interface/DeviceDriver/device_interface.h"
 #include "device_interface/Move/MovePlan.h"
 #include "device_interface/Base/RobotStruct.h"
+#include "device_interface/Tool/saveData.h"
 #include "device_interface/Grip/grip_interface.h"
 
 #include "hyy_message/srv/robotmove.hpp"
@@ -110,6 +111,7 @@ namespace hyy_controller
     bool start_controller;
     bool block_flag;
     int if_additionaxis;
+    std::string subject;
 
     rclcpp::Service<hyyMoveMsg>::SharedPtr hyyMoveSrv;
     rclcpp::Service<hyyGripMsg>::SharedPtr hyyGripSrv;

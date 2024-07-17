@@ -105,7 +105,7 @@ controller_interface::CallbackReturn HyyController::on_init(){
 		return controller_interface::CallbackReturn::ERROR;
 	}
 
-    dof_ = HYYRobotBase::get_group_dof(component_name_);
+	dof_ = HYYRobotBase::get_group_dof(component_name_);
     if (dof_ != static_cast<int>(joints_.size()))
     {
 		RCLCPP_ERROR(get_node()->get_logger(), "Robot device dof(%d) != joint num(%ld).", dof_, joints_.size());
@@ -116,6 +116,8 @@ controller_interface::CallbackReturn HyyController::on_init(){
     for (int i = 0; i < dof_; i++){
         joint_speed[i] = 0.1;
     }
+
+	subject = params_.subject;
 
 	return controller_interface::CallbackReturn::SUCCESS;
 
@@ -229,7 +231,13 @@ controller_interface::return_type HyyController::update(const rclcpp::Time & tim
 	{
 		double position[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 		HYYRobotBase::GetGroupCtrlTarget(component_name_, position, NULL2);
-		for (auto index = 0ul; index < command_interfaces_.size(); ++index){
+		// std::string name = "/home/robot/Work/system/" + subject;
+		// double time_ = time.nanoseconds() / 1e9;
+		// double data[8] = {time_, position[0], position[1], position[2],
+		// 				  position[3], position[4], position[5], position[6]};
+		// int ret = HYYRobotBase::RSaveDataFast1(name.c_str(), 1, 1000, 8, data);
+		for (auto index = 0ul; index < command_interfaces_.size(); ++index)
+		{
 			command_interfaces_[index].set_value(position[index]);
 		}
 	}
@@ -704,25 +712,44 @@ void HyyController::robotgeneralcontrol_command_callback(const std::shared_ptr<h
 			string _deviceStop = "deviceStop";
 			string _robotStop = "robotStop";
 			string _addaxisStop = "addaxisStop";
-			if(req->type == _deviceStop){
-				DeviceStopRun();
+			int err = 0;
+			if (req->type == _deviceStop){
 				RCLCPP_INFO(get_node()->get_logger(), "robotcontrol: detect DeviceStopRun.");
+				DeviceStopRun();
+				RCLCPP_INFO(get_node()->get_logger(), "robotcontrol: All Devices Stop Run.");
 				res->result = 0;
 				return;
-			}else if(req->type == _robotStop){
-				for (int i = 0; i < req->robotindex.size(); i++){
-					RobotStopRun(req->robotindex.at(i));
+			}else if(req->type == _robotStop || req->type == _addaxisStop){
+				if(if_additionaxis){
+					RCLCPP_INFO(get_node()->get_logger(), "robotcontrol: detect AdditionStopRun.");
+					err = AdditionStopRun(component_index_);
+					RCLCPP_INFO(get_node()->get_logger(), "robotcontrol: AddAxisGroup %d Stop Run.", component_index_);
+					if (0 != HYYRobotBase::OpenCtrlInput(component_name_)){
+						start_controller = false;
+						RCLCPP_ERROR(get_node()->get_logger(), "OpenCtrlInput failed, err = %d, reboot driver", ERR_CACHE_CLOSED);
+					}
+					if(err == 0){
+						res->result = 0;
+					}else{
+						res->result = ERR_CACHE_CLOSED;
+					}
+					return;
+				}else{
+					err = 0;
+					RCLCPP_INFO(get_node()->get_logger(), "robotcontrol: detect RobotStopRun.");
+					err = RobotStopRun(component_index_);
+					RCLCPP_INFO(get_node()->get_logger(), "robotcontrol: Robot %d Stop Run.", component_index_);
+					if (0 != HYYRobotBase::OpenCtrlInput(component_name_)){
+						start_controller = false;
+						RCLCPP_ERROR(get_node()->get_logger(), "OpenCtrlInput failed, err = %d, reboot driver", ERR_CACHE_CLOSED);
+					}
+					if(err == 0){
+						res->result = 0;
+					}else{
+						res->result = ERR_CACHE_CLOSED;
+					}
+					return;
 				}
-				RCLCPP_INFO(get_node()->get_logger(), "robotcontrol: detect RobotStopRun.");
-				res->result = 0;
-				return;
-			}else if(req->type == _addaxisStop){
-				for (int i = 0; i < req->addaxisindex.size(); i++){
-					AdditionStopRun(req->addaxisindex.at(i));
-				}
-				RCLCPP_INFO(get_node()->get_logger(), "robotcontrol: detect AdditionStopRun.");
-				res->result = 0;
-				return;
 			}else{
 				RCLCPP_ERROR(get_node()->get_logger(), "robotcontrol: control type isn't exist.");
 				res->result = ERR_TYPE;

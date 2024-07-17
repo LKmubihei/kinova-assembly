@@ -12,5 +12,6 @@
 #define ERR_DATASPLIT -206 //!< 运动目标数据分割错误
 #define ERR_GETMOVETARGET -207 //!< 获取运动目标数据错误
 #define ERR_PERSPEEDFORMAT -208 //!< 百分比运动速度错误
+#define ERR_CACHE_CLOSED -209 //!< 缓存区未打开
 
 #endif

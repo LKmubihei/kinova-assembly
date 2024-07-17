@@ -32,7 +32,7 @@ int main(int argc, char ** argv)
 
   std::signal(SIGINT, signal_handler);
 
-  int communication_time = 0;
+  uint32_t communication_time = 0;
   int Priority = 38;
 
   std::shared_ptr<rclcpp::Executor> executor = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
@@ -75,18 +75,19 @@ int main(int argc, char ** argv)
 
       // set loop time.
       rclcpp::Duration d_time(0, communication_time);
-
+      // double time2 = d_time.nanoseconds() / 1e9;
       // loop initial time.
       rclcpp::Time curtime = cm->now();
 
       //
       struct timeval start, end;
-      // int __dtime = 0;
+      // double __dtime = 0;
+      // double time_ = 0;
+      // double time_initial = curtime.nanoseconds() / 1e9;
 
       while (rclcpp::ok() && !is_shutting_down.load())
       {
         // get loop start time.
-        gettimeofday(&start, NULL);
 
         // execute update loop.
         cm->read(curtime, d_time);
@@ -96,16 +97,19 @@ int main(int argc, char ** argv)
 
         // Loop timing.
         HYYRobotBase::userTimer(&timer);
-
-        // get loop end time.
         gettimeofday(&end, NULL);
 
-        // calculate loop timecost
+        
+        // time_ = (curtime.nanoseconds() / 1e9) - time_initial;
         // __dtime = (end.tv_sec * 1000000 + end.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec);
+        // RCLCPP_INFO(cm->get_logger(), "time: %.4fs, costtime :%.4fms, time2 :%.4fs, communication_time: %d", time_, __dtime, time2, communication_time);
+        // get loop end time.
+        gettimeofday(&start, NULL);
+
+        // calculate loop timecost
         // if (__dtime > (communication_time / 1000 * 0.8)){
         //   RCLCPP_INFO(cm->get_logger(), "Over time: loop time is %d us", 1000-__dtime);
         // }
-
       }
     }
   );

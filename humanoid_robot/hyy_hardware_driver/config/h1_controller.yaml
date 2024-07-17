@@ -102,6 +102,7 @@ hyy_left_arm_controller:
 
     component_index: 0
     if_additionaxis: 0
+    subject: leftarm
 
 hyy_right_arm_controller:
   ros__parameters:
@@ -122,6 +123,7 @@ hyy_right_arm_controller:
 
     component_index: 1
     if_additionaxis: 0
+    subject: rightarm
 
 hyy_body_controller:
   ros__parameters:
@@ -137,6 +139,7 @@ hyy_body_controller:
 
     component_index: 0
     if_additionaxis: 1
+    subject: body
 
 hyy_head_controller:
   ros__parameters:
@@ -152,6 +155,7 @@ hyy_head_controller:
 
     component_index: 1
     if_additionaxis: 1
+    subject: head
 
 hyy_external_device_controller:
   ros__parameters:

@@ -377,6 +377,11 @@ hardware_interface::CallbackReturn HyyHardwareInterface::on_deactivate(const rcl
 hardware_interface::return_type HyyHardwareInterface::read(const rclcpp::Time & time, const rclcpp::Duration & period){
 
     for (int i = 0; i < robots_num; i++){
+        // std::string name = "/home/robot/Work/system/robot" + std::to_string(robots[i]._index);
+        // double time_ = time.nanoseconds() / 1e9;
+        // double data[8] = {time_, robots[i].joint_position_command_[0], robots[i].joint_position_command_[1], robots[i].joint_position_command_[2],
+        //                   robots[i].joint_position_command_[3], robots[i].joint_position_command_[4], robots[i].joint_position_command_[5], robots[i].joint_position_command_[6]};
+        // int ret = HYYRobotBase::RSaveDataFast1(name.c_str(), 1, 1000, 8, data);
         mode = convertToEMode(robots[i].device_mode);
         if (mode == e_mode::in_Position){
             HYYRobotBase::GetGroupPosition(robots[i].component_name, &(robots[i].joint_position_state_[0]));
@@ -425,7 +430,7 @@ hardware_interface::return_type HyyHardwareInterface::read(const rclcpp::Time & 
 }
 
 hardware_interface::return_type HyyHardwareInterface::write(const rclcpp::Time & time, const rclcpp::Duration & period){
-    
+
     for (int i = 0; i < robots_num; i++){
         mode = convertToEMode(robots[i].device_mode);
         if (mode == e_mode::in_Position){
