@@ -37,8 +37,8 @@ int main(int argc, char **argv){
     vector<string> demo_movement_;
     string vel = "v100";
     string zone = "zone0";
-    string tool = "tool0";
-    string wobj = "wobj0";
+    string tool = "DEFAULT_TOOL";
+    string wobj = "DEFAULT_WOBJ";
 
 
     /*

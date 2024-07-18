@@ -20,6 +20,7 @@
 #include "device_interface/Base/RobotStruct.h"
 #include "device_interface/Tool/saveData.h"
 #include "device_interface/Grip/grip_interface.h"
+#include "device_interface/Base/RobotSystem.h"
 
 #include "hyy_message/srv/robotmove.hpp"
 #include "hyy_message/srv/robotgrip.hpp"

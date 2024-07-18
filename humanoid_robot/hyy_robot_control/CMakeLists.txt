@@ -30,7 +30,7 @@ find_package(moveit_visual_tools REQUIRED)
 #*                                                                         */
 #***************************************************************************/
 
-add_executable(${PROJECT_NAME} src/${PROJECT_NAME}.cpp src/debugging.cpp)
+add_executable(${PROJECT_NAME} src/${PROJECT_NAME}.cpp src/t1_demo.cpp)
 target_compile_features(${PROJECT_NAME} PUBLIC c_std_99 cxx_std_17)
 
 #Specifies the directory where the compiler should look for header files when compiling a given target (such as an executable or library).
@@ -75,7 +75,7 @@ target_link_libraries(
 #*                                                                         */
 #***************************************************************************/
 
-add_executable(motion_plan_demo src/motion_plan_demo.cpp)
+add_executable(motion_plan_demo src/h1_moveit_demo.cpp)
 ament_target_dependencies(
   motion_plan_demo 
   PUBLIC

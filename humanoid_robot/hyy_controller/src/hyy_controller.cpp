@@ -712,6 +712,7 @@ void HyyController::robotgeneralcontrol_command_callback(const std::shared_ptr<h
 			string _deviceStop = "deviceStop";
 			string _robotStop = "robotStop";
 			string _addaxisStop = "addaxisStop";
+			string _robotok = "robotok";
 			int err = 0;
 			if (req->type == _deviceStop){
 				RCLCPP_INFO(get_node()->get_logger(), "robotcontrol: detect DeviceStopRun.");
@@ -750,6 +751,9 @@ void HyyController::robotgeneralcontrol_command_callback(const std::shared_ptr<h
 					}
 					return;
 				}
+			}else if (req->type == _robotok){
+				int ret = robot_ok();
+				res->result = ret;
 			}else{
 				RCLCPP_ERROR(get_node()->get_logger(), "robotcontrol: control type isn't exist.");
 				res->result = ERR_TYPE;

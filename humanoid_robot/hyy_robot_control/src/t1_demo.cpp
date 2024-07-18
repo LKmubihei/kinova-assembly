@@ -118,16 +118,14 @@ int main(int argc, char **argv){
     /*                                                                         */
     /***************************************************************************/
 	
-    vector<int> angle_grip = {600, 700, 800, 900, 800, 500};
-
-    string R0_VEL = "R0_v400";
-    string R1_VEL = "R1_v400";
-    string A0_VEL = "A0_v400";
-    string A1_VEL = "A1_v400";
-
-    string zone = "zone0";
-    string tool = "tool0";
-    string wobj = "wobj0";
+    string R0_VEL = "R0_V6S";
+    string R0_VSHAKE = "R0_VSHAKE";
+    string R1_VEL = "R0_V6S";
+    string A0_VEL = "A0_PERCENT1";
+    string A1_VEL = "A1_PERCENT1";
+    string zone = "DEFAULT_ZONE";
+    string tool = "DEFAULT_TOOL";
+    string wobj = "DEFAULT_WOBJ";
 
     /***************************************************************************/
     /*                                                                         */
@@ -140,43 +138,29 @@ int main(int argc, char **argv){
     hyyRobotBodyControl->isblock(true);
     hyyRobotHeadControl->isblock(true);
 
-    //  STEP 1 (Initialize)
-    hyyRobotBodyControl->moveA("A0_J0", A0_VEL, zone, tool, wobj);    
-    hyyRobotHeadControl->moveA("A1_J0", A1_VEL, zone, tool, wobj);
-    hyyRobotLeftArmControl->moveA("R0_J0", R0_VEL, zone, tool, wobj);
-    hyyRobotRightArmControl->moveA("R1_J0", R1_VEL, zone, tool, wobj);
-    // hyyExternalDeviceControl->Gripper_fullopen();
-    // hyyExternalDeviceControl->hand_fullopen();
+    //  STEP 1 (RESET)
+    hyyRobotBodyControl->moveA("A0_T1_INITIAL", A0_VEL, zone, tool, wobj);    
+    hyyRobotLeftArmControl->moveA("R1_T1_INITIAL", R0_VEL, zone, tool, wobj);
+    hyyRobotRightArmControl->moveA("R0_T1_INITIAL", R1_VEL, zone, tool, wobj);
     blockhere(2, hyyRobotLeftArmControl->ask_status(), hyyRobotRightArmControl->ask_status());
 
-    //  STEP 2 (Grip)
-    hyyRobotBodyControl->moveA("A0_J1", A0_VEL, zone, tool, wobj);
-    hyyRobotLeftArmControl->moveA("R0_J2", R0_VEL, zone, tool, wobj);
-    hyyRobotRightArmControl->moveA("R1_J2", R1_VEL, zone, tool, wobj);
-    blockhere(2, hyyRobotLeftArmControl->ask_status(), hyyRobotRightArmControl->ask_status());
-    // hyyExternalDeviceControl->Gripper_fullclose();
-    // hyyExternalDeviceControl->hand_SetAngle(angle_grip);
- 
-    // collision test 
-    // hyyRobotLeftArmControl->moveA("R0_J3", R0_VEL, zone, tool, wobj);
-    // hyyRobotRightArmControl->moveA("R1_J3", R1_VEL, zone, tool, wobj);
-    // blockhere(2, hyyRobotLeftArmControl->ask_status(), hyyRobotRightArmControl->ask_status());
+    //  STEP 2 (SHAKE HAND INITIAL POSITION)
+    hyyRobotRightArmControl->isblock(true);
+    hyyRobotBodyControl->moveA("A0_T1_SHAKE", A0_VEL, zone, tool, wobj);
+    hyyRobotRightArmControl->moveA("R0_T1_SHAKE_INITIAL", R1_VEL, zone, tool, wobj);
 
-    //  STEP 3 (Move and Drop)
-    hyyRobotBodyControl->moveA("A0_J0", A0_VEL, zone, tool, wobj);    
-    hyyRobotHeadControl->moveA("A1_J1", A1_VEL, zone, tool, wobj);
-    hyyRobotHeadControl->moveA("A1_J0", A1_VEL, zone, tool, wobj);
-    hyyRobotBodyControl->moveA("A0_J2", A0_VEL, zone, tool, wobj);
-    hyyRobotBodyControl->moveA("A0_J3", A0_VEL, zone, tool, wobj);
-    // hyyExternalDeviceControl->Gripper_fullopen();
-    // hyyExternalDeviceControl->hand_fullopen();
-
-    //  STEP 4 (Back to Initial)
-    hyyRobotLeftArmControl->moveA("R0_J0", R0_VEL, zone, tool, wobj);
-    hyyRobotRightArmControl->moveA("R1_J0", R1_VEL, zone, tool, wobj);
-    blockhere(2, hyyRobotLeftArmControl->ask_status(), hyyRobotRightArmControl->ask_status());
-    hyyRobotBodyControl->moveA("A0_J2", A0_VEL, zone, tool, wobj);
-    hyyRobotBodyControl->moveA("A0_J0", A0_VEL, zone, tool, wobj);
+    //  STEP 4 (SHAKE HAND LOOP)
+    int count = 0;
+    while (hyyRobotRightArmControl->robot_ok())
+    {
+        usleep(250000);
+        hyyRobotRightArmControl->moveA("R0_T1_SHAKE_FINAL", R0_VSHAKE, zone, tool, wobj);
+        usleep(250000);
+        hyyRobotRightArmControl->moveA("R0_T1_SHAKE_INITIAL", R0_VSHAKE, zone, tool, wobj);
+        if (count++ >= 5){
+            break;
+        }
+    }
 
     /***************************************************************************/
     /*                                                                         */

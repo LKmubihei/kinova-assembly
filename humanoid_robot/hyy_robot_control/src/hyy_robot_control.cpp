@@ -221,6 +221,32 @@ int HyyRobotControl::stopAddaxisRun(){
 
 }
 
+int HyyRobotControl::robot_ok(){
+	
+	if (!init_flag){
+		RCLCPP_ERROR(node_->get_logger(), "please init()");
+		return -1;
+	}
+	if (!robotGeneralControlClient->wait_for_service(std::chrono::seconds(10))) {
+		RCLCPP_ERROR(node_->get_logger(), "Service %s is not available.", robotGeneralControlClient->get_service_name());
+		return -1;
+	}
+
+	generalControlReq->type = "robotok";
+	generalControlReq->robotindex.clear();
+	generalControlReq->addaxisindex.clear();
+
+	auto res = robotGeneralControlClient->async_send_request(generalControlReq);
+	if (res.wait_for(std::chrono::seconds(10)) == std::future_status::ready) {
+		// RCLCPP_INFO_STREAM(node_->get_logger(), robotGeneralControlClient->get_service_name()<< " response: " << res.get()->result);
+		return res.get()->result;
+	} else {
+		RCLCPP_ERROR_STREAM(node_->get_logger(), "robotok: failed to call service " << robotGeneralControlClient->get_service_name());
+		return -1;
+	}
+
+}
+
 int HyyRobotControl::moveA(const std::string& target,const std::string& velocity,const std::string& zone,const std::string& tool,const std::string& wobj)
 {
 	if (!init_flag){

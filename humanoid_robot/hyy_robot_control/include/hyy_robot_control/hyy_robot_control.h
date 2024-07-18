@@ -76,7 +76,7 @@ public:
     * @param wobj 坐标系
     * @return int 0：正常，<0:异常，7：机器人被强制停止，其他：机器人在运行
     ***********************/
-    int moveA(const std::string &target, const std::string &velocity = "v100", const std::string &zone = "zone0", const std::string &tool = "tool0", const std::string &wobj = "wobj0");
+    int moveA(const std::string &target, const std::string &velocity = "DEFAULT_SPEED", const std::string &zone = "DEFAULT_ZONE", const std::string &tool = "DEFAULT_TOOL", const std::string &wobj = "DEFAULT_WOBJ");
 
     /***********************
     * \brief 机械臂或附加轴组做绝对关节位置运动指令（程序自定目标）
@@ -87,7 +87,7 @@ public:
     * @param wobj 坐标系
     * @return int 0：正常，<0:异常，7：机器人被强制停止，其他：机器人在运行
     ***********************/
-    int moveA(std::vector<double> &target, const std::string &velocity = "v100", const std::string &zone = "zone0", const std::string &tool = "tool0", const std::string &wobj = "wobj0");
+    int moveA(std::vector<double> &target, const std::string &velocity = "DEFAULT_SPEED", const std::string &zone = "DEFAULT_ZONE", const std::string &tool = "DEFAULT_TOOL", const std::string &wobj = "DEFAULT_WOBJ");
     
     /***********************
     * \brief 机械臂做绝对笛卡尔位置运动指令（控制器中的目标）（关节层面规划）
@@ -98,7 +98,7 @@ public:
     * @param wobj 坐标系
     * @return int 0：正常，<0:异常，7：机器人被强制停止，其他：机器人在运行
     ***********************/
-    int moveJ(const std::string &target, const std::string &velocity = "v100", const std::string &zone = "zone0", const std::string &tool = "tool0", const std::string &wobj = "wobj0");
+    int moveJ(const std::string &target, const std::string &velocity = "DEFAULT_SPEED", const std::string &zone = "DEFAULT_ZONE", const std::string &tool = "DEFAULT_TOOL", const std::string &wobj = "DEFAULT_WOBJ");
 
     /***********************
     * \brief 机械臂做绝对笛卡尔位置运动指令（程序自定目标）（关节层面规划）
@@ -109,7 +109,7 @@ public:
     * @param wobj 坐标系
     * @return int 0：正常，<0:异常，7：机器人被强制停止，其他：机器人在运行
     ***********************/
-    int moveJ(std::vector<double> &target, const std::string &velocity = "v100", const std::string &zone = "zone0", const std::string &tool = "tool0", const std::string &wobj = "wobj0");
+    int moveJ(std::vector<double> &target, const std::string &velocity = "DEFAULT_SPEED", const std::string &zone = "DEFAULT_ZONE", const std::string &tool = "DEFAULT_TOOL", const std::string &wobj = "DEFAULT_WOBJ");
     
     /***********************
     * \brief 机械臂做绝对笛卡尔位置运动指令（控制器中的目标）（笛卡尔层面规划）
@@ -120,7 +120,7 @@ public:
     * @param wobj 坐标系
     * @return int 0：正常，<0:异常，7：机器人被强制停止，其他：机器人在运行
     ***********************/
-    int moveL(const std::string &target, const std::string &velocity = "v100", const std::string &zone = "zone0", const std::string &tool = "tool0", const std::string &wobj = "wobj0");
+    int moveL(const std::string &target, const std::string &velocity = "DEFAULT_SPEED", const std::string &zone = "DEFAULT_ZONE", const std::string &tool = "DEFAULT_TOOL", const std::string &wobj = "DEFAULT_WOBJ");
 
     /***********************
     * \brief 机械臂做绝对笛卡尔位置运动指令（程序自定目标）（笛卡尔层面规划）
@@ -131,7 +131,7 @@ public:
     * @param wobj 坐标系
     * @return int 0：正常，<0:异常，7：机器人被强制停止，其他：机器人在运行
     ***********************/
-    int moveL(std::vector<double> &target, const std::string &velocity = "v100", const std::string &zone = "zone0", const std::string &tool = "tool0", const std::string &wobj = "wobj0");
+    int moveL(std::vector<double> &target, const std::string &velocity = "DEFAULT_SPEED", const std::string &zone = "DEFAULT_ZONE", const std::string &tool = "DEFAULT_TOOL", const std::string &wobj = "DEFAULT_WOBJ");
     
     /***********************
     * \brief 机械臂做圆弧运动指令（控制器中的目标）
@@ -143,7 +143,7 @@ public:
     * @param wobj 坐标系
     * @return int 0：正常，<0:异常，7：机器人被强制停止，其他：机器人在运行
     ***********************/
-    int moveC(const std::string &target, const std::string &target_mid, const std::string &velocity = "v100", const std::string &zone = "zone0", const std::string &tool = "tool0", const std::string &wobj = "wobj0");
+    int moveC(const std::string &target, const std::string &target_mid, const std::string &velocity = "DEFAULT_SPEED", const std::string &zone = "DEFAULT_ZONE", const std::string &tool = "DEFAULT_TOOL", const std::string &wobj = "DEFAULT_WOBJ");
     
     /***********************
     * \brief 机械臂做圆弧运动指令（程序自定目标）
@@ -155,7 +155,7 @@ public:
     * @param wobj 坐标系
     * @return int 0：正常，<0:异常，7：机器人被强制停止，其他：机器人在运行
     ***********************/
-    int moveC(std::vector<double> &target, std::vector<double> &target_mid, const std::string &velocity = "v100", const std::string &zone = "zone0", const std::string &tool = "tool0", const std::string &wobj = "wobj0");
+    int moveC(std::vector<double> &target, std::vector<double> &target_mid, const std::string &velocity = "DEFAULT_SPEED", const std::string &zone = "DEFAULT_ZONE", const std::string &tool = "DEFAULT_TOOL", const std::string &wobj = "DEFAULT_WOBJ");
 	
     /**
      * @brief 获取数字量输入
@@ -197,7 +197,7 @@ public:
      * @param wobj 工作坐标系
      * @return 当前笛卡尔位姿
      */
-    std::vector<double> get_cartesian_current(const std::string &tool = "tool0", const std::string &wobj = "wobj0");
+    std::vector<double> get_cartesian_current(const std::string &tool = "DEFAULT_TOOL", const std::string &wobj = "DEFAULT_WOBJ");
     
     /**
      * @brief 设置控制器运行模式
@@ -267,6 +267,12 @@ public:
      * @return int 0：正常，<0:异常
      */
     int stopAddaxisRun();
+
+    /**
+     * @brief 机器人状态是否正常
+     * @return int 1:状态正常; 0:状态错误或强制退出
+     */
+    int robot_ok();
 
 private:
     std::shared_ptr<rclcpp::Node> node_;
