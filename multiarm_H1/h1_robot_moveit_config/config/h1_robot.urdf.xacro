@@ -13,7 +13,6 @@
     <xacro:include filename="$(find h1_description)/urdf/gazebo_config.xacro"/>
     <xacro:gazebo_config sim_gazebo_classic="$(arg sim_gazebo_classic)"/>
 
-
     <xacro:h1_robot_ros2_control name="FakeSystem" initial_positions_file="$(arg initial_positions_file)"/>
 
 </robot>

@@ -1,0 +1,8 @@
+version: # 版本号
+  major: 12
+  minor: 0
+  build: 0
+serial: xmate # 机器人序列号（用于机器人与配置文件匹配）
+description: 初始全局配置 # 该文件的用途描述
+data_path: /home/robot/Work/system/robot_config/app/ # 数据存放目录
+simulation: false  # 是否开启仿真仿真，true仿真，false真机
