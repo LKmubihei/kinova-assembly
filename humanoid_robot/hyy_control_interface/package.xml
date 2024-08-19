@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>hyy_robot_control</name>
+  <name>hyy_control_interface</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
-  <maintainer email="robotck@todo.todo">robotck</maintainer>
+  <maintainer email="17746801531@163.com">robotck</maintainer>
   <license>TODO: License declaration</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>

@@ -27,7 +27,7 @@
 
 extern std::atomic<bool> stop;
 
-namespace hyy_robot_control
+namespace hyy_control_interface
 {
     
 #define R_PI 3.1415926535898
@@ -58,14 +58,14 @@ class HyyRobotControl{
 public:
     HyyRobotControl(std::shared_ptr<rclcpp::Node> node);
     HyyRobotControl();
+    ~HyyRobotControl();
 
     /***********************
     * \brief 用户接口初始化
     * \param controller_name 控制器名
-    * \param type 控制器类型（0-机械臂和轴组控制器，1-外部设备控制器）
     * \return 成功返回 true ,其他返回 false
     ***********************/
-    bool init(std::string controller_name, int type);
+    bool init(std::string controller_name);
 
     /***********************
     * \brief 机械臂或附加轴组做绝对关节位置运动指令（控制器中的目标）
@@ -289,13 +289,20 @@ private:
     std::shared_ptr<hyyGeneralControlMsg::Request> generalControlReq;
     bool init_flag, block_flag;
 
-    int wait_move_finish(rclcpp::Client<hyy_robot_control::hyyMoveMsg>::FutureAndRequestId &resp);
+    int wait_move_finish(rclcpp::Client<hyyMoveMsg>::FutureAndRequestId &resp);
     void rpy2tr(double *rpy, double R[3][3], int flag);
     void tr2rpy(double R[3][3], double* rpy, int flag);
 	void Rmulti(double R0[3][3],double R1[3][3],double Rres[3][3]);
 	void RMultVec(double(*R)[3], double* v, double * vres);
+};
 
+class HyyExternalDevicesControl
+{
+    
 public:
+    HyyExternalDevicesControl(std::shared_ptr<rclcpp::Node> node);
+    HyyExternalDevicesControl();
+    ~HyyExternalDevicesControl();
 
     /***********************
     * \brief 设置灵巧手角度
@@ -405,45 +412,14 @@ public:
     ***********************/
     std::vector<int> hand_GetTemp(const int hand_id = 1);
 
-private:
-    std::string SetangleSrvName_, SetposSrvName_, SetspeedSrvName_, SetforceSrvName_;
-    std::string GetangleactSrvName_, GetanglesetSrvName_, GetposactSrvName_, GetpossetSrvName_;
-    std::string GetspeedsetSrvName_, GetforceactSrvName_, GetforcesetSrvName_, GetcurrentactSrvName_;
-    std::string GeterrorSrvName_, GettempSrvName_;
-
-    rclcpp::Client<hyySetangleMsg>::SharedPtr hyySetangleClient;
-    rclcpp::Client<hyySetposMsg>::SharedPtr hyySetposClient;
-    rclcpp::Client<hyySetspeedMsg>::SharedPtr hyySetspeedClient;
-    rclcpp::Client<hyySetforceMsg>::SharedPtr hyySetforceClient;
-    rclcpp::Client<hyyGetangleactMsg>::SharedPtr hyyGetangleactClient;
-    rclcpp::Client<hyyGetanglesetMsg>::SharedPtr hyyGetanglesetClient;
-    rclcpp::Client<hyyGetposactMsg>::SharedPtr hyyGetposactClient;
-    rclcpp::Client<hyyGetpossetMsg>::SharedPtr hyyGetpossetClient;
-    rclcpp::Client<hyyGetspeedsetMsg>::SharedPtr hyyGetspeedsetClient;
-    rclcpp::Client<hyyGetforceactMsg>::SharedPtr hyyGetforceactClient;
-    rclcpp::Client<hyyGetforcesetMsg>::SharedPtr hyyGetforcesetClient;
-    rclcpp::Client<hyyGetcurrentactMsg>::SharedPtr hyyGetcurrentactClient;
-    rclcpp::Client<hyyGeterrorMsg>::SharedPtr hyyGeterrorClient;
-    rclcpp::Client<hyyGettempMsg>::SharedPtr hyyGettempClient;
-
-    std::shared_ptr<hyySetangleMsg::Request> SetangleReq;
-    std::shared_ptr<hyySetposMsg::Request> SetposReq;
-    std::shared_ptr<hyySetspeedMsg::Request> SetspeedReq;
-    std::shared_ptr<hyySetforceMsg::Request> SetforceReq;
-    std::shared_ptr<hyyGetangleactMsg::Request> GetangleactReq;
-    std::shared_ptr<hyyGetanglesetMsg::Request> GetanglesetReq;
-    std::shared_ptr<hyyGetposactMsg::Request> GetposactReq;
-    std::shared_ptr<hyyGetpossetMsg::Request> GetpossetReq;
-    std::shared_ptr<hyyGetspeedsetMsg::Request> GetspeedsetReq;
-    std::shared_ptr<hyyGetforceactMsg::Request> GetforceactReq;
-    std::shared_ptr<hyyGetforcesetMsg::Request> GetforcesetReq;
-    std::shared_ptr<hyyGetcurrentactMsg::Request> GetcurrentactReq;
-    std::shared_ptr<hyyGeterrorMsg::Request> GeterrorReq;
-    std::shared_ptr<hyyGettempMsg::Request> GettempReq;
-
-    std::vector<int> empty;
-
 public:
+
+    /***********************
+    * \brief 用户接口初始化
+    * \param controller_name 控制器名
+    * \return 成功返回 true ,其他返回 false
+    ***********************/
+    bool init(std::string controller_name);
 
     /***********************
     * \brief 设置夹爪位置（不运动）
@@ -523,6 +499,47 @@ public:
 
 private:
 
+    std::shared_ptr<rclcpp::Node> node_;
+
+    std::string SetangleSrvName_, SetposSrvName_, SetspeedSrvName_, SetforceSrvName_;
+    std::string GetangleactSrvName_, GetanglesetSrvName_, GetposactSrvName_, GetpossetSrvName_;
+    std::string GetspeedsetSrvName_, GetforceactSrvName_, GetforcesetSrvName_, GetcurrentactSrvName_;
+    std::string GeterrorSrvName_, GettempSrvName_;
+
+    rclcpp::Client<hyySetangleMsg>::SharedPtr hyySetangleClient;
+    rclcpp::Client<hyySetposMsg>::SharedPtr hyySetposClient;
+    rclcpp::Client<hyySetspeedMsg>::SharedPtr hyySetspeedClient;
+    rclcpp::Client<hyySetforceMsg>::SharedPtr hyySetforceClient;
+    rclcpp::Client<hyyGetangleactMsg>::SharedPtr hyyGetangleactClient;
+    rclcpp::Client<hyyGetanglesetMsg>::SharedPtr hyyGetanglesetClient;
+    rclcpp::Client<hyyGetposactMsg>::SharedPtr hyyGetposactClient;
+    rclcpp::Client<hyyGetpossetMsg>::SharedPtr hyyGetpossetClient;
+    rclcpp::Client<hyyGetspeedsetMsg>::SharedPtr hyyGetspeedsetClient;
+    rclcpp::Client<hyyGetforceactMsg>::SharedPtr hyyGetforceactClient;
+    rclcpp::Client<hyyGetforcesetMsg>::SharedPtr hyyGetforcesetClient;
+    rclcpp::Client<hyyGetcurrentactMsg>::SharedPtr hyyGetcurrentactClient;
+    rclcpp::Client<hyyGeterrorMsg>::SharedPtr hyyGeterrorClient;
+    rclcpp::Client<hyyGettempMsg>::SharedPtr hyyGettempClient;
+
+    std::shared_ptr<hyySetangleMsg::Request> SetangleReq;
+    std::shared_ptr<hyySetposMsg::Request> SetposReq;
+    std::shared_ptr<hyySetspeedMsg::Request> SetspeedReq;
+    std::shared_ptr<hyySetforceMsg::Request> SetforceReq;
+    std::shared_ptr<hyyGetangleactMsg::Request> GetangleactReq;
+    std::shared_ptr<hyyGetanglesetMsg::Request> GetanglesetReq;
+    std::shared_ptr<hyyGetposactMsg::Request> GetposactReq;
+    std::shared_ptr<hyyGetpossetMsg::Request> GetpossetReq;
+    std::shared_ptr<hyyGetspeedsetMsg::Request> GetspeedsetReq;
+    std::shared_ptr<hyyGetforceactMsg::Request> GetforceactReq;
+    std::shared_ptr<hyyGetforcesetMsg::Request> GetforcesetReq;
+    std::shared_ptr<hyyGetcurrentactMsg::Request> GetcurrentactReq;
+    std::shared_ptr<hyyGeterrorMsg::Request> GeterrorReq;
+    std::shared_ptr<hyyGettempMsg::Request> GettempReq;
+
+    bool init_flag;
+
+private:
+
     std::string SetGripPosSrvName_;
     std::string SetGripSpeedSrvName_;
     std::string SetGripForceSrvName_;
@@ -551,6 +568,7 @@ private:
     std::shared_ptr<hyyGripMsg::Request> GetGripPosReq;
 
 };
+
 
 } // namespace hyy_robot_control
 

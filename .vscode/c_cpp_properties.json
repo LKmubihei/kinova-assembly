@@ -1,0 +1,38 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/robotck/ros2_ws/install/xmate_hardware_interface/include/**",
+        "/home/robotck/ros2_ws/install/single_arm_hardware_interface/include/**",
+        "/home/robotck/ros2_ws/install/hyy_external_controller/include/**",
+        "/home/robotck/ros2_ws/install/hyy_controller/include/**",
+        "/home/robotck/ros2_ws/install/hyy_message/include/**",
+        "/home/robotck/ros2_ws/install/hyy_hardware_interface/include/**",
+        "/home/robotck/Demo_ws/install/ros2_grasping/include/**",
+        "/home/robotck/Demo_ws/install/ros2_data/include/**",
+        "/home/robotck/learn_ws/install/polygon_plugins/include/**",
+        "/home/robotck/learn_ws/install/polygon_base/include/**",
+        "/home/robotck/learn_ws/install/my_interface/include/**",
+        "/home/robotck/learn_ws/install/more_interfaces/include/**",
+        "/opt/ros/humble/include/**",
+        "/home/robotck/ros2_ws/src/hyyRossPackages/external_device/hyy_external_controller/include/**",
+        "/home/robotck/ros2_ws/src/hyyRossPackages/humanoid_robot/hyy_control_interface/include/**",
+        "/home/robotck/ros2_ws/src/hyyRossPackages/humanoid_robot/hyy_controller/include/**",
+        "/home/robotck/ros2_ws/src/hyyRossPackages/humanoid_robot/hyy_hardware_interface/include/**",
+        "/home/robotck/ros2_ws/src/hyyRossPackages/singleArmUniversal/single_arm_hardware_interface/include/**",
+        "/home/robotck/ros2_ws/src/hyyRossPackages/xmate/xmate_hardware_interface/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}

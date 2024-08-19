@@ -1,8 +1,8 @@
-#include "hyy_robot_control/hyy_robot_control.h"
+#include "hyy_control_interface/hyy_control_interface.h"
 
 std::atomic<bool> stop(false);
 
-namespace hyy_robot_control{
+namespace hyy_control_interface{
 
 HyyRobotControl::HyyRobotControl(std::shared_ptr<rclcpp::Node> node) :
 init_flag(false),
@@ -15,127 +15,37 @@ block_flag(true)
 	gripReq = std::make_shared<hyyGripMsg::Request>();
 	generalControlReq = std::make_shared<hyyGeneralControlMsg::Request>();
 
-	SetangleReq = std::make_shared<hyySetangleMsg::Request>();
-    SetposReq = std::make_shared<hyySetposMsg::Request>();
-    SetspeedReq = std::make_shared<hyySetspeedMsg::Request>();
-    SetforceReq = std::make_shared<hyySetforceMsg::Request>();
-    GetangleactReq = std::make_shared<hyyGetangleactMsg::Request>();
-    GetanglesetReq = std::make_shared<hyyGetanglesetMsg::Request>();
-    GetposactReq = std::make_shared<hyyGetposactMsg::Request>();
-    GetpossetReq = std::make_shared<hyyGetpossetMsg::Request>();
-    GetspeedsetReq = std::make_shared<hyyGetspeedsetMsg::Request>();
-    GetforceactReq = std::make_shared<hyyGetforceactMsg::Request>();
-    GetforcesetReq = std::make_shared<hyyGetforcesetMsg::Request>();
-    GetcurrentactReq = std::make_shared<hyyGetcurrentactMsg::Request>();
-    GeterrorReq = std::make_shared<hyyGeterrorMsg::Request>();
-    GettempReq = std::make_shared<hyyGettempMsg::Request>();
-	empty.resize(6);
-
-    SetGripPosReq = std::make_shared<hyyGripMsg::Request>();
-    SetGripSpeedReq = std::make_shared<hyyGripMsg::Request>();
-    SetGripForceReq = std::make_shared<hyyGripMsg::Request>();
-    GripMoveReq = std::make_shared<hyyGripMsg::Request>();
-    ActivateGripReq = std::make_shared<hyyGripMsg::Request>();
-    DeactivateGripReq = std::make_shared<hyyGripMsg::Request>();
-    GetGripStatusReq = std::make_shared<hyyGripMsg::Request>();
-    GetGripPosReq = std::make_shared<hyyGripMsg::Request>();
 }
 
 HyyRobotControl::HyyRobotControl(){}
 
-bool HyyRobotControl::init(std::string controller_name, int type)
+HyyRobotControl::~HyyRobotControl(){}
+
+bool HyyRobotControl::init(std::string controller_name)
 {
 	RCLCPP_INFO(node_->get_logger(), "Preparing all service clients, please wait.");
-    if (type == 1) {
+    
+	MoveSrvName_ = "/" + controller_name + "/hyyRobotMoveSrv";
+	IoSrvName_ = "/" + controller_name + "/hyyRobotIoSrv";
+	MoveDataSrvName_ = "/" + controller_name + "/hyyRobotMoveDataSrv";
+	GripSrvName_ = "/" + controller_name + "/hyyRobotGripSrv";
+	GeneralControlSrvName_ = "/" + controller_name + "/hyyRobotGeneralControlSrv";
 
-		SetangleSrvName_ = "/" + controller_name + "/Setangle";
-		SetposSrvName_ = "/" + controller_name + "/Setpos";
-		SetspeedSrvName_ = "/" + controller_name + "/Setspeed";
-		SetforceSrvName_ = "/" + controller_name + "/Setforce";
-		GetangleactSrvName_ = "/" + controller_name + "/Getangleact";
-		GetanglesetSrvName_ = "/" + controller_name + "/Getangleset";
-		GetposactSrvName_ = "/" + controller_name + "/Getposact";
-		GetpossetSrvName_ = "/" + controller_name + "/Getposset";
-		GetspeedsetSrvName_ = "/" + controller_name + "/Getspeedset";
-		GetforceactSrvName_ = "/" + controller_name + "/Getforceact";
-		GetforcesetSrvName_ = "/" + controller_name + "/Getforceset";
-		GetcurrentactSrvName_ = "/" + controller_name + "/Getcurrentact";
-		GeterrorSrvName_ = "/" + controller_name + "/Geterror";
-		GettempSrvName_ = "/" + controller_name + "/Gettemp";
+	robotMoveClient = node_->create_client<hyyMoveMsg>(MoveSrvName_);
+	robotIoClient = node_->create_client<hyyIoMsg>(IoSrvName_);
+	robotMoveDataClient = node_->create_client<hyyMoveDataMsg>(MoveDataSrvName_);
+	robotGripClient = node_->create_client<hyyGripMsg>(GripSrvName_);
+	robotGeneralControlClient = node_->create_client<hyyGeneralControlMsg>(GeneralControlSrvName_);
 
-		hyySetangleClient = node_->create_client<hyySetangleMsg>(SetangleSrvName_);
-		hyySetposClient = node_->create_client<hyySetposMsg>(SetposSrvName_);
-		hyySetspeedClient = node_->create_client<hyySetspeedMsg>(SetspeedSrvName_);
-		hyySetforceClient = node_->create_client<hyySetforceMsg>(SetforceSrvName_);
-		hyyGetangleactClient = node_->create_client<hyyGetangleactMsg>(GetangleactSrvName_);
-		hyyGetanglesetClient = node_->create_client<hyyGetanglesetMsg>(GetanglesetSrvName_);
-		hyyGetposactClient = node_->create_client<hyyGetposactMsg>(GetposactSrvName_);
-		hyyGetpossetClient = node_->create_client<hyyGetpossetMsg>(GetpossetSrvName_);
-		hyyGetspeedsetClient = node_->create_client<hyyGetspeedsetMsg>(GetspeedsetSrvName_);
-		hyyGetforceactClient = node_->create_client<hyyGetforceactMsg>(GetforceactSrvName_);
-		hyyGetforcesetClient = node_->create_client<hyyGetforcesetMsg>(GetforcesetSrvName_);
-		hyyGetcurrentactClient = node_->create_client<hyyGetcurrentactMsg>(GetcurrentactSrvName_);
-		hyyGeterrorClient = node_->create_client<hyyGeterrorMsg>(GeterrorSrvName_);
-		hyyGettempClient = node_->create_client<hyyGettempMsg>(GettempSrvName_);
-		
-		SetGripPosSrvName_ = "/" + controller_name + "/ControlGripper";
-		SetGripSpeedSrvName_ = "/" + controller_name + "/ControlGripper";
-		SetGripForceSrvName_ = "/" + controller_name + "/ControlGripper";
-		GripMoveSrvName_ = "/" + controller_name + "/ControlGripper";
-		ActivateGripSrvName_ = "/" + controller_name + "/ControlGripper";
-		DeactivateGripSrvName_ = "/" + controller_name + "/ControlGripper";
-		GetGripStatusSrvName_ = "/" + controller_name + "/ControlGripper";
-		GetGripPosSrvName_ = "/" + controller_name + "/ControlGripper";
+	std::vector<rclcpp::ClientBase::SharedPtr> clients = {robotMoveClient, robotIoClient, robotMoveDataClient, robotGripClient, robotGeneralControlClient};
 
-		hyySetGripPosClient = node_->create_client<hyyGripMsg>(SetGripPosSrvName_);
-		hyySetGripSpeedClient = node_->create_client<hyyGripMsg>(SetGripSpeedSrvName_);
-		hyySetGripForceClient = node_->create_client<hyyGripMsg>(SetGripForceSrvName_);
-		hyyGripMoveClient = node_->create_client<hyyGripMsg>(GripMoveSrvName_);
-		hyyActivateGripClient = node_->create_client<hyyGripMsg>(ActivateGripSrvName_);
-		hyyDeactivateGripClient = node_->create_client<hyyGripMsg>(DeactivateGripSrvName_);
-		hyyGetGripStatusClient = node_->create_client<hyyGripMsg>(GetGripStatusSrvName_);
-		hyyGetGripPosClient = node_->create_client<hyyGripMsg>(GetGripPosSrvName_);
-
-		std::vector<rclcpp::ClientBase::SharedPtr> clients = {
-			hyySetangleClient, hyySetposClient, hyySetspeedClient, hyySetforceClient,
-			hyyGetangleactClient, hyyGetanglesetClient, hyyGetposactClient, hyyGetpossetClient,
-			hyyGetspeedsetClient, hyyGetforceactClient, hyyGetforcesetClient, hyyGetcurrentactClient,
-			hyyGeterrorClient, hyyGettempClient, hyySetGripPosClient ,hyySetGripSpeedClient, 
-			hyySetGripForceClient, hyyGripMoveClient, hyyActivateGripClient, hyyDeactivateGripClient,
-			hyyGetGripStatusClient, hyyGetGripPosClient
-		};
-
-		for (const auto &client : clients){
-			if (!client) {
-				RCLCPP_ERROR(node_->get_logger(), "Failed to create one of the service clients.");
-				return false;
-			}
+	for (const auto &client : clients){
+		if (!client) {
+			RCLCPP_ERROR(node_->get_logger(), "Failed to create one of the service clients.");
+			return false;
 		}
-
-	} else {
-
-		MoveSrvName_ = "/" + controller_name + "/hyyRobotMoveSrv";
-		IoSrvName_ = "/" + controller_name + "/hyyRobotIoSrv";
-		MoveDataSrvName_ = "/" + controller_name + "/hyyRobotMoveDataSrv";
-		GripSrvName_ = "/" + controller_name + "/hyyRobotGripSrv";
-		GeneralControlSrvName_ = "/" + controller_name + "/hyyRobotGeneralControlSrv";
-
-		robotMoveClient = node_->create_client<hyyMoveMsg>(MoveSrvName_);
-		robotIoClient = node_->create_client<hyyIoMsg>(IoSrvName_);
-		robotMoveDataClient = node_->create_client<hyyMoveDataMsg>(MoveDataSrvName_);
-		robotGripClient = node_->create_client<hyyGripMsg>(GripSrvName_);
-		robotGeneralControlClient = node_->create_client<hyyGeneralControlMsg>(GeneralControlSrvName_);
-
-		std::vector<rclcpp::ClientBase::SharedPtr> clients = {robotMoveClient, robotIoClient, robotMoveDataClient, robotGripClient, robotGeneralControlClient};
-
-		for (const auto &client : clients){
-			if (!client) {
-				RCLCPP_ERROR(node_->get_logger(), "Failed to create one of the service clients.");
-				return false;
-			}
-		}
-
 	}
+
 	sleep(1);
 	RCLCPP_INFO(node_->get_logger(), "All service clients created successfully.");
 
@@ -526,7 +436,7 @@ int HyyRobotControl::ask_status(){
 	return state;
 }
 
-int HyyRobotControl::wait_move_finish(rclcpp::Client<hyy_robot_control::hyyMoveMsg>::FutureAndRequestId &resp)
+int HyyRobotControl::wait_move_finish(rclcpp::Client<hyyMoveMsg>::FutureAndRequestId &resp)
 {
     if (block_flag) {
         moveReq->type = "move_state";
@@ -1198,7 +1108,118 @@ void HyyRobotControl::RMultVec(double(*R)[3], double* v, double * vres)
 	vres[2] = R[2][0] * v[0] + R[2][1] * v[1] + R[2][2] * v[2];
 }
 
-bool HyyRobotControl::hand_SetAngle(std::vector<int> angle, const int hand_id){
+HyyExternalDevicesControl::HyyExternalDevicesControl(std::shared_ptr<rclcpp::Node> node) :
+init_flag(false)
+{
+	SetangleReq = std::make_shared<hyySetangleMsg::Request>();
+    SetposReq = std::make_shared<hyySetposMsg::Request>();
+    SetspeedReq = std::make_shared<hyySetspeedMsg::Request>();
+    SetforceReq = std::make_shared<hyySetforceMsg::Request>();
+    GetangleactReq = std::make_shared<hyyGetangleactMsg::Request>();
+    GetanglesetReq = std::make_shared<hyyGetanglesetMsg::Request>();
+    GetposactReq = std::make_shared<hyyGetposactMsg::Request>();
+    GetpossetReq = std::make_shared<hyyGetpossetMsg::Request>();
+    GetspeedsetReq = std::make_shared<hyyGetspeedsetMsg::Request>();
+    GetforceactReq = std::make_shared<hyyGetforceactMsg::Request>();
+    GetforcesetReq = std::make_shared<hyyGetforcesetMsg::Request>();
+    GetcurrentactReq = std::make_shared<hyyGetcurrentactMsg::Request>();
+    GeterrorReq = std::make_shared<hyyGeterrorMsg::Request>();
+    GettempReq = std::make_shared<hyyGettempMsg::Request>();
+
+    SetGripPosReq = std::make_shared<hyyGripMsg::Request>();
+    SetGripSpeedReq = std::make_shared<hyyGripMsg::Request>();
+    SetGripForceReq = std::make_shared<hyyGripMsg::Request>();
+    GripMoveReq = std::make_shared<hyyGripMsg::Request>();
+    ActivateGripReq = std::make_shared<hyyGripMsg::Request>();
+    DeactivateGripReq = std::make_shared<hyyGripMsg::Request>();
+    GetGripStatusReq = std::make_shared<hyyGripMsg::Request>();
+    GetGripPosReq = std::make_shared<hyyGripMsg::Request>();
+}
+
+HyyExternalDevicesControl::HyyExternalDevicesControl(){
+
+}
+
+HyyExternalDevicesControl::~HyyExternalDevicesControl(){
+
+}
+
+bool HyyExternalDevicesControl::init(std::string controller_name)
+{
+	RCLCPP_INFO(node_->get_logger(), "Preparing all service clients, please wait.");
+
+	SetangleSrvName_ = "/" + controller_name + "/Setangle";
+	SetposSrvName_ = "/" + controller_name + "/Setpos";
+	SetspeedSrvName_ = "/" + controller_name + "/Setspeed";
+	SetforceSrvName_ = "/" + controller_name + "/Setforce";
+	GetangleactSrvName_ = "/" + controller_name + "/Getangleact";
+	GetanglesetSrvName_ = "/" + controller_name + "/Getangleset";
+	GetposactSrvName_ = "/" + controller_name + "/Getposact";
+	GetpossetSrvName_ = "/" + controller_name + "/Getposset";
+	GetspeedsetSrvName_ = "/" + controller_name + "/Getspeedset";
+	GetforceactSrvName_ = "/" + controller_name + "/Getforceact";
+	GetforcesetSrvName_ = "/" + controller_name + "/Getforceset";
+	GetcurrentactSrvName_ = "/" + controller_name + "/Getcurrentact";
+	GeterrorSrvName_ = "/" + controller_name + "/Geterror";
+	GettempSrvName_ = "/" + controller_name + "/Gettemp";
+
+	hyySetangleClient = node_->create_client<hyySetangleMsg>(SetangleSrvName_);
+	hyySetposClient = node_->create_client<hyySetposMsg>(SetposSrvName_);
+	hyySetspeedClient = node_->create_client<hyySetspeedMsg>(SetspeedSrvName_);
+	hyySetforceClient = node_->create_client<hyySetforceMsg>(SetforceSrvName_);
+	hyyGetangleactClient = node_->create_client<hyyGetangleactMsg>(GetangleactSrvName_);
+	hyyGetanglesetClient = node_->create_client<hyyGetanglesetMsg>(GetanglesetSrvName_);
+	hyyGetposactClient = node_->create_client<hyyGetposactMsg>(GetposactSrvName_);
+	hyyGetpossetClient = node_->create_client<hyyGetpossetMsg>(GetpossetSrvName_);
+	hyyGetspeedsetClient = node_->create_client<hyyGetspeedsetMsg>(GetspeedsetSrvName_);
+	hyyGetforceactClient = node_->create_client<hyyGetforceactMsg>(GetforceactSrvName_);
+	hyyGetforcesetClient = node_->create_client<hyyGetforcesetMsg>(GetforcesetSrvName_);
+	hyyGetcurrentactClient = node_->create_client<hyyGetcurrentactMsg>(GetcurrentactSrvName_);
+	hyyGeterrorClient = node_->create_client<hyyGeterrorMsg>(GeterrorSrvName_);
+	hyyGettempClient = node_->create_client<hyyGettempMsg>(GettempSrvName_);
+	
+	SetGripPosSrvName_ = "/" + controller_name + "/ControlGripper";
+	SetGripSpeedSrvName_ = "/" + controller_name + "/ControlGripper";
+	SetGripForceSrvName_ = "/" + controller_name + "/ControlGripper";
+	GripMoveSrvName_ = "/" + controller_name + "/ControlGripper";
+	ActivateGripSrvName_ = "/" + controller_name + "/ControlGripper";
+	DeactivateGripSrvName_ = "/" + controller_name + "/ControlGripper";
+	GetGripStatusSrvName_ = "/" + controller_name + "/ControlGripper";
+	GetGripPosSrvName_ = "/" + controller_name + "/ControlGripper";
+
+	hyySetGripPosClient = node_->create_client<hyyGripMsg>(SetGripPosSrvName_);
+	hyySetGripSpeedClient = node_->create_client<hyyGripMsg>(SetGripSpeedSrvName_);
+	hyySetGripForceClient = node_->create_client<hyyGripMsg>(SetGripForceSrvName_);
+	hyyGripMoveClient = node_->create_client<hyyGripMsg>(GripMoveSrvName_);
+	hyyActivateGripClient = node_->create_client<hyyGripMsg>(ActivateGripSrvName_);
+	hyyDeactivateGripClient = node_->create_client<hyyGripMsg>(DeactivateGripSrvName_);
+	hyyGetGripStatusClient = node_->create_client<hyyGripMsg>(GetGripStatusSrvName_);
+	hyyGetGripPosClient = node_->create_client<hyyGripMsg>(GetGripPosSrvName_);
+
+	std::vector<rclcpp::ClientBase::SharedPtr> clients = {
+		hyySetangleClient, hyySetposClient, hyySetspeedClient, hyySetforceClient,
+		hyyGetangleactClient, hyyGetanglesetClient, hyyGetposactClient, hyyGetpossetClient,
+		hyyGetspeedsetClient, hyyGetforceactClient, hyyGetforcesetClient, hyyGetcurrentactClient,
+		hyyGeterrorClient, hyyGettempClient, hyySetGripPosClient ,hyySetGripSpeedClient, 
+		hyySetGripForceClient, hyyGripMoveClient, hyyActivateGripClient, hyyDeactivateGripClient,
+		hyyGetGripStatusClient, hyyGetGripPosClient
+	};
+
+	for (const auto &client : clients){
+		if (!client) {
+			RCLCPP_ERROR(node_->get_logger(), "Failed to create one of the service clients.");
+			return false;
+		}
+	}
+
+	sleep(1);
+	RCLCPP_INFO(node_->get_logger(), "All service clients created successfully.");
+
+	init_flag = true;
+	return true;
+}
+
+bool HyyExternalDevicesControl::hand_SetAngle(std::vector<int> angle, const int hand_id){
 
 	if (!init_flag){
 		RCLCPP_ERROR(node_->get_logger(), "please init()");
@@ -1226,12 +1247,12 @@ bool HyyRobotControl::hand_SetAngle(std::vector<int> angle, const int hand_id){
 	}
 }
 
-bool HyyRobotControl::hand_fullopen(){
+bool HyyExternalDevicesControl::hand_fullopen(){
 	std::vector<int> angle_ = {1000, 1000, 1000, 1000, 1000, 1000};
 	return hand_SetAngle(angle_);
 }
 
-bool HyyRobotControl::hand_SetForce(std::vector<int> force, const int hand_id){
+bool HyyExternalDevicesControl::hand_SetForce(std::vector<int> force, const int hand_id){
 
 	if (!init_flag){
 		RCLCPP_ERROR(node_->get_logger(), "please init()");
@@ -1258,7 +1279,7 @@ bool HyyRobotControl::hand_SetForce(std::vector<int> force, const int hand_id){
 	return true;
 }
 
-bool HyyRobotControl::hand_SetPos(std::vector<int> pos, const int hand_id){
+bool HyyExternalDevicesControl::hand_SetPos(std::vector<int> pos, const int hand_id){
 
 	if (!init_flag){
 		RCLCPP_ERROR(node_->get_logger(), "please init()");
@@ -1285,7 +1306,7 @@ bool HyyRobotControl::hand_SetPos(std::vector<int> pos, const int hand_id){
 	}
 }
 
-bool HyyRobotControl::hand_SetSpeed(std::vector<int> speed, const int hand_id){
+bool HyyExternalDevicesControl::hand_SetSpeed(std::vector<int> speed, const int hand_id){
 
 	if (!init_flag){
 		RCLCPP_ERROR(node_->get_logger(), "please init()");
@@ -1313,7 +1334,8 @@ bool HyyRobotControl::hand_SetSpeed(std::vector<int> speed, const int hand_id){
 
 }
 
-std::vector<int> HyyRobotControl::hand_GetAngleAct(const int hand_id){
+std::vector<int> HyyExternalDevicesControl::hand_GetAngleAct(const int hand_id){
+	std::vector<int> empty;
 
 	if (!init_flag){
 		RCLCPP_ERROR(node_->get_logger(), "please init()");
@@ -1336,8 +1358,8 @@ std::vector<int> HyyRobotControl::hand_GetAngleAct(const int hand_id){
 
 }
 
-std::vector<int> HyyRobotControl::hand_GetAngleSet(const int hand_id){
-
+std::vector<int> HyyExternalDevicesControl::hand_GetAngleSet(const int hand_id){
+	std::vector<int> empty;
 	
 	if (!init_flag){
 		RCLCPP_ERROR(node_->get_logger(), "please init()");
@@ -1360,7 +1382,8 @@ std::vector<int> HyyRobotControl::hand_GetAngleSet(const int hand_id){
 
 }
 
-std::vector<int> HyyRobotControl::hand_GetCurrentAct(const int hand_id){
+std::vector<int> HyyExternalDevicesControl::hand_GetCurrentAct(const int hand_id){
+	std::vector<int> empty;
 
 	if (!init_flag){
 		RCLCPP_ERROR(node_->get_logger(), "please init()");
@@ -1383,7 +1406,8 @@ std::vector<int> HyyRobotControl::hand_GetCurrentAct(const int hand_id){
 
 }
 
-std::vector<int> HyyRobotControl::hand_GetError(const int hand_id){
+std::vector<int> HyyExternalDevicesControl::hand_GetError(const int hand_id){
+	std::vector<int> empty;
 
 	if (!init_flag){
 		RCLCPP_ERROR(node_->get_logger(), "please init()");
@@ -1406,7 +1430,8 @@ std::vector<int> HyyRobotControl::hand_GetError(const int hand_id){
 
 }
 
-std::vector<int> HyyRobotControl::hand_GetForceAct(const int hand_id){
+std::vector<int> HyyExternalDevicesControl::hand_GetForceAct(const int hand_id){
+	std::vector<int> empty;
 
 	if (!init_flag){
 		RCLCPP_ERROR(node_->get_logger(), "please init()");
@@ -1429,7 +1454,8 @@ std::vector<int> HyyRobotControl::hand_GetForceAct(const int hand_id){
 
 }
 
-std::vector<int> HyyRobotControl::hand_GetForceSet(const int hand_id){
+std::vector<int> HyyExternalDevicesControl::hand_GetForceSet(const int hand_id){
+	std::vector<int> empty;
 
 	if (!init_flag){
 		RCLCPP_ERROR(node_->get_logger(), "please init()");
@@ -1452,7 +1478,8 @@ std::vector<int> HyyRobotControl::hand_GetForceSet(const int hand_id){
 
 }
 
-std::vector<int> HyyRobotControl::hand_GetPosAct(const int hand_id){
+std::vector<int> HyyExternalDevicesControl::hand_GetPosAct(const int hand_id){
+	std::vector<int> empty;
 
 	if (!init_flag){
 		RCLCPP_ERROR(node_->get_logger(), "please init()");
@@ -1475,7 +1502,8 @@ std::vector<int> HyyRobotControl::hand_GetPosAct(const int hand_id){
 
 }
 
-std::vector<int> HyyRobotControl::hand_GetPosSet(const int hand_id){
+std::vector<int> HyyExternalDevicesControl::hand_GetPosSet(const int hand_id){
+	std::vector<int> empty;
 
 	if (!init_flag){
 		RCLCPP_ERROR(node_->get_logger(), "please init()");
@@ -1498,7 +1526,8 @@ std::vector<int> HyyRobotControl::hand_GetPosSet(const int hand_id){
 
 }
 
-std::vector<int> HyyRobotControl::hand_GetSpeedSet(const int hand_id){
+std::vector<int> HyyExternalDevicesControl::hand_GetSpeedSet(const int hand_id){
+	std::vector<int> empty;
 
 	if (!init_flag){
 		RCLCPP_ERROR(node_->get_logger(), "please init()");
@@ -1521,7 +1550,8 @@ std::vector<int> HyyRobotControl::hand_GetSpeedSet(const int hand_id){
 
 }
 
-std::vector<int> HyyRobotControl::hand_GetTemp(const int hand_id){
+std::vector<int> HyyExternalDevicesControl::hand_GetTemp(const int hand_id){
+	std::vector<int> empty;
 
 	if (!init_flag){
 		RCLCPP_ERROR(node_->get_logger(), "please init()");
@@ -1544,7 +1574,7 @@ std::vector<int> HyyRobotControl::hand_GetTemp(const int hand_id){
 
 }
 
-bool HyyRobotControl::Gripper_SetPos(const int pos){
+bool HyyExternalDevicesControl::Gripper_SetPos(const int pos){
 	if (!init_flag){
 		RCLCPP_ERROR(node_->get_logger(), "please init()");
 		return false;
@@ -1566,7 +1596,7 @@ bool HyyRobotControl::Gripper_SetPos(const int pos){
 
 }
 
-bool HyyRobotControl::Gripper_SetSpeed(const int speed){
+bool HyyExternalDevicesControl::Gripper_SetSpeed(const int speed){
 	if (!init_flag){
 		RCLCPP_ERROR(node_->get_logger(), "please init()");
 		return false;
@@ -1587,7 +1617,7 @@ bool HyyRobotControl::Gripper_SetSpeed(const int speed){
 	}
 }
 
-bool HyyRobotControl::Gripper_SetForce(const int force){
+bool HyyExternalDevicesControl::Gripper_SetForce(const int force){
 	if (!init_flag){
 		RCLCPP_ERROR(node_->get_logger(), "please init()");
 		return false;
@@ -1608,7 +1638,7 @@ bool HyyRobotControl::Gripper_SetForce(const int force){
 	}
 }
 
-bool HyyRobotControl::Gripper_Move(){
+bool HyyExternalDevicesControl::Gripper_Move(){
 	if (!init_flag){
 		RCLCPP_ERROR(node_->get_logger(), "please init()");
 		return false;
@@ -1628,23 +1658,23 @@ bool HyyRobotControl::Gripper_Move(){
 	}
 }
 
-bool HyyRobotControl::Gripper_goto(const int pos){
+bool HyyExternalDevicesControl::Gripper_goto(const int pos){
 	Gripper_SetPos(pos);
 	Gripper_Move();
 	return true;
 }
 
-bool HyyRobotControl::Gripper_fullopen(){
+bool HyyExternalDevicesControl::Gripper_fullopen(){
 	Gripper_goto(0);
 	return true;
 }
 
-bool HyyRobotControl::Gripper_fullclose(){
+bool HyyExternalDevicesControl::Gripper_fullclose(){
 	Gripper_goto(255);
 	return true;
 }
 
-bool HyyRobotControl::Gripper_Activate(){
+bool HyyExternalDevicesControl::Gripper_Activate(){
 	if (!init_flag){
 		RCLCPP_ERROR(node_->get_logger(), "please init()");
 		return false;
@@ -1664,7 +1694,7 @@ bool HyyRobotControl::Gripper_Activate(){
 	}
 }
 
-bool HyyRobotControl::Gripper_Deactivate(){
+bool HyyExternalDevicesControl::Gripper_Deactivate(){
 	if (!init_flag){
 		RCLCPP_ERROR(node_->get_logger(), "please init()");
 		return false;
@@ -1684,7 +1714,7 @@ bool HyyRobotControl::Gripper_Deactivate(){
 	}
 }
 
-bool HyyRobotControl::Gripper_initialize(){
+bool HyyExternalDevicesControl::Gripper_initialize(){
 	Gripper_Deactivate();
 	sleep(1);
 	Gripper_Activate();
@@ -1696,7 +1726,7 @@ bool HyyRobotControl::Gripper_initialize(){
 	return true;
 }
 
-int HyyRobotControl::Gripper_GetStatus(){
+int HyyExternalDevicesControl::Gripper_GetStatus(){
 	if (!init_flag){
 		RCLCPP_ERROR(node_->get_logger(), "please init()");
 		return -1;
@@ -1716,7 +1746,7 @@ int HyyRobotControl::Gripper_GetStatus(){
 	}
 }
 
-int HyyRobotControl::Gripper_GetPos(){
+int HyyExternalDevicesControl::Gripper_GetPos(){
 	if (!init_flag){
 		RCLCPP_ERROR(node_->get_logger(), "please init()");
 		return -1;
