@@ -23,7 +23,7 @@ HyyRobotControl::~HyyRobotControl(){}
 
 bool HyyRobotControl::init(std::string controller_name)
 {
-	RCLCPP_INFO(node_->get_logger(), "Preparing all service clients, please wait.");
+	// RCLCPP_INFO(node_->get_logger(), "Preparing all service clients, please wait.");
     
 	MoveSrvName_ = "/" + controller_name + "/hyyRobotMoveSrv";
 	IoSrvName_ = "/" + controller_name + "/hyyRobotIoSrv";
@@ -47,7 +47,7 @@ bool HyyRobotControl::init(std::string controller_name)
 	}
 
 	sleep(1);
-	RCLCPP_INFO(node_->get_logger(), "All service clients created successfully.");
+	RCLCPP_INFO_STREAM(node_->get_logger(), controller_name << ": all service clients created successfully.");
 
 	init_flag = true;
 	return true;
@@ -1146,7 +1146,7 @@ HyyExternalDevicesControl::~HyyExternalDevicesControl(){
 
 bool HyyExternalDevicesControl::init(std::string controller_name)
 {
-	RCLCPP_INFO(node_->get_logger(), "Preparing all service clients, please wait.");
+	// RCLCPP_INFO(node_->get_logger(), "Preparing all service clients, please wait.");
 
 	SetangleSrvName_ = "/" + controller_name + "/Setangle";
 	SetposSrvName_ = "/" + controller_name + "/Setpos";
@@ -1213,7 +1213,7 @@ bool HyyExternalDevicesControl::init(std::string controller_name)
 	}
 
 	sleep(1);
-	RCLCPP_INFO(node_->get_logger(), "All service clients created successfully.");
+	RCLCPP_INFO_STREAM(node_->get_logger(), controller_name << ": all service clients created successfully.");
 
 	init_flag = true;
 	return true;

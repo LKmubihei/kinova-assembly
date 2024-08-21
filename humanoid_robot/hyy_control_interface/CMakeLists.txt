@@ -1,15 +1,18 @@
+#***************************************************************************/
+#*                                                                         */
+#*   CMake project configuration for hyy_control_interface                 */
+#*                                                                         */
+#*   - Adds compiler options if using GCC or Clang                         */
+#*   - Finds and links required packages                                   */
+#*                                                                         */
+#***************************************************************************/
+
 cmake_minimum_required(VERSION 3.8)
 project(hyy_control_interface)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
-
-#***************************************************************************/
-#*                                                                         */
-#*   Standard application structure   dependencies                         */
-#*                                                                         */
-#***************************************************************************/
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -25,28 +28,42 @@ find_package(moveit_visual_tools REQUIRED)
 
 #***************************************************************************/
 #*                                                                         */
-#*   Standard application structure   hyy_robot_control configure          */
+#*   Standard application structure - hyyrobot motion planning             */
+#*                                                                         */
+#*   target_include_directories: Specifies the directory where the         */
+#*   compiler should look for header files when compiling a given          */
+#*   target (such as an executable or library).                            */
+#*                                                                         */
+#*   BUILD_INTERFACE: used during the build(compilation) process.          */
+#*   INSTALL_INTERFACE: used after the target is installed.                */
 #*                                                                         */
 #***************************************************************************/
 
-add_executable(${PROJECT_NAME} src/${PROJECT_NAME}.cpp src/t1_demo.cpp)
-target_compile_features(${PROJECT_NAME} PUBLIC c_std_99 cxx_std_17)
+add_executable(h1_demo_cart src/hyy_control_interface.cpp src/h1_demo_cart.cpp)
+target_include_directories(h1_demo_cart PUBLIC
+$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> 
+$<INSTALL_INTERFACE:include>) 
+ament_target_dependencies(h1_demo_cart PUBLIC rclcpp hyy_message)
 
-#Specifies the directory where the compiler should look for header files when compiling a given target (such as an executable or library).
-target_include_directories(${PROJECT_NAME} PUBLIC
-$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> #used during the build(compilation) process.
-$<INSTALL_INTERFACE:include>) #used after the target is installed.
+add_executable(h1_demo_pos src/hyy_control_interface.cpp src/h1_demo_pos.cpp)
+target_include_directories(h1_demo_pos PUBLIC
+$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> 
+$<INSTALL_INTERFACE:include>) 
+ament_target_dependencies(h1_demo_pos PUBLIC rclcpp hyy_message)
 
-ament_target_dependencies(
-  ${PROJECT_NAME} 
-  PUBLIC 
-  rclcpp
-  hyy_message
-)
-  
+add_executable(t1_demo_pos src/hyy_control_interface.cpp src/t1_demo_pos.cpp)
+target_include_directories(t1_demo_pos PUBLIC
+$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+$<INSTALL_INTERFACE:include>)
+ament_target_dependencies(t1_demo_pos PUBLIC rclcpp hyy_message)
+
 #***************************************************************************/
 #*                                                                         */
-#*   Standard application structure   collision_detect configure           */
+#*   Standard application structure - Collision detection                  */
+#*                                                                         */
+#*   This section configures the collision detection executable.           */
+#*   The target `collision_detect` is created, and its dependencies are    */
+#*   specified for both compilation and linking stages.                    */
 #*                                                                         */
 #***************************************************************************/
 
@@ -59,7 +76,7 @@ ament_target_dependencies(
   hyy_message
   kdl_parser
   orocos_kdl
-  Eigen3 #只需要处理头文件目录
+  Eigen3 # Only the header files are required
 )
 target_link_libraries(
   collision_detect
@@ -70,7 +87,11 @@ target_link_libraries(
 
 #***************************************************************************/
 #*                                                                         */
-#*   Standard application structure   moveit motion planning configure     */
+#*   Standard application structure - MoveIt motion planning               */
+#*                                                                         */
+#*   This section configures the motion planning demo executable for the   */
+#*   the MoveIt framework. The target `motion_plan_demo` is created        */
+#*   and linked with necessary dependencies.                               */
 #*                                                                         */
 #***************************************************************************/
 
@@ -86,38 +107,81 @@ ament_target_dependencies(
 
 #***************************************************************************/
 #*                                                                         */
-#*   Standard application structure   install                              */
+#*   The following lines specify the required C and C++ language           */
+#*   standards for the specified targets. Each target is configured        */
+#*   to use the C99 standard for C files and the C++17 standard            */
+#*   for C++ files.                                                        */
 #*                                                                         */
 #***************************************************************************/
 
-#Copy the project's header files or included directories to the target installation path during the installation phase.
+target_compile_features(h1_demo_cart PUBLIC c_std_99 cxx_std_17)
+target_compile_features(h1_demo_pos  PUBLIC c_std_99 cxx_std_17)
+target_compile_features(t1_demo_pos  PUBLIC c_std_99 cxx_std_17)
+target_compile_features(collision_detect PUBLIC c_std_99 cxx_std_17)
+target_compile_features(motion_plan_demo PUBLIC c_std_99 cxx_std_17)
+
+#***************************************************************************/
+#*                                                                         */
+#*   Copy the project's header files or included directories to            */
+#*   the target installation path during the installation phase.           */
+#*                                                                         */
+#*   Specifies the directory where runtime components of executable        */
+#*   files and dynamic libraries should be installed.                      */
+#*                                                                         */
+#***************************************************************************/
+
 install(
   DIRECTORY include launch
   DESTINATION share/${PROJECT_NAME}
   )
   
-#Specifies the directory where runtime components of executable files and dynamic libraries should be installed.
 install( 
-  TARGETS ${PROJECT_NAME} collision_detect motion_plan_demo
+  TARGETS 
+  h1_demo_cart 
+  h1_demo_pos 
+  t1_demo_pos 
+  collision_detect  
+  motion_plan_demo
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
 #***************************************************************************/
 #*                                                                         */
-#*   Standard application structure   test                                 */
+#*   If testing is enabled, perform the following steps                    */
+#*   This block is executed only when the BUILD_TESTING option is ON.      */
+#*                                                                         */
+#*   1. Locate and require the ament_lint_auto package, which is           */
+#*      necessary for automated linting and code quality checks.           */
+#*                                                                         */
+#*   2. Skip the linter that checks for copyright and license information  */
+#*      in source files by setting ament_cmake_copyright_FOUND to TRUE.    */
+#*      This line should be commented out when all source files have       */
+#*      proper copyright and license headers.                              */
+#*                                                                         */
+#*   3. Skip cpplint checks by setting ament_cmake_cpplint_FOUND to TRUE.  */
+#*      This setting only takes effect in a git repository environment.    */
+#*      Uncomment this line when the package is in a git repository and    */
+#*      all source files have appropriate copyright and license headers.   */
+#*                                                                         */
+#*   4. Automatically locate and configure test dependencies needed        */
+#*      for running the tests in this package using                        */
+#*      ament_lint_auto_find_test_dependencies().                          */
 #*                                                                         */
 #***************************************************************************/
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
-  # the following line skips the linter which checks for copyrights
-  # comment the line when a copyright and license is added to all source files
   set(ament_cmake_copyright_FOUND TRUE)
-  # the following line skips cpplint (only works in a git repo)
-  # comment the line when this package is in a git repo and when
-  # a copyright and license is added to all source files
   set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-ament_package()
+#***************************************************************************/
+#*                                                                         */
+#*   Declare and configure the ament package                               */
+#*   This command sets up the package so that it can be recognized         */
+#*   and utilized by the ROS 2 ecosystem.                                  */
+#*                                                                         */
+#***************************************************************************/
+
+ament_package() 

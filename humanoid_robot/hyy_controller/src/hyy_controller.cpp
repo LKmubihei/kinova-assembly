@@ -624,33 +624,35 @@ void HyyController::robotmovedata_command_callback(const std::shared_ptr<hyy_mes
 						rwobj = &rwobj_;
 					}
 				}
-				double pospose[6];
-				if (0 != robot_getCartesian(rtool, rwobj, pospose, component_index_)){
-					res->result.clear();
-					RCLCPP_ERROR(get_node()->get_logger(), "Movedata: can't get current cartesian pos.");
-					return;
+				robpose *pospose;
+				if (if_additionaxis){
+					GetCurrentAdditionCartesian(pospose, component_index_);
+					RCLCPP_INFO(get_node()->get_logger(), "Movedata: send addition axix %d current cartesian position", component_index_);
+				}else{
+					GetCurrentCartesian(rtool, rwobj, pospose, component_index_);
+					RCLCPP_INFO(get_node()->get_logger(), "Movedata: send robot %d current cartesian position", component_index_);
 				}
 				res->result.clear();
-				res->result.push_back(pospose[0]);
-				res->result.push_back(pospose[1]);
-				res->result.push_back(pospose[2]);
-				res->result.push_back(pospose[3]);
-				res->result.push_back(pospose[4]);
-				res->result.push_back(pospose[5]);
-				RCLCPP_INFO(get_node()->get_logger(), "Movedata: send current cartesian point");
+				res->result.push_back(pospose->xyz[0]);
+				res->result.push_back(pospose->xyz[1]);
+				res->result.push_back(pospose->xyz[2]);
+				res->result.push_back(pospose->kps[0]);
+				res->result.push_back(pospose->kps[1]);
+				res->result.push_back(pospose->kps[2]);
 			}else if (_cur_joint == req->type){
 				double joint[10];
 				memset(joint, 0, sizeof(joint));
 				if(if_additionaxis){
 					GetCurrentAdditionJoint(joint, component_index_);
+					RCLCPP_INFO(get_node()->get_logger(), "Movedata: send addition axix %d current joint position", component_index_);
 				}else{
-					robot_getJoint(joint, component_index_);
+					GetCurrentJoint(joint, component_index_);
+					RCLCPP_INFO(get_node()->get_logger(), "Movedata: send robot %d current joint position", component_index_);
 				}
 				res->result.clear();
 				for (int i = 0; i < dof_; i++){
 					res->result.push_back(joint[i]);
 				}
-				RCLCPP_INFO(get_node()->get_logger(), "Movedata: send current joint point");
 			}else{
 				res->result.clear();
 				RCLCPP_ERROR(get_node()->get_logger(), "Movedata: data type isn't exist.");
