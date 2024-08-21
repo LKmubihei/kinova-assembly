@@ -130,9 +130,9 @@ int main(int argc, char **argv){
 
     vector<double> joint_pos;
     joint_pos = leftArmControl->get_joint_data("R1_J0");
-    RCLCPP_INFO(node->get_logger(), "R1_J0: %.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f", joint_pos[0], joint_pos[1], joint_pos[2], joint_pos[3], joint_pos[4], joint_pos[5], joint_pos[6]);
+    RCLCPP_INFO(node->get_logger(), "R1_J0: %.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f", joint_pos[0], joint_pos[1], joint_pos[2], joint_pos[3], joint_pos[4], joint_pos[5], joint_pos[6]);
     joint_pos = leftArmControl->get_joint_data("R1_J2");
-    RCLCPP_INFO(node->get_logger(), "R1_J2: %.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f", joint_pos[0], joint_pos[1], joint_pos[2], joint_pos[3], joint_pos[4], joint_pos[5], joint_pos[6]);
+    RCLCPP_INFO(node->get_logger(), "R1_J2: %.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f", joint_pos[0], joint_pos[1], joint_pos[2], joint_pos[3], joint_pos[4], joint_pos[5], joint_pos[6]);
 
     vector<double> cur_cart_pos;
     cur_cart_pos = leftArmControl->get_cartesian_current();
@@ -140,7 +140,7 @@ int main(int argc, char **argv){
 
     vector<double> cur_joint_pos;
     cur_joint_pos = leftArmControl->get_joint_current();
-    RCLCPP_INFO(node->get_logger(), "cur_joint_pos: %.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f", cur_joint_pos[0], cur_joint_pos[1], cur_joint_pos[2], cur_joint_pos[3], cur_joint_pos[4], cur_joint_pos[5], cur_joint_pos[6]);
+    RCLCPP_INFO(node->get_logger(), "cur_joint_pos: %.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f", cur_joint_pos[0], cur_joint_pos[1], cur_joint_pos[2], cur_joint_pos[3], cur_joint_pos[4], cur_joint_pos[5], cur_joint_pos[6]);
 
     /***************************************************************************/
     /*                                                                         */
