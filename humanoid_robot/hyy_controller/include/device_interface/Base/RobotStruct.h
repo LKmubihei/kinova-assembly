@@ -608,7 +608,7 @@ extern void init_speed_cartesian(speed* sp, double tcp, double orl, int flag);
  * @param sp 返回速度数据
  * @param data 机器人关节速度数据，含义由per_flag决定
  * @param dof 数据维度，即机器人自由度
- *  @param per_flag  关节速度含义0:百分比(0~1)；1:速度（mm/s or rad/s）;2:时间（s）
+ * @param per_flag  关节速度含义0:百分比(0~1)；1:速度（mm/s or rad/s）;2:时间（s）
  * @param tcp 平动速度，含义由tcp_flag决定
  * @param orl 转动速度，含义由tcp_flag决定
  * @param tcp_flag 笛卡尔速度含义 0:百分比(0~1)；1:速度（mm/s or rad/s）;2:时间（s）

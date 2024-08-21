@@ -2,7 +2,7 @@
 
 namespace hyy_controller
 {
-
+using namespace HYYRobotBase;
 HyyController::HyyController():
 component_index_(0),
 dof_(0),
@@ -12,12 +12,16 @@ block_flag(true),
 if_additionaxis(false)
 {
 
-	// intialize default_tool_frame
-	default_tool_frame = new double[6];
+	// intialize default_jointspeed
+	default_jointspeed = new double[6];
 	for (int i = 0; i < 6; i++){
-		default_tool_frame[i] = 0.0;
+		default_jointspeed[i] = 0.05;
 	}
-
+	// intialize default_tool_frame
+	default_toolframe = new double[6];
+	for (int i = 0; i < 6; i++){
+		default_toolframe[i] = 0.0;
+	}
 	// intialize default_userframe
 	default_userframe = new double[6];
 	for (int i = 0; i < 6; i++){
@@ -33,7 +37,6 @@ if_additionaxis(false)
 	for (int i = 0; i < 6; i++){
 		default_addframe[i] = 0.0;
 	}
-
 	// intialize default_payload
 	default_payload.m = 0.0;
 	for (int i = 0; i < 3; i++){
@@ -48,11 +51,12 @@ if_additionaxis(false)
 
 HyyController::~HyyController()
 {
-    delete[] joint_speed;
     delete[] default_userframe;
     delete[] default_workframe;
-    delete[] default_tool_frame;
+    delete[] default_toolframe;
+    delete[] default_jointspeed;
     delete[] default_addframe;
+
 }
   
 controller_interface::CallbackReturn HyyController::on_init(){
@@ -95,10 +99,10 @@ controller_interface::CallbackReturn HyyController::on_init(){
         return controller_interface::CallbackReturn::ERROR;
     }
 
-	if(!if_additionaxis){
-		component_name_ = HYYRobotBase::get_name_robot_device(HYYRobotBase::get_deviceName(0, NULL), component_index_);
-	}else{
+	if(if_additionaxis){
 		component_name_ = HYYRobotBase::get_name_additionaxis_device(HYYRobotBase::get_deviceName(0, NULL), component_index_);
+	}else{
+		component_name_ = HYYRobotBase::get_name_robot_device(HYYRobotBase::get_deviceName(0, NULL), component_index_);
 	}
 	if (nullptr == component_name_){
 		RCLCPP_ERROR(get_node()->get_logger(), "Can't get component(robot) name");
@@ -106,18 +110,15 @@ controller_interface::CallbackReturn HyyController::on_init(){
 	}
 
 	dof_ = HYYRobotBase::get_group_dof(component_name_);
-    if (dof_ != static_cast<int>(joints_.size()))
-    {
+    if (dof_ != static_cast<int>(joints_.size())){
 		RCLCPP_ERROR(get_node()->get_logger(), "Robot device dof(%d) != joint num(%ld).", dof_, joints_.size());
 		return controller_interface::CallbackReturn::ERROR;
 	}
 
-    joint_speed = new double[dof_];
-    for (int i = 0; i < dof_; i++){
-        joint_speed[i] = 0.1;
-    }
-
-	subject = params_.subject;
+	init_speed(&default_speed, default_jointspeed, dof_, 1, 10, 0.05, 1);
+	init_tool(&default_tool, default_toolframe, 1, &default_payload);
+	init_zone(&default_zone, 0, 0);
+	init_wobj(&default_wobj, default_userframe, default_workframe, default_addframe, 0, 0, 0);
 
 	return controller_interface::CallbackReturn::SUCCESS;
 
@@ -267,80 +268,58 @@ void HyyController::robotmove_command_callback(const std::shared_ptr<hyy_message
             wobj *rwobj = NULL;
 
             if (_state != req->type){
-				RCLCPP_INFO_STREAM(get_node()->get_logger(), "Recieve new target......");
+				RCLCPP_INFO_STREAM(get_node()->get_logger(), "\nRecieve new target......");
+				// intialize speed
 				if (!req->velocity.empty())
                 { 
-                    double v = velocity_data_type(req->velocity.c_str());
-                    if (v < 0){
-                        if (0 != getspeed(req->velocity.c_str(), &rspeed_)){
-                            RCLCPP_WARN(get_node()->get_logger(), "Get speed failed, use default.");
-                            init_speed(&rspeed_, joint_speed, dof_, 1, 100, 0.1, 1);
-                            rspeed = &rspeed_;
-                        }else{
-                            rspeed = &rspeed_;
-							RCLCPP_INFO_STREAM(get_node()->get_logger(), "Use speed " << req->velocity);
-                        }
-                    }else{
-						RCLCPP_INFO_STREAM(get_node()->get_logger(), "Use speed percentage " << v * 100 << "%");
-						for (int i = 0; i < dof_; i++){
-							joint_speed[i] = v;
-						}
-						init_speed(&rspeed_, joint_speed, dof_, 0, v, v, 0);
-						rspeed = &rspeed_;
+					if (getspeed(req->velocity.c_str(), rspeed)){
+						RCLCPP_INFO_STREAM(get_node()->get_logger(), "Use speed " << req->velocity);
+					}else{
+						RCLCPP_WARN(get_node()->get_logger(), "Get speed failed, use default speed.");
+						rspeed = &default_speed;
 					}
 				}else{
-                    RCLCPP_WARN(get_node()->get_logger(), "Speed data was empty, use default.");
-                    init_speed(&rspeed_, joint_speed, dof_, 1, 100, 0.1, 1);
-                    rspeed = &rspeed_;
+                    RCLCPP_WARN(get_node()->get_logger(), "Speed data was empty, use default speed.");
+                    rspeed = &default_speed;
                 }
-
+				// intialize zone
 				if (!req->zone.empty())
 				{
-                    if (0 != getzone(req->zone.c_str(), &rzone_)){
-                        RCLCPP_WARN(get_node()->get_logger(), "Get zone failed, use default.");
-                        init_zone(&rzone_, 0, 0);
-                        rzone = &rzone_;
-                    }else{
-						rzone = &rzone_;
+                    if (getzone(req->zone.c_str(), rzone)){
 						RCLCPP_INFO_STREAM(get_node()->get_logger(), "Use zone " << req->zone);
+                    }else{
+                        RCLCPP_WARN(get_node()->get_logger(), "Get zone failed, use default zone.");
+                        rzone = &default_zone;
 					}
                 }else{
-					RCLCPP_WARN(get_node()->get_logger(), "Zone data was empty, use default.");
-					init_zone(&rzone_, 0, 0);
-					rzone = &rzone_;
+					RCLCPP_WARN(get_node()->get_logger(), "Zone data was empty, use default zone.");
+					rzone = &default_zone;
 				}
-
+				// intialize tool
 				if (!req->tool.empty())
 				{
-                    if (0 != gettool(req->tool.c_str(), &rtool_)){
-                        RCLCPP_WARN(get_node()->get_logger(), "Get tool failed, use default.");
-						init_tool(&rtool_, default_tool_frame, 1, &default_payload);
-						rtool = &rtool_;
-					}else{
+                    if (gettool(req->tool.c_str(), rtool)){
 						RCLCPP_INFO_STREAM(get_node()->get_logger(), "Use tool " << req->tool);
-						rtool = &rtool_;
+					}else{
+                        RCLCPP_WARN(get_node()->get_logger(), "Get tool failed, use default tool.");
+						rtool = &default_tool;
 					}
 				}else{
-					RCLCPP_WARN(get_node()->get_logger(), "Tool data was empty, use default.");
-					init_tool(&rtool_, default_tool_frame, 1, &default_payload);
-					rtool = &rtool_;
+					RCLCPP_WARN(get_node()->get_logger(), "Tool data was empty, use default tool.");
+					rtool = &default_tool;
 				}
-
-
+				// intialize wobj
 				if (!req->wobj.empty())
 				{
-					if (0 != getwobj(req->wobj.c_str(), &rwobj_)){
-						RCLCPP_WARN(get_node()->get_logger(), "Get wobj failed, use default.");
-						init_wobj(&rwobj_, default_userframe, default_workframe, default_addframe, 0, 0, 0);
-						rwobj = &rwobj_;
-					}else{
+					if (getwobj(req->wobj.c_str(), rwobj)){
 						RCLCPP_INFO_STREAM(get_node()->get_logger(), "Use wobj " << req->wobj);
-						rwobj = &rwobj_;
+					}else{
+						RCLCPP_WARN(get_node()->get_logger(), "Get wobj failed, use default wobj.");
+						rwobj = &default_wobj;
 					}
 				}else{
-					RCLCPP_WARN(get_node()->get_logger(), "Wobj data was empty, use default.");
-					init_wobj(&rwobj_, default_userframe, default_workframe, default_addframe, 0, 0, 0);
-					rwobj = &rwobj_;
+					RCLCPP_WARN(get_node()->get_logger(), "Wobj data was empty, use default wobj.");
+					rwobj = &default_wobj;
 				}
 
 			}
@@ -352,14 +331,11 @@ void HyyController::robotmove_command_callback(const std::shared_ptr<hyy_message
 						res->result = ERR_MOVETERGET_DOF;
 						return;
 					}else{
-						init_robjoint(&rjoint_, req->target.data(), dof_);
-						rjoint = &rjoint_;
+						init_robjoint(rjoint, req->target.data(), dof_);
 					}
 				}else{
 					if (!req->targetstr.empty()){
-						if (0 == getrobjoint(req->targetstr.c_str(), &rjoint_)){
-							rjoint = &rjoint_;
-						}else{
+						if (getrobjoint(req->targetstr.c_str(), rjoint) != 0){
 							RCLCPP_ERROR(get_node()->get_logger(), "MoveA: get robjoint from targetstr error.");
 							res->result = ERR_GETMOVETARGET;
 							return;
@@ -378,8 +354,7 @@ void HyyController::robotmove_command_callback(const std::shared_ptr<hyy_message
 				}
 
 				if (0 != res->result){
-					RCLCPP_INFO_STREAM(get_node()->get_logger(), "result: " << res->result);
-					RCLCPP_ERROR(get_node()->get_logger(), "MoveA: perform moveA error.");
+					RCLCPP_ERROR_STREAM(get_node()->get_logger(), "MoveA: perform error, result = " << res->result);
 					return;
 				}
 
@@ -391,14 +366,11 @@ void HyyController::robotmove_command_callback(const std::shared_ptr<hyy_message
 						res->result = ERR_MOVETERGET_DOF;
 						return;
 					}else{
-						init_robpose(&rpose_, &(req->target[0]), &(req->target[3]));
-						rpose = &rpose_;
+						init_robpose(rpose, &(req->target[0]), &(req->target[3]));
 					}
 				}else{
 					if (!req->targetstr.empty()){
-						if (0 == getrobpose(req->targetstr.c_str(), &rpose_)){
-							rpose = &rpose_;
-						}else{
+						if (getrobpose(req->targetstr.c_str(), rpose) != 0){
 							RCLCPP_ERROR(get_node()->get_logger(), "MoveJ: get robpose from targetstr error.");
 							res->result = ERR_GETMOVETARGET;
 							return;
@@ -411,8 +383,7 @@ void HyyController::robotmove_command_callback(const std::shared_ptr<hyy_message
 				}
 				res->result = MultiMoveJ(rpose, rspeed, rzone, rtool, rwobj, component_index_);
 				if (0 != res->result){
-					RCLCPP_INFO_STREAM(get_node()->get_logger(), "result: " << res->result);
-					RCLCPP_ERROR(get_node()->get_logger(), "MoveJ: perform moveJ error.");
+					RCLCPP_ERROR_STREAM(get_node()->get_logger(), "MoveJ: perform error, result = " << res->result);
 					return;
 				}
 			
@@ -425,15 +396,11 @@ void HyyController::robotmove_command_callback(const std::shared_ptr<hyy_message
 						res->result = ERR_MOVETERGET_DOF;
 						return;
 					}else{
-						init_robpose(&rpose_, &(req->target[0]), &(req->target[3]));
-						rpose = &rpose_;
+						init_robpose(rpose, &(req->target[0]), &(req->target[3]));
 					}
 				}else{
-					if (!req->targetstr.empty())
-					{
-						if (0 == getrobpose(req->targetstr.c_str(), &rpose_)){
-							rpose = &rpose_;
-						}else{
+					if (!req->targetstr.empty()){
+						if (getrobpose(req->targetstr.c_str(), rpose) != 0){
 							RCLCPP_ERROR(get_node()->get_logger(), "MoveL: get robpose from targetstr error.");
 							res->result = ERR_GETMOVETARGET;
 							return;
@@ -447,8 +414,7 @@ void HyyController::robotmove_command_callback(const std::shared_ptr<hyy_message
 				res->result = MultiMoveL(rpose, rspeed, rzone, rtool, rwobj, component_index_);
 				if (0 != res->result)
 				{
-					RCLCPP_INFO_STREAM(get_node()->get_logger(), "result: " << res->result);
-					RCLCPP_ERROR(get_node()->get_logger(), "MoveL: perform moveL error.");
+					RCLCPP_ERROR_STREAM(get_node()->get_logger(), "MoveL: perform error, result = " << res->result);
 					return;
 				}
 			}else if (_moveC == req->type){
@@ -458,10 +424,8 @@ void HyyController::robotmove_command_callback(const std::shared_ptr<hyy_message
 						res->result = ERR_MOVETERGET_DOF;
 						return;
 					}else{
-						init_robpose(&rpose_, &(req->target[0]), &(req->target[3]));
-						rpose = &rpose_;
-						init_robpose(&rpose_mid_, &(req->target[6]), &(req->target[9]));
-						rpose_mid = &rpose_mid_;
+						init_robpose(rpose, &(req->target[0]), &(req->target[3]));
+						init_robpose(rpose_mid, &(req->target[6]), &(req->target[9]));
 					}
 				}else{
 					if (!req->targetstr.empty())
@@ -475,16 +439,12 @@ void HyyController::robotmove_command_callback(const std::shared_ptr<hyy_message
 							res->result = ERR_DATASPLIT;
 							return;
 						}
-						if (0 == getrobpose(_target.c_str(), &rpose_)){
-							rpose = &rpose_;
-						}else{
+						if (getrobpose(_target.c_str(), rpose) != 0){
 							RCLCPP_ERROR(get_node()->get_logger(), "MoveC: get robpose from target error.");
 							res->result = ERR_GETMOVETARGET;
 							return;
 						}
-						if (0 == getrobpose(_target_mid.c_str(), &rpose_mid_)){
-							rpose_mid = &rpose_mid_;
-						}else{
+						if (getrobpose(_target_mid.c_str(), rpose_mid) != 0){
 							RCLCPP_ERROR(get_node()->get_logger(), "MoveC:get robpose_mid from target_mid error.");
 							res->result = ERR_GETMOVETARGET;
 							return;
@@ -498,8 +458,7 @@ void HyyController::robotmove_command_callback(const std::shared_ptr<hyy_message
 				res->result = MultiMoveC(rpose, rpose_mid, rspeed, rzone, rtool, rwobj, component_index_);
 				if (0 != res->result)
 				{
-					RCLCPP_INFO_STREAM(get_node()->get_logger(), "result: " << res->result);
-					RCLCPP_ERROR(get_node()->get_logger(), "MoveC: perform moveC error.");
+					RCLCPP_ERROR_STREAM(get_node()->get_logger(), "MoveC: perform error, result = " << res->result);
 					return;
 				}
 
@@ -606,22 +565,16 @@ void HyyController::robotmovedata_command_callback(const std::shared_ptr<hyy_mes
 				tool *rtool = NULL;
 				wobj *rwobj = NULL;
 				if (!req->tool.empty()){
-					if (0 != gettool(req->tool.c_str(), &rtool_)){
+					if (0 != gettool(req->tool.c_str(), rtool)){
 						RCLCPP_WARN(get_node()->get_logger(), "Movedata: get tool failed, use default.");
-						init_tool(&rtool_, default_tool_frame, 1, &default_payload);
-						rtool = &rtool_;				
-					}else{
-						rtool = &rtool_;
+						rtool = &default_tool;				
 					}
 				}
 				if (!req->wobj.empty())
 				{
-					if (0 != getwobj(req->wobj.c_str(), &rwobj_)){
+					if (0 != getwobj(req->wobj.c_str(), rwobj)){
 						RCLCPP_WARN(get_node()->get_logger(), "Movedata: get wobj failed, use default.");
-						init_wobj(&rwobj_, default_userframe, default_workframe, default_addframe, 0, 0, 0);
-						rwobj = &rwobj_;
-					}else{
-						rwobj = &rwobj_;
+						rwobj = &default_wobj;
 					}
 				}
 				robpose *pospose;

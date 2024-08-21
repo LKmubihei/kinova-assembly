@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <utility>
 #include <memory>
-#include <string>
+#include <cstring>
 #include <vector>
 #include "controller_interface/controller_interface.hpp"
 #include "rclcpp/logging.hpp"
@@ -94,13 +94,13 @@ namespace hyy_controller
     void robotgeneralcontrol_command_callback(const std::shared_ptr<hyyGeneralControlMsg::Request> req,
                                     std::shared_ptr<hyyGeneralControlMsg::Response> res);
 
-    HYYRobotBase::robjoint rjoint_;
-    HYYRobotBase::robpose rpose_;
-    HYYRobotBase::robpose rpose_mid_;
-    HYYRobotBase::speed rspeed_;
-    HYYRobotBase::zone rzone_;
-    HYYRobotBase::tool rtool_;
-    HYYRobotBase::wobj rwobj_;
+    // HYYRobotBase::robjoint rjoint_;
+    // HYYRobotBase::robpose rpose_;
+    // HYYRobotBase::robpose rpose_mid_;
+    // HYYRobotBase::speed rspeed_;
+    // HYYRobotBase::zone rzone_;
+    // HYYRobotBase::tool rtool_;
+    // HYYRobotBase::wobj rwobj_;
 
     std::shared_ptr<ParamListener> param_listener_;
     Params params_;
@@ -112,7 +112,6 @@ namespace hyy_controller
     bool start_controller;
     bool block_flag;
     int if_additionaxis;
-    std::string subject;
 
     rclcpp::Service<hyyMoveMsg>::SharedPtr hyyMoveSrv;
     rclcpp::Service<hyyGripMsg>::SharedPtr hyyGripSrv;
@@ -123,12 +122,16 @@ namespace hyy_controller
     double velocity_data_type(const std::string &velocity);
 
   private:
-    double *joint_speed;
-    double *default_tool_frame;
+    double *default_jointspeed;
+    double *default_toolframe;
     double *default_userframe;
     double *default_workframe;
     double *default_addframe;
     HYYRobotBase::PayLoad default_payload;
+    HYYRobotBase::speed default_speed;
+    HYYRobotBase::tool default_tool;
+    HYYRobotBase::wobj default_wobj;
+    HYYRobotBase::zone default_zone;
   };
 
 }  // namespace hyy_controller
