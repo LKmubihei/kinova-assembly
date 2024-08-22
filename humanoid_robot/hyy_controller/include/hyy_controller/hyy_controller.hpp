@@ -94,13 +94,13 @@ namespace hyy_controller
     void robotgeneralcontrol_command_callback(const std::shared_ptr<hyyGeneralControlMsg::Request> req,
                                     std::shared_ptr<hyyGeneralControlMsg::Response> res);
 
-    // HYYRobotBase::robjoint rjoint_;
-    // HYYRobotBase::robpose rpose_;
-    // HYYRobotBase::robpose rpose_mid_;
-    // HYYRobotBase::speed rspeed_;
-    // HYYRobotBase::zone rzone_;
-    // HYYRobotBase::tool rtool_;
-    // HYYRobotBase::wobj rwobj_;
+    HYYRobotBase::robjoint rjoint_;
+    HYYRobotBase::robpose rpose_;
+    HYYRobotBase::robpose rpose_mid_;
+    HYYRobotBase::speed rspeed_;
+    HYYRobotBase::zone rzone_;
+    HYYRobotBase::tool rtool_;
+    HYYRobotBase::wobj rwobj_;
 
     std::shared_ptr<ParamListener> param_listener_;
     Params params_;

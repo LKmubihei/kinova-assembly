@@ -22,7 +22,7 @@ void handle_sigint(int sig) {
     leftArmControl->stopRobotRun();
     bodyControl->stopAddaxisRun();
     headControl->stopAddaxisRun();
-    printf("\nros2 shut down, wait seconds to exit 0.\n");
+    printf("ros2 shut down, wait seconds to exit 0.\n");
     if (rclcpp::shutdown())
     {
         sleep(2);
@@ -33,33 +33,26 @@ void handle_sigint(int sig) {
 void blockhere(int num_args, ...) {
     va_list args;
     va_start(args, num_args);
-
     while (1) {
         if (stop.load()) {
             break;
         }
-
         bool all_zero = true;
-
         va_list args_copy;
         va_copy(args_copy, args);
-
         for (int i = 0; i < num_args; ++i) {
             if (va_arg(args_copy, int) != 0) {
                 all_zero = false;
                 break;
             }
         }
-
         va_end(args_copy);
-
         if (all_zero) {
             break;
         } else {
             usleep(100000);
         }
     }
-
     va_end(args);
 }
 
