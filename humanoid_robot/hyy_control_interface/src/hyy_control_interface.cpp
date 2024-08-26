@@ -46,7 +46,7 @@ bool HyyRobotControl::init(std::string controller_name)
 		}
 	}
 
-	sleep(1);
+	usleep(250000);
 	RCLCPP_INFO_STREAM(node_->get_logger(), controller_name << ": all service clients created successfully.");
 
 	init_flag = true;
@@ -1212,7 +1212,7 @@ bool HyyExternalDevicesControl::init(std::string controller_name)
 		}
 	}
 
-	sleep(1);
+	usleep(250000);
 	RCLCPP_INFO_STREAM(node_->get_logger(), controller_name << ": all service clients created successfully.");
 
 	init_flag = true;

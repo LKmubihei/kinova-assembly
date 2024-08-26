@@ -12,7 +12,6 @@ std::shared_ptr<hyy_control_interface::HyyRobotControl> rightArmControl;
 std::shared_ptr<hyy_control_interface::HyyRobotControl> leftArmControl;
 std::shared_ptr<hyy_control_interface::HyyRobotControl> bodyControl;
 std::shared_ptr<hyy_control_interface::HyyRobotControl> headControl;
-// std::shared_ptr<hyy_control_interface::HyyExternalDevicesControl> gripperHandControl;
 
 void handle_sigint(int sig) {
     printf("\nros2 is shutting down, robot stop moving.\n");
@@ -22,7 +21,7 @@ void handle_sigint(int sig) {
     leftArmControl->stopRobotRun();
     bodyControl->stopAddaxisRun();
     headControl->stopAddaxisRun();
-    printf("\nros2 shut down, wait seconds to exit 0.\n");
+    printf("ros2 shut down, wait seconds to exit 0.\n");
     if (rclcpp::shutdown())
     {
         sleep(2);
@@ -33,33 +32,26 @@ void handle_sigint(int sig) {
 void blockhere(int num_args, ...) {
     va_list args;
     va_start(args, num_args);
-
     while (1) {
         if (stop.load()) {
             break;
         }
-
         bool all_zero = true;
-
         va_list args_copy;
         va_copy(args_copy, args);
-
         for (int i = 0; i < num_args; ++i) {
             if (va_arg(args_copy, int) != 0) {
                 all_zero = false;
                 break;
             }
         }
-
         va_end(args_copy);
-
         if (all_zero) {
             break;
         } else {
             usleep(100000);
         }
     }
-
     va_end(args);
 }
 
@@ -68,7 +60,8 @@ int main(int argc, char **argv){
     
     /***************************************************************************/
     /*                                                                         */
-    /*   Standard application structure   Client Initialize!!                   */
+    /*   Standard application structure                                        */
+    /*   System Initialize!!                                                   */
     /*                                                                         */
     /***************************************************************************/
 
@@ -76,12 +69,6 @@ int main(int argc, char **argv){
     signal(SIGINT, handle_sigint);
     auto node = rclcpp::Node::make_shared("hyyShowDemo");
     auto executor = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
-
-    // gripperHandControl = std::make_shared<hyy_control_interface::HyyExternalDevicesControl>(node);
-    // if (!gripperHandControl->init("hyy_external_device_controller", 1)){
-    //     RCLCPP_ERROR(node->get_logger(), "hyydebug client initialize falied");
-    //     return -1;
-    // }
     
     leftArmControl = std::make_shared<hyy_control_interface::HyyRobotControl>(node);
     if (!leftArmControl->init("hyy_left_arm_controller")){
@@ -109,81 +96,130 @@ int main(int argc, char **argv){
             executor->spin(); 
         }
     );
-
     sleep(2);
-
-    // gripperHandControl->Gripper_initialize();
 
     /***************************************************************************/
     /*                                                                         */
     /*   Standard application structure                                        */
-    /*   Robot Move Test.                                                      */
+    /*   Get Variables!!                                                       */
     /*                                                                         */
     /***************************************************************************/
-	
-    // vector<int> angle_grip = {600, 700, 800, 900, 800, 500};
 
-    string R0_VEL = "R0_PERCENT10";
-    string R1_VEL = "R0_PERCENT10";
-    string A0_VEL = "A0_PERCENT20";
-    string A1_VEL = "A0_PERCENT20";
+    string R0_VEL = "R0_PERCENT5";
+    string R1_VEL = "R0_PERCENT5";
+    string A0_VEL = "A0_PERCENT10";
+    string A1_VEL = "A0_PERCENT10";
 
     // string zone = "DEFAULT_ZONE";
     // string tool = "DEFAULT_TOOL";
     // string wobj = "DEFAULT_WOBJ";
 
-    leftArmControl->isblock(false);
-    rightArmControl->isblock(false);
+    leftArmControl->isblock(true);
+    rightArmControl->isblock(true);
     bodyControl->isblock(true);
     headControl->isblock(true);
+
+    /***************************************************************************/
+    /*                                                                         */
+    /*   Standard application structure                                        */
+    /*   Left Arm Move Test.                                                   */
+    /*                                                                         */
+    /***************************************************************************/
 
     int count = 0;
     while (leftArmControl->robot_ok())
     {
-
         //  STEP 1 (Initialize)
-        bodyControl->moveA("A0_J0", A0_VEL);    
-        headControl->moveA("A1_J0", A1_VEL);
         leftArmControl->moveA("R0_J0", R0_VEL);
-        rightArmControl->moveA("R1_J0", R1_VEL);
-        // gripperHandControl->Gripper_fullopen();
-        // gripperHandControl->hand_fullopen();
-        blockhere(2, leftArmControl->ask_status(), rightArmControl->ask_status());
-
         //  STEP 2 (Grip)
-        bodyControl->moveA("A0_J1", A0_VEL);
-        leftArmControl->moveA("R0_J2", R0_VEL);
-        rightArmControl->moveA("R1_J2", R1_VEL);
-        blockhere(2, leftArmControl->ask_status(), rightArmControl->ask_status());
-        // gripperHandControl->Gripper_fullclose();
-        // gripperHandControl->hand_SetAngle(angle_grip);
-
-        //  STEP 3 (Move and Drop)
-        bodyControl->moveA("A0_J0", A0_VEL);    
-        headControl->moveA("A1_J1", A1_VEL);
-        headControl->moveA("A1_J0", A1_VEL);
-        bodyControl->moveA("A0_J2", A0_VEL);
-        bodyControl->moveA("A0_J3", A0_VEL);
-        // gripperHandControl->Gripper_fullopen();
-        // gripperHandControl->hand_fullopen();
-
+        leftArmControl->moveJ("R0_P2", R0_VEL);
         //  STEP 4 (Back to Initial)
-        leftArmControl->moveA("R0_J0", R0_VEL);
-        rightArmControl->moveA("R1_J0", R1_VEL);
-        blockhere(2, leftArmControl->ask_status(), rightArmControl->ask_status());
-        bodyControl->moveA("A0_J2", A0_VEL);
-        bodyControl->moveA("A0_J0", A0_VEL);
+        leftArmControl->moveJ("R0_P0", R0_VEL);
 
-        RCLCPP_INFO(node->get_logger(), "current conut: %d.", count);
-        if (++count >= 10)
-        {
+        if (++count >= 1){
             break;
         }
     }
 
     /***************************************************************************/
     /*                                                                         */
-    /*   Standard application structure   Ros2 destroy!!                       */
+    /*   Standard application structure                                        */
+    /*   Right Arm Move Test.                                                  */
+    /*                                                                         */
+    /***************************************************************************/
+
+    count = 0;
+    while (rightArmControl->robot_ok())
+    {
+        //  STEP 1 (Initialize)
+        rightArmControl->moveA("R1_J0", R1_VEL);
+
+        //  STEP 2 (Grip)
+        rightArmControl->moveJ("R1_P2", R1_VEL);
+
+        //  STEP 4 (Back to Initial)
+        rightArmControl->moveJ("R1_P0", R1_VEL);
+        
+        if (++count >= 1){
+            break;
+        }
+    }
+
+    /***************************************************************************/
+    /*                                                                         */
+    /*   Standard application structure                                        */
+    /*   Body Move Test.                                                       */
+    /*                                                                         */
+    /***************************************************************************/
+
+    count = 0;
+    while (bodyControl->robot_ok())
+    {
+        //  STEP 1 (Initialize)
+        bodyControl->moveA("A0_J0", A0_VEL);    
+
+        //  STEP 2 (Grip)
+        bodyControl->moveA("A0_J1", A0_VEL);
+
+        //  STEP 3 (Move and Drop)
+        bodyControl->moveA("A0_J0", A0_VEL);    
+        bodyControl->moveA("A0_J2", A0_VEL);
+        bodyControl->moveA("A0_J3", A0_VEL);
+
+        //  STEP 4 (Back to Initial)
+        bodyControl->moveA("A0_J2", A0_VEL);
+        bodyControl->moveA("A0_J0", A0_VEL);
+
+        if (++count >= 1){
+            break;
+        }
+    }
+    /***************************************************************************/
+    /*                                                                         */
+    /*   Standard application structure                                        */
+    /*   Head Move Test.                                                       */
+    /*                                                                         */
+    /***************************************************************************/
+
+    count = 0;
+    while (headControl->robot_ok())
+    {
+        //  STEP 1 (Initialize)
+        headControl->moveA("A1_J0", A1_VEL);
+
+        //  STEP 3 (Move and Drop)
+        headControl->moveA("A1_J1", A1_VEL);
+        headControl->moveA("A1_J0", A1_VEL);
+
+        if (++count >= 1){
+            break;
+        }
+    }
+
+    /***************************************************************************/
+    /*                                                                         */
+    /*   Standard application structure                                        */
+    /*   System Exit.                                                          */
     /*                                                                         */
     /***************************************************************************/
 

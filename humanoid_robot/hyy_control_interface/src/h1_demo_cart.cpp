@@ -104,7 +104,7 @@ int main(int argc, char **argv){
         }
     );
 
-    sleep(3);
+    sleep(2);
 
     // gripperHandControl->Gripper_initialize();
 
@@ -115,25 +115,25 @@ int main(int argc, char **argv){
     /*                                                                         */
     /***************************************************************************/
 
-    vector<double> cart_pos;
-    cart_pos = leftArmControl->get_cartesian_data("R0_P0");
-    RCLCPP_INFO(node->get_logger(), "R0_P0: %.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f", cart_pos[0], cart_pos[1], cart_pos[2], cart_pos[3], cart_pos[4], cart_pos[5]);
-    cart_pos = leftArmControl->get_cartesian_data("R0_P2");
-    RCLCPP_INFO(node->get_logger(), "R0_P2: %.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f", cart_pos[0], cart_pos[1], cart_pos[2], cart_pos[3], cart_pos[4], cart_pos[5]);
+    // vector<double> cart_pos;
+    // cart_pos = leftArmControl->get_cartesian_data("R0_P0");
+    // RCLCPP_INFO(node->get_logger(), "R0_P0: %.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f", cart_pos[0], cart_pos[1], cart_pos[2], cart_pos[3], cart_pos[4], cart_pos[5]);
+    // cart_pos = leftArmControl->get_cartesian_data("R0_P2");
+    // RCLCPP_INFO(node->get_logger(), "R0_P2: %.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f", cart_pos[0], cart_pos[1], cart_pos[2], cart_pos[3], cart_pos[4], cart_pos[5]);
 
-    vector<double> joint_pos;
-    joint_pos = leftArmControl->get_joint_data("R1_J0");
-    RCLCPP_INFO(node->get_logger(), "R1_J0: %.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f", joint_pos[0], joint_pos[1], joint_pos[2], joint_pos[3], joint_pos[4], joint_pos[5], joint_pos[6]);
-    joint_pos = leftArmControl->get_joint_data("R1_J2");
-    RCLCPP_INFO(node->get_logger(), "R1_J2: %.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f", joint_pos[0], joint_pos[1], joint_pos[2], joint_pos[3], joint_pos[4], joint_pos[5], joint_pos[6]);
+    // vector<double> joint_pos;
+    // joint_pos = leftArmControl->get_joint_data("R1_J0");
+    // RCLCPP_INFO(node->get_logger(), "R1_J0: %.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f", joint_pos[0], joint_pos[1], joint_pos[2], joint_pos[3], joint_pos[4], joint_pos[5], joint_pos[6]);
+    // joint_pos = leftArmControl->get_joint_data("R1_J2");
+    // RCLCPP_INFO(node->get_logger(), "R1_J2: %.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f", joint_pos[0], joint_pos[1], joint_pos[2], joint_pos[3], joint_pos[4], joint_pos[5], joint_pos[6]);
 
-    vector<double> cur_cart_pos;
-    cur_cart_pos = leftArmControl->get_cartesian_current();
-    RCLCPP_INFO(node->get_logger(), "cur_cart_pos: %.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f", cur_cart_pos[0], cur_cart_pos[1], cur_cart_pos[2], cur_cart_pos[3], cur_cart_pos[4], cur_cart_pos[5]);
+    // vector<double> cur_cart_pos;
+    // cur_cart_pos = leftArmControl->get_cartesian_current();
+    // RCLCPP_INFO(node->get_logger(), "cur_cart_pos: %.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f", cur_cart_pos[0], cur_cart_pos[1], cur_cart_pos[2], cur_cart_pos[3], cur_cart_pos[4], cur_cart_pos[5]);
 
-    vector<double> cur_joint_pos;
-    cur_joint_pos = leftArmControl->get_joint_current();
-    RCLCPP_INFO(node->get_logger(), "cur_joint_pos: %.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f", cur_joint_pos[0], cur_joint_pos[1], cur_joint_pos[2], cur_joint_pos[3], cur_joint_pos[4], cur_joint_pos[5], cur_joint_pos[6]);
+    // vector<double> cur_joint_pos;
+    // cur_joint_pos = leftArmControl->get_joint_current();
+    // RCLCPP_INFO(node->get_logger(), "cur_joint_pos: %.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f", cur_joint_pos[0], cur_joint_pos[1], cur_joint_pos[2], cur_joint_pos[3], cur_joint_pos[4], cur_joint_pos[5], cur_joint_pos[6]);
 
     /***************************************************************************/
     /*                                                                         */
@@ -144,8 +144,8 @@ int main(int argc, char **argv){
 	
     // vector<int> angle_grip = {600, 700, 800, 900, 800, 500};
 
-    string R0_VEL = "R0_PERCENT20";
-    string R1_VEL = "R0_PERCENT20";
+    string R0_VEL = "R0_PERCENT10";
+    string R1_VEL = "R0_PERCENT10";
     string A0_VEL = "A0_PERCENT20";
     string A1_VEL = "A0_PERCENT20";
 
@@ -194,13 +194,12 @@ int main(int argc, char **argv){
         bodyControl->moveA("A0_J2", A0_VEL);
         bodyControl->moveA("A0_J0", A0_VEL);
 
-        if (count++ >= 2){
+        RCLCPP_INFO(node->get_logger(), "current conut: %d.", count);
+        if (++count >= 10)
+        {
             break;
         }
     }
-
-    vector<double> cur_cart = leftArmControl->get_cartesian_current();
-    RCLCPP_INFO(node->get_logger(), "cur_cart: %.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f", cur_cart[0], cur_cart[1], cur_cart[2], cur_cart[3], cur_cart[4], cur_cart[5]);
 
     /***************************************************************************/
     /*                                                                         */

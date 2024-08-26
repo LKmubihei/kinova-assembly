@@ -108,8 +108,7 @@ int main(int argc, char **argv){
             executor->spin(); 
         }
     );
-
-    sleep(3);
+    sleep(2);
 
     // gripperHandControl->Gripper_initialize();
     
