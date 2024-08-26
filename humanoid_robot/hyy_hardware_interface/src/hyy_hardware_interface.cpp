@@ -273,11 +273,6 @@ std::vector<hardware_interface::CommandInterface> HyyHardwareInterface::export_c
 
 hardware_interface::CallbackReturn HyyHardwareInterface::on_configure(const rclcpp_lifecycle::State & previous_state){    
 
-    return CallbackReturn::SUCCESS;
-}
-
-hardware_interface::CallbackReturn HyyHardwareInterface::on_activate(const rclcpp_lifecycle::State & previous_state){
-
     for (int i = 0; i < robots_num; i++){
         HYYRobotBase::RobotPoweroff(robots[i]._index);
     }
@@ -347,6 +342,12 @@ hardware_interface::CallbackReturn HyyHardwareInterface::on_activate(const rclcp
         RCLCPP_FATAL(logger_, "Error: %s", e.what());
         return CallbackReturn::ERROR;
     }
+    
+    return CallbackReturn::SUCCESS;
+}
+
+hardware_interface::CallbackReturn HyyHardwareInterface::on_activate(const rclcpp_lifecycle::State & previous_state){
+
 
     for (int i = 0; i < robots_num; i++){
         HYYRobotBase::RobotPower(robots[i]._index);
