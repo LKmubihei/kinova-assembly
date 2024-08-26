@@ -187,64 +187,6 @@ hardware_interface::CallbackReturn HyyHardwareInterface::on_init(const hardware_
         }
     }
 
-    /*
-        Initialize robots raw data
-    */
-    try{
-        for (int i = 0; i < robots_num; i++)
-        {
-            robots[i].joint_position_state_.resize(robots[i]._dof);
-            robots[i].joint_velocity_state_.resize(robots[i]._dof);
-            robots[i].joint_effort_state_.resize(robots[i]._dof);
-            robots[i].joint_position_command_.resize(robots[i]._dof);
-            robots[i].joint_velocity_command_.resize(robots[i]._dof);
-            robots[i].joint_effort_command_.resize(robots[i]._dof);
-
-            for (size_t j = 0; j < robots[i]._dof; j++){
-                robots[i].joint_position_state_[j] = HYYRobotBase::GetAxisPosition(robots[i].component_name, j + 1);
-                robots[i].joint_velocity_state_[j] = 0.0;
-                robots[i].joint_effort_state_[j] = 0.0;
-                robots[i].joint_position_command_[j] = robots[i].joint_position_state_[j];
-                robots[i].joint_velocity_command_[j] = robots[i].joint_velocity_state_[j];
-                robots[i].joint_effort_command_[j] = robots[i].joint_effort_state_[j];
-            }
-        }
-
-        if (if_add_axisgroups){
-            for (int i = 0; i < addGroups_num; i++)
-            {
-                addGroups[i].joint_position_state_.resize(addGroups[i]._dof);
-                addGroups[i].joint_velocity_state_.resize(addGroups[i]._dof);
-                addGroups[i].joint_effort_state_.resize(addGroups[i]._dof);
-                addGroups[i].joint_position_command_.resize(addGroups[i]._dof);
-                addGroups[i].joint_velocity_command_.resize(addGroups[i]._dof);
-                addGroups[i].joint_effort_command_.resize(addGroups[i]._dof);
-
-                for (size_t j = 0; j < addGroups[i]._dof; j++){
-                    addGroups[i].joint_position_state_[j] = HYYRobotBase::GetAxisPosition(addGroups[i].component_name, j + 1);
-                    addGroups[i].joint_velocity_state_[j] = 0.0;
-                    addGroups[i].joint_effort_state_[j] = 0.0;
-                    addGroups[i].joint_position_command_[j] = addGroups[i].joint_position_state_[j];
-                    addGroups[i].joint_velocity_command_[j] = addGroups[i].joint_velocity_state_[j];
-                    addGroups[i].joint_effort_command_[j] = addGroups[i].joint_effort_state_[j];
-                }
-            }   
-        }
-
-        if (if_add_external_device){
-            externalDevices.joint_position_state_.resize(externalDevices._dof);
-            externalDevices.joint_position_command_.resize(externalDevices._dof);
-            for (size_t i = 0; i < externalDevices._dof; i++){
-                externalDevices.joint_position_state_[i] = 0.0;
-                externalDevices.joint_position_command_[i] = externalDevices.joint_position_state_[i];
-            }
-        }
-        
-    }catch(std::exception &e){
-        RCLCPP_FATAL(logger_, "Error: %s", e.what());
-        return CallbackReturn::ERROR;
-    }
-
     return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -347,6 +289,64 @@ hardware_interface::CallbackReturn HyyHardwareInterface::on_activate(const rclcp
     HYYRobotBase::set_robot_run_type(_sim_flag);
     int runmode = HYYRobotBase::get_robot_run_type();
     RCLCPP_INFO(logger_, "robot current run type: %s(%d)", runmode ? "inSim" : "inReal", runmode);
+
+    /*
+        Initialize robots raw data
+    */
+    try{
+        for (int i = 0; i < robots_num; i++)
+        {
+            robots[i].joint_position_state_.resize(robots[i]._dof);
+            robots[i].joint_velocity_state_.resize(robots[i]._dof);
+            robots[i].joint_effort_state_.resize(robots[i]._dof);
+            robots[i].joint_position_command_.resize(robots[i]._dof);
+            robots[i].joint_velocity_command_.resize(robots[i]._dof);
+            robots[i].joint_effort_command_.resize(robots[i]._dof);
+
+            for (size_t j = 0; j < robots[i]._dof; j++){
+                robots[i].joint_position_state_[j] = HYYRobotBase::GetAxisPosition(robots[i].component_name, j + 1);
+                robots[i].joint_velocity_state_[j] = 0.0;
+                robots[i].joint_effort_state_[j] = 0.0;
+                robots[i].joint_position_command_[j] = robots[i].joint_position_state_[j];
+                robots[i].joint_velocity_command_[j] = robots[i].joint_velocity_state_[j];
+                robots[i].joint_effort_command_[j] = robots[i].joint_effort_state_[j];
+            }
+        }
+
+        if (if_add_axisgroups){
+            for (int i = 0; i < addGroups_num; i++)
+            {
+                addGroups[i].joint_position_state_.resize(addGroups[i]._dof);
+                addGroups[i].joint_velocity_state_.resize(addGroups[i]._dof);
+                addGroups[i].joint_effort_state_.resize(addGroups[i]._dof);
+                addGroups[i].joint_position_command_.resize(addGroups[i]._dof);
+                addGroups[i].joint_velocity_command_.resize(addGroups[i]._dof);
+                addGroups[i].joint_effort_command_.resize(addGroups[i]._dof);
+
+                for (size_t j = 0; j < addGroups[i]._dof; j++){
+                    addGroups[i].joint_position_state_[j] = HYYRobotBase::GetAxisPosition(addGroups[i].component_name, j + 1);
+                    addGroups[i].joint_velocity_state_[j] = 0.0;
+                    addGroups[i].joint_effort_state_[j] = 0.0;
+                    addGroups[i].joint_position_command_[j] = addGroups[i].joint_position_state_[j];
+                    addGroups[i].joint_velocity_command_[j] = addGroups[i].joint_velocity_state_[j];
+                    addGroups[i].joint_effort_command_[j] = addGroups[i].joint_effort_state_[j];
+                }
+            }   
+        }
+
+        if (if_add_external_device){
+            externalDevices.joint_position_state_.resize(externalDevices._dof);
+            externalDevices.joint_position_command_.resize(externalDevices._dof);
+            for (size_t i = 0; i < externalDevices._dof; i++){
+                externalDevices.joint_position_state_[i] = 0.0;
+                externalDevices.joint_position_command_[i] = externalDevices.joint_position_state_[i];
+            }
+        }
+        
+    }catch(std::exception &e){
+        RCLCPP_FATAL(logger_, "Error: %s", e.what());
+        return CallbackReturn::ERROR;
+    }
 
     for (int i = 0; i < robots_num; i++){
         HYYRobotBase::RobotPower(robots[i]._index);

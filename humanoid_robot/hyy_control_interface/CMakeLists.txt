@@ -57,6 +57,12 @@ $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 $<INSTALL_INTERFACE:include>)
 ament_target_dependencies(h1_separate_cart PUBLIC rclcpp hyy_message)
 
+add_executable(h1_demo_home src/hyy_control_interface.cpp src/h1_demo_home.cpp)
+target_include_directories(h1_demo_home PUBLIC
+$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+$<INSTALL_INTERFACE:include>)
+ament_target_dependencies(h1_demo_home PUBLIC rclcpp hyy_message)
+
 add_executable(t1_demo_pos src/hyy_control_interface.cpp src/t1_demo_pos.cpp)
 target_include_directories(t1_demo_pos PUBLIC
 $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -123,6 +129,7 @@ ament_target_dependencies(
 target_compile_features(h1_demo_cart PUBLIC c_std_99 cxx_std_17)
 target_compile_features(h1_demo_pos  PUBLIC c_std_99 cxx_std_17)
 target_compile_features(h1_separate_cart  PUBLIC c_std_99 cxx_std_17)
+target_compile_features(h1_demo_home  PUBLIC c_std_99 cxx_std_17)
 target_compile_features(t1_demo_pos  PUBLIC c_std_99 cxx_std_17)
 target_compile_features(collision_detect PUBLIC c_std_99 cxx_std_17)
 target_compile_features(motion_plan_demo PUBLIC c_std_99 cxx_std_17)
@@ -147,6 +154,7 @@ install(
   h1_demo_cart 
   h1_demo_pos 
   h1_separate_cart
+  h1_demo_home
   t1_demo_pos 
   collision_detect  
   motion_plan_demo
