@@ -156,11 +156,6 @@ int main(int argc, char **argv){
     bodyControl->isblock(true);
     headControl->isblock(true);
 
-    leftArmControl->power();
-    rightArmControl->power();
-    bodyControl->power();
-    headControl->power();
-
     int count = 0;
     while (leftArmControl->robot_ok())
     {
@@ -210,11 +205,6 @@ int main(int argc, char **argv){
     /*   System Exit.                                                          */
     /*                                                                         */
     /***************************************************************************/
-
-    leftArmControl->powerOff();
-    rightArmControl->powerOff();
-    bodyControl->powerOff();
-    headControl->powerOff();
 
     RCLCPP_INFO(node->get_logger(), "debug finished test");
     executor->cancel();
