@@ -12,16 +12,14 @@ std::shared_ptr<hyy_control_interface::HyyRobotControl> rightArmControl;
 std::shared_ptr<hyy_control_interface::HyyRobotControl> leftArmControl;
 std::shared_ptr<hyy_control_interface::HyyRobotControl> bodyControl;
 std::shared_ptr<hyy_control_interface::HyyRobotControl> headControl;
-// std::shared_ptr<hyy_control_interface::HyyExternalDevicesControl> gripperHandControl;
 
 void handle_sigint(int sig) {
     printf("\nros2 is shutting down, robot stop moving.\n");
     stop.store(true);
-    // rightArmControl->stopDeviceRun();
-    rightArmControl->stopRobotRun();
-    leftArmControl->stopRobotRun();
-    bodyControl->stopAddaxisRun();
-    headControl->stopAddaxisRun();
+    rightArmControl->stopRun();
+    leftArmControl->stopRun();
+    bodyControl->stopRun();
+    headControl->stopRun();
     printf("ros2 shut down, wait seconds to exit 0.\n");
     if (rclcpp::shutdown())
     {
@@ -158,6 +156,11 @@ int main(int argc, char **argv){
     bodyControl->isblock(true);
     headControl->isblock(true);
 
+    leftArmControl->power();
+    rightArmControl->power();
+    bodyControl->power();
+    headControl->power();
+
     int count = 0;
     while (leftArmControl->robot_ok())
     {
@@ -207,6 +210,11 @@ int main(int argc, char **argv){
     /*   System Exit.                                                          */
     /*                                                                         */
     /***************************************************************************/
+
+    leftArmControl->powerOff();
+    rightArmControl->powerOff();
+    bodyControl->powerOff();
+    headControl->powerOff();
 
     RCLCPP_INFO(node->get_logger(), "debug finished test");
     executor->cancel();

@@ -666,50 +666,66 @@ void HyyController::robotgeneralcontrol_command_callback(const std::shared_ptr<h
 	if (start_controller)
 	{
 		if (!req->type.empty()){
-			string _deviceStop = "deviceStop";
-			string _robotStop = "robotStop";
-			string _addaxisStop = "addaxisStop";
+			string _stopRun = "stopRun";
+			string _power = "power";
+			string _powerOff = "powerOff";
 			string _robotok = "robotok";
-			int err = 0;
-			if (req->type == _deviceStop){
-				RCLCPP_INFO(get_node()->get_logger(), "robotcontrol: detect DeviceStopRun.");
-				DeviceStopRun();
-				RCLCPP_INFO(get_node()->get_logger(), "robotcontrol: All Devices Stop Run.");
-				res->result = 0;
-				return;
-			}else if(req->type == _robotStop || req->type == _addaxisStop){
+			int ret = 0;
+			if(req->type == _stopRun){
 				if(if_additionaxis){
-					RCLCPP_INFO(get_node()->get_logger(), "robotcontrol: detect AdditionStopRun.");
-					err = AdditionStopRun(component_index_);
-					RCLCPP_INFO(get_node()->get_logger(), "robotcontrol: AddAxisGroup %d Stop Run.", component_index_);
-					if (0 != HYYRobotBase::OpenCtrlInput(component_name_)){
-						start_controller = false;
-						RCLCPP_ERROR(get_node()->get_logger(), "OpenCtrlInput failed, err = %d, reboot driver", ERR_CACHE_CLOSED);
-					}
-					if(err == 0){
-						res->result = 0;
+					ret = AdditionStopRun(component_index_);
+					if(ret == 0){
+						RCLCPP_INFO(get_node()->get_logger(), "robotcontrol: Addition %d stop run.", component_index_);
+						res->result = ret;
 					}else{
-						res->result = ERR_CACHE_CLOSED;
+						RCLCPP_INFO(get_node()->get_logger(), "robotcontrol: Addition %d stop run failed.", component_index_);
+						res->result = ret;
 					}
-					return;
 				}else{
-					err = 0;
-					RCLCPP_INFO(get_node()->get_logger(), "robotcontrol: detect RobotStopRun.");
-					err = RobotStopRun(component_index_);
-					RCLCPP_INFO(get_node()->get_logger(), "robotcontrol: Robot %d Stop Run.", component_index_);
-					if (0 != HYYRobotBase::OpenCtrlInput(component_name_)){
-						start_controller = false;
-						RCLCPP_ERROR(get_node()->get_logger(), "OpenCtrlInput failed, err = %d, reboot driver", ERR_CACHE_CLOSED);
-					}
-					if(err == 0){
-						res->result = 0;
+					ret = RobotStopRun(component_index_);
+					if(ret == 0){
+						RCLCPP_INFO(get_node()->get_logger(), "robotcontrol: Robot %d stop run.", component_index_);
+						res->result = ret;
 					}else{
-						res->result = ERR_CACHE_CLOSED;
+						RCLCPP_INFO(get_node()->get_logger(), "robotcontrol: Robot %d stop run failed.", component_index_);
+						res->result = ret;
 					}
-					return;
 				}
+				ret = HYYRobotBase::OpenCtrlInput(component_name_);
+				if (ret != 0){
+					start_controller = false;
+					RCLCPP_ERROR(get_node()->get_logger(), "OpenCtrlInput failed, controller closed, please reboot hardware driver.");
+					res->result = ret;
+				}
+				return;
+			}else if (req->type == _power){
+				if(if_additionaxis){
+					ret = AdditionPower(component_index_);
+					if(ret == 0){
+						RCLCPP_INFO(get_node()->get_logger(), "robotcontrol: Addition %d Power.", component_index_);
+					}else{
+						RCLCPP_INFO(get_node()->get_logger(), "robotcontrol: Addition %d power failed.", component_index_);
+					}
+				}else{
+					ret = RobotPower(component_index_);
+					if(ret == 0){
+						RCLCPP_INFO(get_node()->get_logger(), "robotcontrol: Robot %d power.", component_index_);
+					}else{
+						RCLCPP_INFO(get_node()->get_logger(), "robotcontrol: Robot %d power failed.", component_index_);
+					}
+				}
+				res->result = ret;
+			}else if (req->type == _powerOff){
+				if(if_additionaxis){
+					ret = AdditionPoweroff(component_index_);
+					RCLCPP_INFO(get_node()->get_logger(), "robotcontrol: Addition %d Poweroff.", component_index_);
+				}else{
+					ret = RobotPoweroff(component_index_);
+					RCLCPP_INFO(get_node()->get_logger(), "robotcontrol: Robot %d Poweroff.", component_index_);
+				}
+				res->result = ret;
 			}else if (req->type == _robotok){
-				int ret = robot_ok();
+				ret = robot_ok();
 				res->result = ret;
 			}else{
 				RCLCPP_ERROR(get_node()->get_logger(), "robotcontrol: control type isn't exist.");
@@ -722,7 +738,6 @@ void HyyController::robotgeneralcontrol_command_callback(const std::shared_ptr<h
 			return;
 		}
 	}
-
 }
 
 double HyyController::velocity_data_type(const std::string& velocity)

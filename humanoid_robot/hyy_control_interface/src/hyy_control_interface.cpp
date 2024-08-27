@@ -53,7 +53,7 @@ bool HyyRobotControl::init(std::string controller_name)
 	return true;
 }
 
-int HyyRobotControl::stopDeviceRun(){
+int HyyRobotControl::stopRun(){
 
 	if (!init_flag){
 		RCLCPP_ERROR(node_->get_logger(), "please init()");
@@ -64,22 +64,22 @@ int HyyRobotControl::stopDeviceRun(){
 		return -1;
 	}
 
-	generalControlReq->type = "deviceStop";
-	generalControlReq->robotindex.clear();
-	generalControlReq->addaxisindex.clear();
+	generalControlReq->type = "stopRun";
+	// generalControlReq->robotindex.clear();
+	// generalControlReq->addaxisindex.clear();
 
 	auto res = robotGeneralControlClient->async_send_request(generalControlReq);
 	if (res.wait_for(std::chrono::seconds(10)) == std::future_status::ready) {
 		// RCLCPP_INFO_STREAM(node_->get_logger(), robotGeneralControlClient->get_service_name()<< " response: " << res.get()->result);
 		return res.get()->result;
 	} else {
-		RCLCPP_ERROR_STREAM(node_->get_logger(), "stopDeviceRun: failed to call service " << robotGeneralControlClient->get_service_name());
+		RCLCPP_ERROR_STREAM(node_->get_logger(), "stopRun: failed to call service " << robotGeneralControlClient->get_service_name());
 		return -1;
 	}
 
 }
 
-int HyyRobotControl::stopRobotRun(){
+int HyyRobotControl::power(){
 
 	if (!init_flag){
 		RCLCPP_ERROR(node_->get_logger(), "please init()");
@@ -90,23 +90,23 @@ int HyyRobotControl::stopRobotRun(){
 		return -1;
 	}
 
-	generalControlReq->type = "robotStop";
-	generalControlReq->robotindex.clear();
-	generalControlReq->addaxisindex.clear();
+	generalControlReq->type = "power";
+	// generalControlReq->robotindex.clear();
+	// generalControlReq->addaxisindex.clear();
 
 	auto res = robotGeneralControlClient->async_send_request(generalControlReq);
 	if (res.wait_for(std::chrono::seconds(10)) == std::future_status::ready) {
 		// RCLCPP_INFO_STREAM(node_->get_logger(), robotGeneralControlClient->get_service_name()<< " response: " << res.get()->result);
 		return res.get()->result;
 	} else {
-		RCLCPP_ERROR_STREAM(node_->get_logger(), "stopRobotRun: failed to call service " << robotGeneralControlClient->get_service_name());
+		RCLCPP_ERROR_STREAM(node_->get_logger(), "power: failed to call service " << robotGeneralControlClient->get_service_name());
 		return -1;
 	}
 
 }
 
-int HyyRobotControl::stopAddaxisRun(){
-	
+int HyyRobotControl::powerOff(){
+
 	if (!init_flag){
 		RCLCPP_ERROR(node_->get_logger(), "please init()");
 		return -1;
@@ -116,16 +116,16 @@ int HyyRobotControl::stopAddaxisRun(){
 		return -1;
 	}
 
-	generalControlReq->type = "addaxisStop";
-	generalControlReq->robotindex.clear();
-	generalControlReq->addaxisindex.clear();
+	generalControlReq->type = "powerOff";
+	// generalControlReq->robotindex.clear();
+	// generalControlReq->addaxisindex.clear();
 
 	auto res = robotGeneralControlClient->async_send_request(generalControlReq);
 	if (res.wait_for(std::chrono::seconds(10)) == std::future_status::ready) {
 		// RCLCPP_INFO_STREAM(node_->get_logger(), robotGeneralControlClient->get_service_name()<< " response: " << res.get()->result);
 		return res.get()->result;
 	} else {
-		RCLCPP_ERROR_STREAM(node_->get_logger(), "stopRobotRun: failed to call service " << robotGeneralControlClient->get_service_name());
+		RCLCPP_ERROR_STREAM(node_->get_logger(), "powerOff: failed to call service " << robotGeneralControlClient->get_service_name());
 		return -1;
 	}
 
@@ -143,8 +143,8 @@ int HyyRobotControl::robot_ok(){
 	}
 
 	generalControlReq->type = "robotok";
-	generalControlReq->robotindex.clear();
-	generalControlReq->addaxisindex.clear();
+	// generalControlReq->robotindex.clear();
+	// generalControlReq->addaxisindex.clear();
 
 	auto res = robotGeneralControlClient->async_send_request(generalControlReq);
 	if (res.wait_for(std::chrono::seconds(10)) == std::future_status::ready) {

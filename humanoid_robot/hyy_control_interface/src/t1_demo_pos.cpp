@@ -17,11 +17,10 @@ std::shared_ptr<hyy_control_interface::HyyRobotControl> headControl;
 void handle_sigint(int sig) {
     printf("\nros2 is shutting down, robot stop moving.\n");
     stop.store(true);
-    // rightArmControl->stopDeviceRun();
-    rightArmControl->stopRobotRun();
-    leftArmControl->stopRobotRun();
-    bodyControl->stopAddaxisRun();
-    headControl->stopAddaxisRun();
+    rightArmControl->stopRun();
+    leftArmControl->stopRun();
+    bodyControl->stopRun();
+    headControl->stopRun();
     printf("\nros2 shut down, wait seconds to exit 0.\n");
     if (rclcpp::shutdown())
     {

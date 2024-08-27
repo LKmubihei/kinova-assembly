@@ -254,19 +254,37 @@ public:
      * @brief 停止所有子设备运行，不下电，可继续执行后续命令
      * @return int 0：正常，<0:异常
      */
-    int stopDeviceRun();
+    int stopDeviceRun() = delete;
 
     /**
      * @brief 停止机器人运行，不下电，可继续执行后续命令
      * @return int 0：正常，<0:异常
      */
-    int stopRobotRun();
+    int stopRobotRun() = delete;
 
     /**
      * @brief 停止附加轴组运行，不下电，可继续执行后续命令
      * @return int 0：正常，<0:异常
      */
-    int stopAddaxisRun();
+    int stopAddaxisRun() = delete;
+
+    /**
+     * @brief 停止机器人/外部轴组的当前运动(不下电，后续运动命令可以执行)
+     * @return int 0：正常，<0:异常
+     */
+    int stopRun();
+
+    /**
+     * @brief 设备使能（上电）
+     * @return int 0：正常，<0:异常
+     */
+    int power();
+
+    /**
+     * @brief 设备去使能（下电）
+     * @return int 0：正常，<0:异常
+     */
+    int powerOff();
 
     /**
      * @brief 机器人状态是否正常
