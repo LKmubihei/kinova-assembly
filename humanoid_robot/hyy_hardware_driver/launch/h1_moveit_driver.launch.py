@@ -19,6 +19,9 @@ from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 from launch.conditions import IfCondition, UnlessCondition
 
+from ament_index_python.packages import get_package_share_directory
+from moveit_configs_utils import MoveItConfigsBuilder
+
 def generate_launch_description():
     # Declare arguments
     declared_arguments = []
@@ -117,7 +120,7 @@ def generate_launch_description():
         'false',
         condition=IfCondition(sim_gazebo_classic)
     )
-
+    
     # Get robot_description(URDF) via xacro
     robot_description_content = Command(
         [
@@ -140,6 +143,70 @@ def generate_launch_description():
     robot_controllers = PathJoinSubstitution(
         [FindPackageShare("hyy_hardware_driver"), "config", "h1_controller.yaml"]
     )
+
+    #**********************************#
+    #         Moveit2 config           #
+    #**********************************#
+    
+    package_share_directory = get_package_share_directory('h1_robot_moveit_config')
+
+    urdf_file_path = PathJoinSubstitution([FindPackageShare("h1_description"), "urdf", "h1.xacro"])
+    yaml_file_path = os.path.join(package_share_directory, 'config', 'moveit_controllers.yaml')
+
+    moveit_config = (
+        MoveItConfigsBuilder("h1_robot")
+        .robot_description(file_path=urdf_file_path)
+        .trajectory_execution(file_path=yaml_file_path)
+        .to_moveit_configs()
+    )
+
+    planning_scene_monitor_parameters = {
+        "publish_planning_scene": True,
+        "publish_geometry_updates": True,
+        "publish_state_updates": True,
+        "publish_transforms_updates": True,
+    }
+    # Start the actual move_group node/action server
+    run_move_group_node = Node(
+        package="moveit_ros_move_group",
+        executable="move_group",
+        output="both",
+        parameters=[moveit_config.to_dict(),
+                    planning_scene_monitor_parameters,
+                    {"use_sim_time": True}],
+    )
+
+    # RViz
+    rviz_config_file = os.path.join(get_package_share_directory("h1_robot_moveit_config"), 'config', "moveit.rviz")
+    rviz_node = Node(
+        package="rviz2",
+        executable="rviz2",
+        name="rviz2555",
+        output="both",
+        arguments=["-d", rviz_config_file],
+        parameters=[
+            moveit_config.robot_description,
+            moveit_config.robot_description_semantic,
+            moveit_config.robot_description_kinematics,
+            moveit_config.planning_pipelines,
+            moveit_config.joint_limits,
+            {"use_sim_time": True}
+        ], 
+    )
+
+    # Static TF
+    static_tf = Node(
+        package="tf2_ros",
+        executable="static_transform_publisher",
+        name="static_transform_publisher",
+        output="both",
+        arguments=["0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "world", "fake_link"],
+        parameters=[{"use_sim_time": True}],
+    )
+    
+    #**********************************#
+    #         Moveit2 config           #
+    #**********************************#
 
     # Start the master driver node 
     control_node = Node(
@@ -241,14 +308,6 @@ def generate_launch_description():
         condition= IfCondition(if_add_external_device)
     )
 
-    # Start rviz2
-    rviz_node = Node(
-        package="rviz2",
-        executable="rviz2",
-        name="rviz2",
-        output="log",
-    )
-    
     # Delay loading and activation of `joint_state_broadcaster` after start of ros2_control_node
     delay_joint_state_broadcaster_spawner_after_spawn_master_driver_node = RegisterEventHandler(
         event_handler=OnProcessStart(
@@ -339,6 +398,34 @@ def generate_launch_description():
         condition = IfCondition(if_add_axisgroups)
     )
 
+
+    load_controllers = [delay_robot_controller_spawners_after_joint_state_broadcaster_spawner, delay_addaxis_controller_spawners_after_joint_state_broadcaster_spawner]
+    # Delay loading and activation of move_group after load_controllers
+    delay_run_move_group_node_after_load_controllers = RegisterEventHandler(
+        event_handler=OnProcessExit(
+            target_action=load_controllers[-1],  # Ensure the last controller loaded triggers this event
+            on_exit=[
+                TimerAction(
+                    period=5.0,
+                    actions=[run_move_group_node]  # Wrap the Node in a list
+                )
+            ]
+        )
+    )
+    
+    # Delay loading and activation of move_group after load_controllers
+    delay_rviz_node_after_run_move_group_node = RegisterEventHandler(
+        event_handler=OnProcessStart(
+            target_action=run_move_group_node,  # Ensure the last controller loaded triggers this event
+            on_start=[
+                TimerAction(
+                    period=5.0,
+                    actions=[rviz_node]  # Wrap the Node in a list
+                )
+            ]
+        )
+    )
+
     return LaunchDescription(
         declared_arguments +
         [set_use_default_controllers, set_if_add_external_device] +
@@ -350,7 +437,8 @@ def generate_launch_description():
             delay_joint_state_broadcaster_spawner_after_spawn_master_driver_node,
             delay_joint_state_broadcaster_spawner_after_spawn_entity,
             delay_rviz_after_joint_state_broadcaster_spawner,
-            delay_robot_controller_spawners_after_joint_state_broadcaster_spawner,
-            delay_addaxis_controller_spawners_after_joint_state_broadcaster_spawner
+            load_controllers,
+            delay_run_move_group_node_after_load_controllers,
+            delay_rviz_node_after_run_move_group_node
         ]
     )
