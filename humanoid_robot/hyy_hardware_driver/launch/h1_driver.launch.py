@@ -22,17 +22,10 @@ from launch.conditions import IfCondition, UnlessCondition
 def generate_launch_description():
     # Declare arguments
     declared_arguments = []
-    declared_arguments.append( 
-        DeclareLaunchArgument(
-            'sim_gazebo_classic', 
-            default_value='false', 
-            description='if true, then start simulation with Gazebo classic'
-        )
-    )
     declared_arguments.append(
         DeclareLaunchArgument(
             "use_default_controllers",
-            default_value="false",
+            default_value="true",
             description="If true then use default controllers, otherwise use HYY controllers.",
         )
     )
@@ -74,7 +67,7 @@ def generate_launch_description():
     declared_arguments.append( 
         DeclareLaunchArgument(
             'if_add_external_device', 
-            default_value='false', 
+            default_value='true', 
             description='if true, then add external devices'
         )
     )
@@ -85,16 +78,8 @@ def generate_launch_description():
             description='external devices DOF'
         )
     )
-    declared_arguments.append( 
-        DeclareLaunchArgument(
-            'ifstartRviz', 
-            default_value='false', 
-            description='if true then start Rviz'
-        )
-    )
 
     # Initialize Arguments
-    sim_gazebo_classic = LaunchConfiguration('sim_gazebo_classic')
     use_default_controllers = LaunchConfiguration("use_default_controllers")
     communication_time = LaunchConfiguration("communication_time")
     device_mode = LaunchConfiguration('device_mode')
@@ -103,20 +88,6 @@ def generate_launch_description():
     if_add_axisgroups = LaunchConfiguration('if_add_axisgroups')
     if_add_external_device = LaunchConfiguration('if_add_external_device')
     external_device_dof = LaunchConfiguration('external_device_dof')
-    ifstartRviz = LaunchConfiguration('ifstartRviz')
-
-    # Only the default controller is supported.
-    set_use_default_controllers = SetLaunchConfiguration(
-        'use_default_controllers',
-        'true',
-        condition=IfCondition(sim_gazebo_classic)
-    )
-    # Gazebo simulation of external devices is not supported yet.
-    set_if_add_external_device = SetLaunchConfiguration(
-        'if_add_external_device',
-        'false',
-        condition=IfCondition(sim_gazebo_classic)
-    )
 
     # Get robot_description(URDF) via xacro
     robot_description_content = Command(
@@ -126,7 +97,7 @@ def generate_launch_description():
             PathJoinSubstitution(
                 [FindPackageShare("h1_description"), "urdf", "h1.xacro"]
             ),
-            ' sim_gazebo_classic:=', sim_gazebo_classic,
+            ' sim_gazebo_classic:=', "false",
             ' device_mode:=', device_mode,
             ' sim_flag:=', sim_flag,
             ' if_add_axisgroups:=', if_add_axisgroups,
@@ -149,19 +120,6 @@ def generate_launch_description():
         parameters=[{'communication_time':communication_time},
                     robot_description,
                     robot_controllers],
-        condition = UnlessCondition(sim_gazebo_classic)
-    )
-    start_gazebo_cmd =  ExecuteProcess(
-        cmd=['gazebo', '--verbose', '/usr/share/gazebo-11/worlds/empty.world', '-s', 'libgazebo_ros_init.so', '-s', 'libgazebo_ros_factory.so'],
-        output='both',
-        condition =IfCondition(sim_gazebo_classic),
-    )
-    spawn_entity = Node(
-        package='gazebo_ros', 
-        executable='spawn_entity.py',
-        arguments=['-topic', 'robot_description', '-entity', 'h1_robot'],
-        output='screen',
-        condition =IfCondition(sim_gazebo_classic)
     )
     
     # Start the necessary controller 
@@ -240,14 +198,6 @@ def generate_launch_description():
         arguments=['hyy_external_device_controller',"-c", "/controller_manager"],
         condition= IfCondition(if_add_external_device)
     )
-
-    # Start rviz2
-    rviz_node = Node(
-        package="rviz2",
-        executable="rviz2",
-        name="rviz2",
-        output="log",
-    )
     
     # Delay loading and activation of `joint_state_broadcaster` after start of ros2_control_node
     delay_joint_state_broadcaster_spawner_after_spawn_master_driver_node = RegisterEventHandler(
@@ -260,49 +210,6 @@ def generate_launch_description():
                 ),
             ],
         ),
-        condition = UnlessCondition(sim_gazebo_classic)
-    )
-    
-    # Delay spawn_entity after start of gazebo
-    delay_spawn_entity_after_start_gazebo_cmd = RegisterEventHandler(
-        event_handler=OnProcessStart(
-            target_action=start_gazebo_cmd,
-            on_start=[
-                TimerAction(
-                    period=5.0,
-                    actions=[spawn_entity],
-                ),
-            ],
-        ),
-        condition = IfCondition(sim_gazebo_classic)
-    )
-    
-    # Delay loading and activation of `joint_state_broadcaster` after start of spawn_entity
-    delay_joint_state_broadcaster_spawner_after_spawn_entity = RegisterEventHandler(
-        event_handler=OnProcessExit(
-            target_action=spawn_entity,
-            on_exit=[
-                TimerAction(
-                    period=5.0,
-                    actions=[joint_state_broadcaster_spawner],
-                ),
-            ],
-        ),
-        condition = IfCondition(sim_gazebo_classic)
-    )
-       
-    # Delay rviz start after Joint State Broadcaster to avoid unnecessary warning output.
-    delay_rviz_after_joint_state_broadcaster_spawner = RegisterEventHandler(
-        event_handler=OnProcessExit(
-            target_action=joint_state_broadcaster_spawner,
-            on_exit=[
-                TimerAction(
-                    period=2.0,
-                    actions=[rviz_node],
-                ),
-            ],
-        ),
-        condition = IfCondition(ifstartRviz)
     )
 
     # Delay loading and activation of robot_controller after `joint_state_broadcaster`
@@ -341,15 +248,10 @@ def generate_launch_description():
 
     return LaunchDescription(
         declared_arguments +
-        [set_use_default_controllers, set_if_add_external_device] +
         [
-            start_gazebo_cmd,
             control_node,
             robot_state_pub_node,
-            delay_spawn_entity_after_start_gazebo_cmd,
             delay_joint_state_broadcaster_spawner_after_spawn_master_driver_node,
-            delay_joint_state_broadcaster_spawner_after_spawn_entity,
-            delay_rviz_after_joint_state_broadcaster_spawner,
             delay_robot_controller_spawners_after_joint_state_broadcaster_spawner,
             delay_addaxis_controller_spawners_after_joint_state_broadcaster_spawner
         ]
