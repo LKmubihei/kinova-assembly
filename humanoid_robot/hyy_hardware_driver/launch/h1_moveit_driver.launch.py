@@ -28,15 +28,8 @@ def generate_launch_description():
     declared_arguments.append( 
         DeclareLaunchArgument(
             'sim_gazebo_classic', 
-            default_value='false', 
+            default_value='true', 
             description='if true, then start simulation with Gazebo classic'
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "use_default_controllers",
-            default_value="false",
-            description="If true then use default controllers, otherwise use HYY controllers.",
         )
     )
     declared_arguments.append(
@@ -77,7 +70,7 @@ def generate_launch_description():
     declared_arguments.append( 
         DeclareLaunchArgument(
             'if_add_external_device', 
-            default_value='false', 
+            default_value='true', 
             description='if true, then add external devices'
         )
     )
@@ -91,14 +84,13 @@ def generate_launch_description():
     declared_arguments.append( 
         DeclareLaunchArgument(
             'ifstartRviz', 
-            default_value='true', 
+            default_value='false', 
             description='if true then start Rviz'
         )
     )
 
     # Initialize Arguments
     sim_gazebo_classic = LaunchConfiguration('sim_gazebo_classic')
-    use_default_controllers = LaunchConfiguration("use_default_controllers")
     communication_time = LaunchConfiguration("communication_time")
     device_mode = LaunchConfiguration('device_mode')
     sim_flag = LaunchConfiguration('sim_flag')
@@ -107,19 +99,6 @@ def generate_launch_description():
     if_add_external_device = LaunchConfiguration('if_add_external_device')
     external_device_dof = LaunchConfiguration('external_device_dof')
     ifstartRviz = LaunchConfiguration('ifstartRviz')
-
-    # Only the default controller is supported.
-    set_use_default_controllers = SetLaunchConfiguration(
-        'use_default_controllers',
-        'true',
-        condition=IfCondition(sim_gazebo_classic)
-    )
-    # Gazebo simulation of external devices is not supported yet.
-    set_if_add_external_device = SetLaunchConfiguration(
-        'if_add_external_device',
-        'false',
-        condition=IfCondition(sim_gazebo_classic)
-    )
     
     # Get robot_description(URDF) via xacro
     robot_description_content = Command(
@@ -148,12 +127,9 @@ def generate_launch_description():
     #         Moveit2 config           #
     #**********************************#
     
-    urdf_file_path = os.path.join(get_package_share_directory('h1_description'), 'urdf', 'h1.xacro')
     yaml_file_path = os.path.join(get_package_share_directory('h1_robot_moveit_config'), 'config', 'moveit_controllers.yaml')
-
     moveit_config = (
         MoveItConfigsBuilder("h1_robot")
-        .robot_description(file_path=urdf_file_path)
         .trajectory_execution(file_path=yaml_file_path)
         .to_moveit_configs()
     )
@@ -164,6 +140,7 @@ def generate_launch_description():
         "publish_state_updates": True,
         "publish_transforms_updates": True,
     }
+
     # Start the actual move_group node/action server
     run_move_group_node = Node(
         package="moveit_ros_move_group",
@@ -171,7 +148,8 @@ def generate_launch_description():
         output="both",
         parameters=[moveit_config.to_dict(),
                     planning_scene_monitor_parameters,
-                    {"use_sim_time": True}],
+                    robot_description,
+        ],
     )
 
     # RViz
@@ -182,13 +160,8 @@ def generate_launch_description():
         name="rviz2555",
         output="both",
         arguments=["-d", rviz_config_file],
-        parameters=[
-            moveit_config.robot_description,
-            moveit_config.robot_description_semantic,
-            moveit_config.robot_description_kinematics,
-            moveit_config.planning_pipelines,
-            moveit_config.joint_limits,
-            {"use_sim_time": True}
+        parameters=[moveit_config.to_dict(),
+                    robot_description,
         ], 
     )
 
@@ -199,11 +172,11 @@ def generate_launch_description():
         name="static_transform_publisher",
         output="both",
         arguments=["0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "world", "fake_link"],
-        parameters=[{"use_sim_time": True}],
+        parameters=[],
     )
     
     #**********************************#
-    #         Moveit2 config           #
+    #         Hradware config          #
     #**********************************#
 
     # Start the master driver node 
@@ -229,6 +202,10 @@ def generate_launch_description():
         condition =IfCondition(sim_gazebo_classic)
     )
     
+    #**********************************#
+    #        Controller config         #
+    #**********************************#
+
     # Start the necessary controller 
     robot_state_pub_node = Node(
         package="robot_state_publisher",
@@ -247,66 +224,78 @@ def generate_launch_description():
         package="controller_manager",
         executable="spawner",
         arguments=['left_arm_controller',"-c", "/controller_manager"],
-        condition=IfCondition(use_default_controllers)
     )
     
     load_default_right_arm_controller = Node(
         package="controller_manager",
         executable="spawner",
         arguments=['right_arm_controller',"-c", "/controller_manager"],
-        condition=IfCondition(use_default_controllers)
     )
     
     load_default_body_controller = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=['body_controller',"-c", "/controller_manager"],
-        condition=IfCondition(use_default_controllers) 
+        arguments=['body_controller',"-c", "/controller_manager"], 
     )
     
     load_default_head_controller = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=['head_controller',"-c", "/controller_manager"],
-        condition=IfCondition(use_default_controllers) 
+        arguments=['head_controller',"-c", "/controller_manager"], 
     )
     
-    load_hyy_left_arm_controller = Node(
+    load_default_hand_controller_1 = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=['hyy_left_arm_controller',"-c", "/controller_manager"],
-        condition=UnlessCondition(use_default_controllers)
-    )
-
-    load_hyy_right_arm_controller = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=['hyy_right_arm_controller',"-c", "/controller_manager"],
-        condition=UnlessCondition(use_default_controllers)
-    )
-
-    load_hyy_body_controller = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=['hyy_body_controller',"-c", "/controller_manager"],
-        condition=UnlessCondition(use_default_controllers) 
-    )
-
-    load_hyy_head_controller = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=['hyy_head_controller',"-c", "/controller_manager"],
-        condition=UnlessCondition(use_default_controllers) 
+        arguments=['hand_J1_controller',"-c", "/controller_manager"],
     )
     
+    load_default_hand_controller_2 = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=['hand_J2_controller',"-c", "/controller_manager"],
+    )
+    
+    load_default_hand_controller_3 = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=['hand_J3_controller',"-c", "/controller_manager"],
+    )
+    
+    load_default_hand_controller_4 = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=['hand_J4_controller',"-c", "/controller_manager"],
+    )
+    
+    load_default_hand_controller_5 = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=['hand_J5_controller',"-c", "/controller_manager"],
+    )
+    
+    load_default_hand_controller_6 = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=['hand_J6_controller',"-c", "/controller_manager"],
+    )
+    
+    load_default_gripper_controller = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=['gripper_controller',"-c", "/controller_manager"],
+    )
+
     load_hyy_external_device_controller = Node(
         package="controller_manager",
         executable="spawner",
         arguments=['hyy_external_device_controller',"-c", "/controller_manager"],
-        condition= IfCondition(if_add_external_device)
     )
 
-    # Delay loading and activation of `joint_state_broadcaster` after start of ros2_control_node
+    #**********************************#
+    #       Boot sequence config       #
+    #**********************************#
+
     delay_joint_state_broadcaster_spawner_after_spawn_master_driver_node = RegisterEventHandler(
         event_handler=OnProcessStart(
             target_action=control_node,
@@ -320,7 +309,6 @@ def generate_launch_description():
         condition = UnlessCondition(sim_gazebo_classic)
     )
     
-    # Delay spawn_entity after start of gazebo
     delay_spawn_entity_after_start_gazebo_cmd = RegisterEventHandler(
         event_handler=OnProcessStart(
             target_action=start_gazebo_cmd,
@@ -334,7 +322,6 @@ def generate_launch_description():
         condition = IfCondition(sim_gazebo_classic)
     )
     
-    # Delay loading and activation of `joint_state_broadcaster` after start of spawn_entity
     delay_joint_state_broadcaster_spawner_after_spawn_entity = RegisterEventHandler(
         event_handler=OnProcessExit(
             target_action=spawn_entity,
@@ -348,7 +335,6 @@ def generate_launch_description():
         condition = IfCondition(sim_gazebo_classic)
     )
 
-    # Delay loading and activation of robot_controller after `joint_state_broadcaster`
     delay_robot_controller_spawners_after_joint_state_broadcaster_spawner = RegisterEventHandler(
         event_handler=OnProcessExit(
             target_action=joint_state_broadcaster_spawner,
@@ -356,16 +342,47 @@ def generate_launch_description():
                 TimerAction(
                     period=3.0,
                     actions=[load_default_left_arm_controller, 
-                             load_default_right_arm_controller,
-                             load_hyy_left_arm_controller,
-                             load_hyy_right_arm_controller,
-                             load_hyy_external_device_controller]
+                             load_default_right_arm_controller
+                             ]
                 )
             ]
         )
     )
-    # Delay loading and activation of robot_controller after `joint_state_broadcaster`
-    delay_addaxis_controller_spawners_after_joint_state_broadcaster_spawner = RegisterEventHandler(
+
+    delay_default_external_controller_spawners_after_joint_state_broadcaster_spawner = RegisterEventHandler(
+        event_handler=OnProcessExit(
+            target_action=joint_state_broadcaster_spawner,
+            on_exit=[
+                TimerAction(
+                    period=3.0,
+                    actions=[load_default_hand_controller_1,
+                             load_default_hand_controller_2,
+                             load_default_hand_controller_3,
+                             load_default_hand_controller_4,
+                             load_default_hand_controller_5,
+                             load_default_hand_controller_6,
+                             load_default_gripper_controller,
+                             ]
+                )
+            ]
+        ),
+        condition = IfCondition(sim_gazebo_classic)
+    )
+
+    delay_hyy_external_controller_spawners_after_joint_state_broadcaster_spawner = RegisterEventHandler(
+        event_handler=OnProcessExit(
+            target_action=joint_state_broadcaster_spawner,
+            on_exit=[
+                TimerAction(
+                    period=3.0,
+                    actions=[load_hyy_external_device_controller]
+                )
+            ]
+        ),
+        condition = UnlessCondition(sim_gazebo_classic)
+    )
+ 
+    delay_additionaxis_controller_spawners_after_joint_state_broadcaster_spawner = RegisterEventHandler(
         event_handler=OnProcessExit(
             target_action=joint_state_broadcaster_spawner,
             on_exit=[
@@ -373,29 +390,13 @@ def generate_launch_description():
                     period=3.0,
                     actions=[
                              load_default_body_controller,
-                             load_default_head_controller,
-                             load_hyy_body_controller,
-                             load_hyy_head_controller]
+                             load_default_head_controller,]
                             )
             ]
         ),
         condition = IfCondition(if_add_axisgroups)
     )
-      
-    # Delay loading and activation of move_group after load_controllers
-    delay_run_move_group_node_after_load_controllers = RegisterEventHandler(
-        event_handler=OnProcessExit(
-            target_action=load_default_right_arm_controller,  # Ensure the last controller loaded triggers this event
-            on_exit=[
-                TimerAction(
-                    period=5.0,
-                    actions=[run_move_group_node]  # Wrap the Node in a list
-                )
-            ]
-        )
-    )
     
-    # Delay loading and activation of move_group after load_controllers
     delay_rviz_node_after_run_move_group_node = RegisterEventHandler(
         event_handler=OnProcessStart(
             target_action=run_move_group_node,  # Ensure the last controller loaded triggers this event
@@ -409,19 +410,25 @@ def generate_launch_description():
         condition = IfCondition(ifstartRviz)
     )
 
+    #**********************************#
+    #         Hradware config          #
+    #**********************************#
+
     return LaunchDescription(
         declared_arguments +
-        [set_use_default_controllers, set_if_add_external_device] +
         [
             start_gazebo_cmd,
             control_node,
             robot_state_pub_node,
+            static_tf,
             delay_spawn_entity_after_start_gazebo_cmd,
             delay_joint_state_broadcaster_spawner_after_spawn_master_driver_node,
             delay_joint_state_broadcaster_spawner_after_spawn_entity,
             delay_robot_controller_spawners_after_joint_state_broadcaster_spawner,
-            delay_addaxis_controller_spawners_after_joint_state_broadcaster_spawner,
-            delay_run_move_group_node_after_load_controllers,
+            delay_additionaxis_controller_spawners_after_joint_state_broadcaster_spawner,
+            delay_default_external_controller_spawners_after_joint_state_broadcaster_spawner,
+            delay_hyy_external_controller_spawners_after_joint_state_broadcaster_spawner,
+            run_move_group_node,
             delay_rviz_node_after_run_move_group_node
         ]
     )

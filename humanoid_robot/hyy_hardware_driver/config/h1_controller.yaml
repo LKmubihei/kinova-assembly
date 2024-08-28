@@ -4,6 +4,8 @@ controller_manager:
 
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
+
+    # default controller
     left_arm_controller:
       type: joint_trajectory_controller/JointTrajectoryController
     right_arm_controller:
@@ -12,7 +14,22 @@ controller_manager:
       type: joint_trajectory_controller/JointTrajectoryController
     body_controller:
       type: joint_trajectory_controller/JointTrajectoryController
+    gripper_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+    hand_J1_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+    hand_J2_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+    hand_J3_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+    hand_J4_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+    hand_J5_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+    hand_J6_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
 
+    # hyy controller
     hyy_left_arm_controller:
       type: hyy_controller/HyyController
     hyy_right_arm_controller:
@@ -39,7 +56,6 @@ left_arm_controller:
       - position
     state_interfaces:
       - position
-
 right_arm_controller:
   ros__parameters:
     joints: 
@@ -54,7 +70,6 @@ right_arm_controller:
       - position
     state_interfaces:
       - position
-
 body_controller:
   ros__parameters:
     joints: 
@@ -64,12 +79,67 @@ body_controller:
       - position
     state_interfaces:
       - position
-
 head_controller:
   ros__parameters:
     joints: 
       - H-J1
       - H-J2
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+gripper_controller:
+  ros__parameters:
+    joints: 
+      - gripper_joint
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+hand_J1_controller:
+  ros__parameters:
+    joints: 
+      - hand_joint1
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+hand_J2_controller:
+  ros__parameters:
+    joints: 
+      - hand_joint2
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+hand_J3_controller:
+  ros__parameters:
+    joints: 
+      - hand_joint3
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+hand_J4_controller:
+  ros__parameters:
+    joints: 
+      - hand_joint4
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+hand_J5_controller:
+  ros__parameters:
+    joints: 
+      - hand_joint5
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+hand_J6_controller:
+  ros__parameters:
+    joints: 
+      - hand_joint6
     command_interfaces:
       - position
     state_interfaces:
