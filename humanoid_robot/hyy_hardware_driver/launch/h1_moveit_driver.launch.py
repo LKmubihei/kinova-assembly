@@ -91,7 +91,7 @@ def generate_launch_description():
     declared_arguments.append( 
         DeclareLaunchArgument(
             'ifstartRviz', 
-            default_value='false', 
+            default_value='true', 
             description='if true then start Rviz'
         )
     )
@@ -148,10 +148,8 @@ def generate_launch_description():
     #         Moveit2 config           #
     #**********************************#
     
-    package_share_directory = get_package_share_directory('h1_robot_moveit_config')
-
-    urdf_file_path = PathJoinSubstitution([FindPackageShare("h1_description"), "urdf", "h1.xacro"])
-    yaml_file_path = os.path.join(package_share_directory, 'config', 'moveit_controllers.yaml')
+    urdf_file_path = os.path.join(get_package_share_directory('h1_description'), 'urdf', 'h1.xacro')
+    yaml_file_path = os.path.join(get_package_share_directory('h1_robot_moveit_config'), 'config', 'moveit_controllers.yaml')
 
     moveit_config = (
         MoveItConfigsBuilder("h1_robot")
@@ -349,20 +347,6 @@ def generate_launch_description():
         ),
         condition = IfCondition(sim_gazebo_classic)
     )
-       
-    # Delay rviz start after Joint State Broadcaster to avoid unnecessary warning output.
-    delay_rviz_after_joint_state_broadcaster_spawner = RegisterEventHandler(
-        event_handler=OnProcessExit(
-            target_action=joint_state_broadcaster_spawner,
-            on_exit=[
-                TimerAction(
-                    period=2.0,
-                    actions=[rviz_node],
-                ),
-            ],
-        ),
-        condition = IfCondition(ifstartRviz)
-    )
 
     # Delay loading and activation of robot_controller after `joint_state_broadcaster`
     delay_robot_controller_spawners_after_joint_state_broadcaster_spawner = RegisterEventHandler(
@@ -397,13 +381,11 @@ def generate_launch_description():
         ),
         condition = IfCondition(if_add_axisgroups)
     )
-
-
-    load_controllers = [delay_robot_controller_spawners_after_joint_state_broadcaster_spawner, delay_addaxis_controller_spawners_after_joint_state_broadcaster_spawner]
+      
     # Delay loading and activation of move_group after load_controllers
     delay_run_move_group_node_after_load_controllers = RegisterEventHandler(
         event_handler=OnProcessExit(
-            target_action=load_controllers[-1],  # Ensure the last controller loaded triggers this event
+            target_action=load_default_right_arm_controller,  # Ensure the last controller loaded triggers this event
             on_exit=[
                 TimerAction(
                     period=5.0,
@@ -423,7 +405,8 @@ def generate_launch_description():
                     actions=[rviz_node]  # Wrap the Node in a list
                 )
             ]
-        )
+        ),
+        condition = IfCondition(ifstartRviz)
     )
 
     return LaunchDescription(
@@ -436,8 +419,8 @@ def generate_launch_description():
             delay_spawn_entity_after_start_gazebo_cmd,
             delay_joint_state_broadcaster_spawner_after_spawn_master_driver_node,
             delay_joint_state_broadcaster_spawner_after_spawn_entity,
-            delay_rviz_after_joint_state_broadcaster_spawner,
-            load_controllers,
+            delay_robot_controller_spawners_after_joint_state_broadcaster_spawner,
+            delay_addaxis_controller_spawners_after_joint_state_broadcaster_spawner,
             delay_run_move_group_node_after_load_controllers,
             delay_rviz_node_after_run_move_group_node
         ]
