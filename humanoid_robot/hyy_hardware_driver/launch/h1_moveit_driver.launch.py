@@ -3,9 +3,7 @@ from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
     RegisterEventHandler,
-    TimerAction,
-    SetLaunchConfiguration,
-    ExecuteProcess
+    TimerAction
 )
 from launch.event_handlers import OnProcessExit, OnProcessStart
 from launch.substitutions import (
@@ -13,7 +11,6 @@ from launch.substitutions import (
     FindExecutable,
     LaunchConfiguration,
     PathJoinSubstitution,
-    PythonExpression,
 )
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare

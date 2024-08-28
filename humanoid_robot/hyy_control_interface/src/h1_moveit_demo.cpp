@@ -23,7 +23,7 @@ int main(int argc, char** argv)
   node_options.automatically_declare_parameters_from_overrides(true);
   auto move_group_node = rclcpp::Node::make_shared("motion_plan_node", node_options);
 
-  move_group_node->set_parameter(rclcpp::Parameter("use_sim_time", true));
+  // move_group_node->set_parameter(rclcpp::Parameter("use_sim_time", true));
 
   // We spin up a SingleThreadedExecutor for the current state monitor to get information about the robot's state.
   rclcpp::executors::SingleThreadedExecutor executor;
