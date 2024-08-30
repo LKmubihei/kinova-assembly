@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot name="t1_robot" xmlns:xacro="http://wiki.ros.org/xacro" >
+    <xacro:arg name="if_add_external_device" default="true" />
+    <xacro:include filename="$(find t1_description)/urdf/t1.urdf.xacro"/>
+    <xacro:include filename="$(find t1_description)/urdf/external_devices_config.xacro"/>
+    <xacro:external_device_config if_add_external_device="$(arg if_add_external_device)"/>
+</robot>
