@@ -93,7 +93,6 @@ def generate_launch_description():
     rviz_node = Node(
         package="rviz2",
         executable="rviz2",
-        name="rviz2555",
         output="both",
         arguments=["-d", rviz_config_file],
         parameters=[moveit_config.to_dict(),
@@ -105,12 +104,23 @@ def generate_launch_description():
     static_tf = Node(
         package="tf2_ros",
         executable="static_transform_publisher",
-        name="static_transform_publisher",
         output="both",
         arguments=["0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "world", "fake_link"],
         parameters=[],
     )
-    
+  
+    moveXYZW_interface = Node(
+        package="hyy_actions",
+        executable="moveXYZW_action",
+        output="screen",
+        parameters=[moveit_config.robot_description_semantic,
+                    moveit_config.robot_description_kinematics,
+                    robot_description,
+                     {"use_sim_time": False},
+                     {"ROB_PARAM": 'left_arm'}
+                    ]
+    )
+
     delay_rviz_node_after_run_move_group_node = RegisterEventHandler(
         event_handler=OnProcessStart(
             target_action=run_move_group_node,  # Ensure the last controller loaded triggers this event
@@ -129,6 +139,7 @@ def generate_launch_description():
         [
             static_tf,
             run_move_group_node,
+            moveXYZW_interface,
             delay_rviz_node_after_run_move_group_node
         ]
     )

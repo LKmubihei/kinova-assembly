@@ -19,7 +19,7 @@
   <depend>ros2_controllers_test_nodes</depend>
   <depend>rviz2</depend>
   <depend>xacro</depend>
-  
+  <depend>hyy_actions</depend>
   <depend>xmate_description</depend>
   <depend>hyy_controller</depend>
 

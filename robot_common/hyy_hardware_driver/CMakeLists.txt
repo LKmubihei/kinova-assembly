@@ -11,6 +11,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
     realtime_tools
     controller_manager
     hyy_controller
+    rclpy
 )
 find_package(ament_cmake REQUIRED)
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})

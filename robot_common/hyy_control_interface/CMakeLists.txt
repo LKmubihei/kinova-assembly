@@ -18,6 +18,7 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclpy REQUIRED)
 find_package(hyy_message REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(kdl_parser REQUIRED)
@@ -148,7 +149,7 @@ target_compile_features(motion_plan_demo PUBLIC c_std_99 cxx_std_17)
 #***************************************************************************/
 
 install(
-  DIRECTORY include launch
+  DIRECTORY include launch scripts
   DESTINATION share/${PROJECT_NAME}
   )
   
@@ -162,6 +163,11 @@ install(
   collision_detect  
   motion_plan_demo
   RUNTIME DESTINATION lib/${PROJECT_NAME}
+)
+
+install(PROGRAMS
+  scripts/action_demo.py
+  DESTINATION lib/${PROJECT_NAME} 
 )
 
 #***************************************************************************/
