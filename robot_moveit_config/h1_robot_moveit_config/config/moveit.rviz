@@ -10,6 +10,9 @@ Panels:
         - /MotionPlanning1/Planning Request1
         - /Axes1
         - /Axes2
+        - /TF1
+        - /TF1/Frames1
+        - /TF1/Frames1/h1_base1
       Splitter Ratio: 0.5
     Tree Height: 412
   - Class: rviz_common/Help
@@ -529,6 +532,148 @@ Visualization Manager:
       Name: Axes
       Radius: 0.009999999776482582
       Reference Frame: <Fixed Frame>
+      Value: true
+    - Class: rviz_default_plugins/TF
+      Enabled: true
+      Frame Timeout: 15
+      Frames:
+        All Enabled: false
+        R_hand_base_link:
+          Value: true
+        R_index_intermediate:
+          Value: true
+        R_index_proximal:
+          Value: true
+        R_middle_intermediate:
+          Value: true
+        R_middle_proximal:
+          Value: true
+        R_pinky_intermediate:
+          Value: true
+        R_pinky_proximal:
+          Value: true
+        R_ring_intermediate:
+          Value: true
+        R_ring_proximal:
+          Value: true
+        R_thumb_distal:
+          Value: true
+        R_thumb_intermediate:
+          Value: true
+        R_thumb_proximal:
+          Value: true
+        R_thumb_proximal_base:
+          Value: true
+        base_link:
+          Value: true
+        fake_link:
+          Value: true
+        h1_base:
+          Value: true
+        hand_e_link:
+          Value: true
+        hande_left_finger:
+          Value: true
+        hande_right_finger:
+          Value: true
+        link-Body:
+          Value: false
+        link-H0:
+          Value: true
+        link-H1:
+          Value: true
+        link-J1:
+          Value: true
+        link-L0:
+          Value: true
+        link-L1:
+          Value: true
+        link-L2:
+          Value: true
+        link-L3:
+          Value: true
+        link-L4:
+          Value: true
+        link-L5:
+          Value: true
+        link-L6:
+          Value: true
+        link-L7:
+          Value: true
+        link-R0:
+          Value: true
+        link-R1:
+          Value: true
+        link-R2:
+          Value: true
+        link-R3:
+          Value: true
+        link-R4:
+          Value: true
+        link-R5:
+          Value: true
+        link-R6:
+          Value: true
+        link-R7:
+          Value: true
+        world:
+          Value: true
+      Marker Scale: 1
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: false
+      Tree:
+        world:
+          fake_link:
+            base_link:
+              link-J1:
+                h1_base:
+                  {}
+                link-Body:
+                  link-H0:
+                    link-H1:
+                      {}
+                  link-L0:
+                    link-L1:
+                      link-L2:
+                        link-L3:
+                          link-L4:
+                            link-L5:
+                              link-L6:
+                                link-L7:
+                                  hand_e_link:
+                                    hande_left_finger:
+                                      {}
+                                    hande_right_finger:
+                                      {}
+                  link-R0:
+                    link-R1:
+                      link-R2:
+                        link-R3:
+                          link-R4:
+                            link-R5:
+                              link-R6:
+                                link-R7:
+                                  R_hand_base_link:
+                                    R_index_proximal:
+                                      R_index_intermediate:
+                                        {}
+                                    R_middle_proximal:
+                                      R_middle_intermediate:
+                                        {}
+                                    R_pinky_proximal:
+                                      R_pinky_intermediate:
+                                        {}
+                                    R_ring_proximal:
+                                      R_ring_intermediate:
+                                        {}
+                                    R_thumb_proximal_base:
+                                      R_thumb_proximal:
+                                        R_thumb_intermediate:
+                                          R_thumb_distal:
+                                            {}
+      Update Interval: 0
       Value: true
   Enabled: true
   Global Options:

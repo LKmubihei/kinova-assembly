@@ -1,4 +1,4 @@
-## ros2_RobotSimulation: ROS2 Actions
+## Hyy Ros2 Actions
 The Robot Actions/Triggers are independent ROS2 Actions that execute different robot/end-effector motions in Gazebo simulation. The list below explains what every single ROS2 Action does, and how the actions are executed independently using the Ubuntu Terminal:
 
 * MoveJ: The Robot moves to the specific waypoint, which is specified by Joint Pose values.

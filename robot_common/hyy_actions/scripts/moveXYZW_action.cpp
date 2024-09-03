@@ -42,7 +42,9 @@
 
 #include <moveit/move_group_interface/move_group_interface_improved.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
-
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
 #include "hyy_message/action/move_xyzw.hpp"
 
 // Declaration of global constants:
@@ -159,13 +161,34 @@ private:
         auto result = std::make_shared<MoveXYZW::Result>();
         
         // Joint model group:
+        move_group_interface.setPoseReferenceFrame("h1_base"); 
         const moveit::core::JointModelGroup* joint_model_group = move_group_interface.getCurrentState()->getJointModelGroup(my_param);
+        
+        tf2_ros::Buffer tf_buffer(this->get_clock());
+        tf2_ros::TransformListener tf_listener(tf_buffer);
+        geometry_msgs::msg::TransformStamped transform_stamped;
+        if (tf_buffer.canTransform("h1_base", "base_link", tf2::TimePointZero, std::chrono::seconds(1))) {
+            try {
+                transform_stamped = tf_buffer.lookupTransform("h1_base", "base_link", tf2::TimePointZero);
+            } catch (tf2::TransformException &ex) {
+                RCLCPP_ERROR(this->get_logger(), "Could not transform base_link to h1_base: %s", ex.what());
+                return;
+            }
+        }else{
+            RCLCPP_ERROR(this->get_logger(), "Transform from base_link to h1_base is not available within the given time frame.");
+        }
 
         // Get CURRENT POSE:
         auto current_pose = move_group_interface.getCurrentPose();
+        // Transform the current pose to the new reference frame
+        geometry_msgs::msg::PoseStamped transformed_pose;
+        tf2::doTransform(current_pose, transformed_pose, transform_stamped);
+
         RCLCPP_INFO(this->get_logger(), "Current POSE before the new MoveXYZW was:");
         RCLCPP_INFO(this->get_logger(), "POSITION -> (x = %.2f, y = %.2f, z = %.2f)", current_pose.pose.position.x, current_pose.pose.position.y,current_pose.pose.position.z);
         RCLCPP_INFO(this->get_logger(), "ORIENTATION (quaternion) -> (x = %.2f, y = %.2f, z = %.2f, w = %.2f)", current_pose.pose.orientation.x, current_pose.pose.orientation.y,current_pose.pose.orientation.z,current_pose.pose.orientation.w);
+        RCLCPP_INFO(this->get_logger(), "Transformed POSITION -> (x = %.2f, y = %.2f, z = %.2f)", transformed_pose.pose.position.x, transformed_pose.pose.position.y, transformed_pose.pose.position.z);
+        RCLCPP_INFO(this->get_logger(), "Transformed ORIENTATION (quaternion) -> (x = %.2f, y = %.2f, z = %.2f, w = %.2f)", transformed_pose.pose.orientation.x, transformed_pose.pose.orientation.y, transformed_pose.pose.orientation.z, transformed_pose.pose.orientation.w);
 
         // EULER to QUATERNION CONVERSION:
         double cy = cos(k*yaw * 0.5);

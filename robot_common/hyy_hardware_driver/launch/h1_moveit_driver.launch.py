@@ -108,6 +108,13 @@ def generate_launch_description():
         arguments=["0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "world", "fake_link"],
         parameters=[],
     )
+
+    # h1 base TF
+    h1_base_tf = Node(
+        package="hyy_control_interface",
+        executable="h1_base_tf_pub.py",
+        output="both",
+    )
   
     moveXYZW_interface = Node(
         package="hyy_actions",
@@ -138,6 +145,7 @@ def generate_launch_description():
         declared_arguments +
         [
             static_tf,
+            h1_base_tf,
             run_move_group_node,
             moveXYZW_interface,
             delay_rviz_node_after_run_move_group_node

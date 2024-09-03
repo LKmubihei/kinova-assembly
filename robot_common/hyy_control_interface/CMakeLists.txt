@@ -167,6 +167,7 @@ install(
 
 install(PROGRAMS
   scripts/action_demo.py
+  scripts/h1_base_tf_pub.py
   DESTINATION lib/${PROJECT_NAME} 
 )
 
