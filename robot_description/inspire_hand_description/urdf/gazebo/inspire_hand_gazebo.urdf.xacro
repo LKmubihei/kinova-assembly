@@ -36,7 +36,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://inspire_hand_description/meshes/visual/R_hand_base_link.STL" />
+          filename="${pkg_address}/meshes/visual/R_hand_base_link.STL" />
       </geometry>
       <material
         name="">
@@ -50,7 +50,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://inspire_hand_description/meshes/visual/R_hand_base_link.STL" />
+          filename="${pkg_address}/meshes/visual/R_hand_base_link.STL" />
       </geometry>
     </collision>
   </link>
@@ -76,7 +76,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://inspire_hand_description/meshes/visual/Link11.STL" />
+          filename="${pkg_address}/meshes/visual/Link11.STL" />
       </geometry>
       <material
         name="">
@@ -90,7 +90,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://inspire_hand_description/meshes/visual/Link11.STL" />
+          filename="${pkg_address}/meshes/visual/Link11.STL" />
       </geometry>
     </collision>
   </link>
@@ -134,7 +134,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://inspire_hand_description/meshes/visual/Link12.STL" />
+          filename="${pkg_address}/meshes/visual/Link12.STL" />
       </geometry>
       <material
         name="">
@@ -148,7 +148,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://inspire_hand_description/meshes/visual/Link12.STL" />
+          filename="${pkg_address}/meshes/visual/Link12.STL" />
       </geometry>
     </collision>
   </link>
@@ -192,7 +192,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://inspire_hand_description/meshes/visual/Link13.STL" />
+          filename="${pkg_address}/meshes/visual/Link13.STL" />
       </geometry>
       <material
         name="">
@@ -206,7 +206,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://inspire_hand_description/meshes/visual/Link13.STL" />
+          filename="${pkg_address}/meshes/visual/Link13.STL" />
       </geometry>
     </collision>
   </link>
@@ -254,7 +254,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://inspire_hand_description/meshes/visual/Link14.STL" />
+          filename="${pkg_address}/meshes/visual/Link14.STL" />
       </geometry>
       <material
         name="">
@@ -268,7 +268,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://inspire_hand_description/meshes/visual/Link14.STL" />
+          filename="${pkg_address}/meshes/visual/Link14.STL" />
       </geometry>
     </collision>
   </link>
@@ -316,7 +316,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://inspire_hand_description/meshes/visual/Link15.STL" />
+          filename="${pkg_address}/meshes/visual/Link15.STL" />
       </geometry>
       <material
         name="">
@@ -330,7 +330,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://inspire_hand_description/meshes/visual/Link15.STL" />
+          filename="${pkg_address}/meshes/visual/Link15.STL" />
       </geometry>
     </collision>
   </link>
@@ -374,7 +374,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://inspire_hand_description/meshes/visual/Link16.STL" />
+          filename="${pkg_address}/meshes/visual/Link16.STL" />
       </geometry>
       <material
         name="">
@@ -388,7 +388,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://inspire_hand_description/meshes/visual/Link16.STL" />
+          filename="${pkg_address}/meshes/visual/Link16.STL" />
       </geometry>
     </collision>
   </link>
@@ -436,7 +436,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://inspire_hand_description/meshes/visual/Link17.STL" />
+          filename="${pkg_address}/meshes/visual/Link17.STL" />
       </geometry>
       <material
         name="">
@@ -450,7 +450,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://inspire_hand_description/meshes/visual/Link17.STL" />
+          filename="${pkg_address}/meshes/visual/Link17.STL" />
       </geometry>
     </collision>
   </link>
@@ -494,7 +494,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://inspire_hand_description/meshes/visual/Link18.STL" />
+          filename="${pkg_address}/meshes/visual/Link18.STL" />
       </geometry>
       <material
         name="">
@@ -508,7 +508,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://inspire_hand_description/meshes/visual/Link18.STL" />
+          filename="${pkg_address}/meshes/visual/Link18.STL" />
       </geometry>
     </collision>
   </link>
@@ -556,7 +556,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://inspire_hand_description/meshes/visual/Link19.STL" />
+          filename="${pkg_address}/meshes/visual/Link19.STL" />
       </geometry>
       <material
         name="">
@@ -570,7 +570,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://inspire_hand_description/meshes/visual/Link19.STL" />
+          filename="${pkg_address}/meshes/visual/Link19.STL" />
       </geometry>
     </collision>
   </link>
@@ -614,7 +614,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://inspire_hand_description/meshes/visual/Link20.STL" />
+          filename="${pkg_address}/meshes/visual/Link20.STL" />
       </geometry>
       <material
         name="">
@@ -628,7 +628,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://inspire_hand_description/meshes/visual/Link20.STL" />
+          filename="${pkg_address}/meshes/visual/Link20.STL" />
       </geometry>
     </collision>
   </link>
@@ -676,7 +676,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://inspire_hand_description/meshes/visual/Link21.STL" />
+          filename="${pkg_address}/meshes/visual/Link21.STL" />
       </geometry>
       <material
         name="">
@@ -690,7 +690,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://inspire_hand_description/meshes/visual/Link21.STL" />
+          filename="${pkg_address}/meshes/visual/Link21.STL" />
       </geometry>
     </collision>
   </link>
@@ -734,7 +734,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://inspire_hand_description/meshes/visual/Link22.STL" />
+          filename="${pkg_address}/meshes/visual/Link22.STL" />
       </geometry>
       <material
         name="">
@@ -748,7 +748,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://inspire_hand_description/meshes/visual/Link22.STL" />
+          filename="${pkg_address}/meshes/visual/Link22.STL" />
       </geometry>
     </collision>
   </link>
