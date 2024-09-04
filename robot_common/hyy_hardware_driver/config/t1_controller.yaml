@@ -4,14 +4,32 @@ controller_manager:
 
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
-    default_left_arm_controller:
+
+    # default controller
+    left_arm_controller:
       type: joint_trajectory_controller/JointTrajectoryController
-    default_right_arm_controller:
+    right_arm_controller:
       type: joint_trajectory_controller/JointTrajectoryController
-    default_head_controller:
+    head_controller:
       type: joint_trajectory_controller/JointTrajectoryController
-    default_body_controller:
+    body_controller:
       type: joint_trajectory_controller/JointTrajectoryController
+    gripper_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+    hand_J1_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+    hand_J2_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+    hand_J3_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+    hand_J4_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+    hand_J5_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+    hand_J6_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+    # hyy controller 
     hyy_left_arm_controller:
       type: hyy_controller/HyyController
     hyy_right_arm_controller:
@@ -24,7 +42,7 @@ controller_manager:
       type: hyy_external_controller/HyyExternalController
 
 # default controller
-default_left_arm_controller:
+left_arm_controller:
   ros__parameters:
     joints: 
       - L-J1
@@ -34,14 +52,11 @@ default_left_arm_controller:
       - L-J5
       - L-J6
       - L-J7
-
     command_interfaces:
       - position
-
     state_interfaces:
       - position
-
-default_right_arm_controller:
+right_arm_controller:
   ros__parameters:
     joints: 
       - R-J1
@@ -51,35 +66,84 @@ default_right_arm_controller:
       - R-J5
       - R-J6
       - R-J7
-
     command_interfaces:
       - position
-
     state_interfaces:
       - position
-
-default_body_controller:
+body_controller:
   ros__parameters:
     joints: 
-      - B-J0
-
+      - B0
     command_interfaces:
       - position
-
     state_interfaces:
       - position
-
-default_head_controller:
+head_controller:
   ros__parameters:
     joints: 
       - H-J1
       - H-J2
-
     command_interfaces:
       - position
-
     state_interfaces:
       - position
+gripper_controller:
+  ros__parameters:
+    joints: 
+      - gripper_joint
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+hand_J1_controller:
+  ros__parameters:
+    joints: 
+      - hand_joint1
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+hand_J2_controller:
+  ros__parameters:
+    joints: 
+      - hand_joint2
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+hand_J3_controller:
+  ros__parameters:
+    joints: 
+      - hand_joint3
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+hand_J4_controller:
+  ros__parameters:
+    joints: 
+      - hand_joint4
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+hand_J5_controller:
+  ros__parameters:
+    joints: 
+      - hand_joint5
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+hand_J6_controller:
+  ros__parameters:
+    joints: 
+      - hand_joint6
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+
 
 # hyy controller
 hyy_left_arm_controller:
@@ -92,13 +156,10 @@ hyy_left_arm_controller:
       - L-J5
       - L-J6
       - L-J7
-
     command_interfaces:
       - position
-
     state_interfaces:
       - position
-
     component_index: 1
     if_additionaxis: 0
 
@@ -112,27 +173,21 @@ hyy_right_arm_controller:
       - R-J5
       - R-J6
       - R-J7
-
     command_interfaces:
       - position
-
     state_interfaces:
       - position
-
     component_index: 0
     if_additionaxis: 0
 
 hyy_body_controller:
   ros__parameters:
     joints: 
-      - B-J0
-      
+      - B0
     command_interfaces:
       - position
-
     state_interfaces:
       - position
-
     component_index: 0
     if_additionaxis: 1
 
@@ -141,13 +196,10 @@ hyy_head_controller:
     joints: 
       - H-J1
       - H-J2
-
     command_interfaces:
       - position
-
     state_interfaces:
       - position
-
     component_index: 1
     if_additionaxis: 1
 
@@ -161,22 +213,17 @@ hyy_external_device_controller:
       - hand_joint5
       - hand_joint6
       - gripper_joint
-
     command_interfaces:
       - position
-
     state_interfaces:
       - position
-
     if_add_force_sensor: 0
     force_sensor_name: 
       - right_sensor
       - left_sensor
-      
     if_add_hand: 1
     port_hand: /dev/ttyUSB1
     baudrate_hand: 115200
-
     if_add_gripper: 1
     port_gripper: /dev/ttyUSB0
     baudrate_gripper: 115200

@@ -1,0 +1,23 @@
+moveit_setup_assistant_config:
+  urdf:
+    package: t1_description
+    relative_path: urdf/t1_robot.urdf.xacro
+  srdf:
+    relative_path: config/t1_robot.srdf
+  package_settings:
+    author_name: zeropanga
+    author_email: zeropanga@buaahyy.com
+    generated_timestamp: 1725354751
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+  modified_urdf:
+    xacros:
+      - control_xacro
+  control_xacro:
+    command:
+      - position
+    state:
+      - position

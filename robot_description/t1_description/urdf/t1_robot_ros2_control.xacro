@@ -86,7 +86,7 @@
       <xacro:joint_interface Joint_Name="L-J7" initial_pos="0.0" initial_vel="0.0" initial_effort="0.0"/>
 
       <xacro:if value= "${if_add_axisgroups}">
-        <xacro:joint_interface Joint_Name="B-J0" initial_pos="0.0" initial_vel="0.0" initial_effort="0.0"/>
+        <xacro:joint_interface Joint_Name="B0" initial_pos="0.0" initial_vel="0.0" initial_effort="0.0"/>
         <xacro:joint_interface Joint_Name="H-J1" initial_pos="0.0" initial_vel="0.0" initial_effort="0.0"/>
         <xacro:joint_interface Joint_Name="H-J2" initial_pos="0.0" initial_vel="0.0" initial_effort="0.0"/>
       </xacro:if>
