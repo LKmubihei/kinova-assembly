@@ -34,8 +34,7 @@ def generate_launch_description():
     rviz_cmd = Node(
         package='rviz2',
         executable='rviz2',
-        name='rviz2',
-        output='screen'
+        output='screen',
     )
 
     return LaunchDescription([

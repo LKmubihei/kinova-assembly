@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<robot name="dual_arm_robot" xmlns:xacro="http://wiki.ros.org/xacro" >
+<robot name="t1_robot" xmlns:xacro="http://wiki.ros.org/xacro" >
 
   <xacro:arg name="sim_gazebo_classic" default="false" />
   <xacro:arg name="device_mode" default="8" />
