@@ -7,14 +7,13 @@
           <parameters>$(find hyy_hardware_driver)/config/h1_controller.yaml</parameters>
         </plugin>
       </gazebo>
-      <!-- <xacro:macro name ="link_reference" params="link_name material_">
+      <xacro:macro name ="link_reference" params="link_name material_">
         <gazebo reference="${link_name}">
           <material>${material_}</material>
         </gazebo>
       </xacro:macro>
       <xacro:link_reference link_name="base_link" material_= "Gazebo/DarkGrey"/>
-      <xacro:link_reference link_name="link-J1" material_= "Gazebo/Orange"/>
-      <xacro:link_reference link_name="link-Body" material_= "Gazebo/DarkGrey"/>
+      <xacro:link_reference link_name="link-Body" material_= "Gazebo/Orange"/>
       <xacro:link_reference link_name="link-L0" material_= "Gazebo/White"/>
       <xacro:link_reference link_name="link-L1" material_= "Gazebo/Grey"/>
       <xacro:link_reference link_name="link-L2" material_= "Gazebo/White"/>
@@ -32,7 +31,7 @@
       <xacro:link_reference link_name="link-R6" material_= "Gazebo/White"/>
       <xacro:link_reference link_name="link-R7" material_= "Gazebo/Grey"/>
       <xacro:link_reference link_name="link-H0" material_= "Gazebo/White"/>
-      <xacro:link_reference link_name="link-H1" material_= "Gazebo/Grey"/> -->
+      <xacro:link_reference link_name="link-H1" material_= "Gazebo/Grey"/>
     </xacro:if>
 
     <ros2_control name="h1_robot_ros2_control" type="system">

@@ -36,7 +36,7 @@ class MoveXYZWClient(Node):
         goal_msg.speed = speed
 
         self.get_logger().info(f'Sending goal: x={goal_msg.positionx}, y={goal_msg.positiony}, z={goal_msg.positionz}, '
-                               f'yaw={goal_msg.yaw}, pitch={goal_msg.pitch}, roll={goal_msg.roll}, speed={goal_msg.speed}')
+                               f'roll={goal_msg.roll}, pitch={goal_msg.pitch}, yaw={goal_msg.yaw}, speed={goal_msg.speed}')
         
         self._send_goal_future = self._action_client.send_goal_async(goal_msg, feedback_callback=self.feedback_callback)
         self._send_goal_future.add_done_callback(self.goal_response_callback)
@@ -75,12 +75,12 @@ def main(args=None):
     
     # Define the specific values for the goal
     goal_values = {
-        "positionx": 0.0,
-        "positiony": 0.6,
-        "positionz": 0.5,
-        "yaw": 0.0,
-        "pitch": 0.0, 
-        "roll": -1.57,
+        "positionx": 0.1559,
+        "positiony": 0.5634,
+        "positionz": -0.204,
+        "roll": 1.4539,
+        "pitch": -0.3917, 
+        "yaw": 1.5427,
         "speed": 0.1
     }
     

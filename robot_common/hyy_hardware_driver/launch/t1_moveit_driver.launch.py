@@ -94,10 +94,7 @@ def generate_launch_description():
         package="rviz2",
         executable="rviz2",
         output="both",
-        arguments=["-d", rviz_config_file],
-        parameters=[moveit_config.to_dict(),
-                    robot_description,
-        ], 
+        arguments=["-d", rviz_config_file]
     )
 
     # Static TF
@@ -124,7 +121,8 @@ def generate_launch_description():
                     moveit_config.robot_description_kinematics,
                     robot_description,
                      {"use_sim_time": False},
-                     {"ROB_PARAM": 'left_arm'}
+                     {"control_group": 'left_arm'},
+                     {"base_frame": 't1_base'}
                     ]
     )
 

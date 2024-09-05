@@ -119,20 +119,19 @@ def generate_launch_description():
     rviz_node = Node(
         package="rviz2",
         executable="rviz2",
-        name="rviz2555",
         output="both",
         arguments=["-d", rviz_config_file],
-        parameters=[moveit_config.to_dict(),
-                    robot_description,
-                    {"use_sim_time": use_sim_time}
-        ], 
+        parameters=[{"use_sim_time": use_sim_time}], 
+        # parameters=[moveit_config.to_dict(),
+        #             robot_description,
+        #             {"use_sim_time": use_sim_time}
+        # ], 
     )
 
     # Static TF
     static_tf = Node(
         package="tf2_ros",
         executable="static_transform_publisher",
-        name="static_transform_publisher",
         output="both",
         arguments=["0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "world", "fake_link"],
         parameters=[{"use_sim_time": use_sim_time}],
@@ -244,6 +243,26 @@ def generate_launch_description():
         arguments=['hyy_external_device_controller',"-c", "/controller_manager"],
     )
 
+    # t1 base TF
+    t1_base_tf = Node(
+        package="hyy_control_interface",
+        executable="t1_base_tf_pub.py",
+        output="both",
+    )
+  
+    moveXYZW_interface = Node(
+        package="hyy_actions",
+        executable="moveXYZW_action",
+        output="screen",
+        parameters=[moveit_config.robot_description_semantic,
+                    moveit_config.robot_description_kinematics,
+                    robot_description,
+                     {"use_sim_time": True},
+                     {"control_group": 'left_arm'},
+                     {"base_frame": 't1_base'}
+                    ]
+    )
+
     #**********************************#
     #       Boot sequence config       #
     #**********************************#
@@ -342,7 +361,9 @@ def generate_launch_description():
         [
             start_gazebo_cmd,
             robot_state_pub_node,
-            static_tf,
+            # static_tf,
+            t1_base_tf,
+            moveXYZW_interface,
             delay_spawn_entity_after_start_gazebo_cmd,
             delay_joint_state_broadcaster_spawner_after_spawn_entity,
             delay_robot_controller_spawners_after_joint_state_broadcaster_spawner,

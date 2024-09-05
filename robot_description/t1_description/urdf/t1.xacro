@@ -9,11 +9,19 @@
   <xacro:arg name="if_add_external_device" default="false" />
   <xacro:arg name="external_device_dof" default="7" />
 
-  <xacro:include filename="$(find t1_description)/urdf/t1.urdf.xacro"/>
-  <xacro:include filename="$(find t1_description)/urdf/gazebo_config.xacro"/>
-  <xacro:include filename="$(find t1_description)/urdf/external_devices_config.xacro"/>
-  <xacro:external_device_config if_add_external_device="$(arg if_add_external_device)"/>
-  <xacro:gazebo_config sim_gazebo_classic="$(arg sim_gazebo_classic)"/>
+  <xacro:if value="$(arg sim_gazebo_classic)">
+    <xacro:include filename="$(find t1_description)/urdf/gazebo/t1_gazebo.urdf.xacro"/>
+    <xacro:include filename="$(find inspire_hand_description)/urdf/gazebo/inspire_hand_gazebo.urdf.xacro"/>
+    <xacro:include filename="$(find robotiq_gripper_description)/urdf/gazebo/robotiq_gripper_gazebo.urdf.xacro"/>
+    <xacro:include filename="$(find t1_description)/urdf/external_devices_config.xacro"/>
+    <xacro:include filename="$(find t1_description)/urdf/gazebo_config.xacro"/>
+  </xacro:if>
+  <xacro:unless value="$(arg sim_gazebo_classic)">
+    <xacro:include filename="$(find t1_description)/urdf/t1.urdf.xacro"/>
+    <xacro:include filename="$(find inspire_hand_description)/urdf/inspire_hand.urdf.xacro"/>
+    <xacro:include filename="$(find robotiq_gripper_description)/urdf/robotiq_gripper.urdf.xacro"/>
+    <xacro:include filename="$(find t1_description)/urdf/external_devices_config.xacro"/>
+  </xacro:unless>
 
   <xacro:include filename="$(find t1_description)/urdf/t1_robot_ros2_control.xacro"/>
   <xacro:t1_robot_ros2_control_config 

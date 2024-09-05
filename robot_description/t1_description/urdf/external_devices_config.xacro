@@ -1,23 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <robot name = "external_devices" xmlns:xacro="http://ros.org/wiki/xacro">
-  <xacro:macro name="external_device_config" params="if_add_external_device">
-    <xacro:if value="${if_add_external_device}">
-      <xacro:include filename="$(find inspire_hand_description)/urdf/inspire_hand.urdf.xacro"/>
-      <xacro:include filename="$(find robotiq_gripper_description)/urdf/robotiq_gripper.urdf.xacro"/>
 
-      <joint name="gripper_connect_joint" type="fixed">
-        <origin xyz="0 0 0" rpy="0 0 1.57" />
-        <!-- <origin xyz="0 0 0.00695" rpy="0 0 0" /> -->
-        <parent link="link-Ltool"/>
-        <child link="hand_e_link"/>
-      </joint>
+  <joint name="gripper_connect_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 1.57" />
+    <!-- <origin xyz="0 0 0.00695" rpy="0 0 0" /> -->
+    <parent link="link-Ltool"/>
+    <child link="hand_e_link"/>
+  </joint>
 
-      <joint name="hand_connect_joint" type="fixed">
-        <!-- <origin xyz="0 0 0" rpy="-1.57 0 -1.57" /> -->
-        <origin xyz="0 0 0" rpy="-1.57 0 0" />
-        <parent link="link-Rtool"/>
-        <child link="R_hand_base_link"/>
-      </joint>
-    </xacro:if>
-  </xacro:macro>
+  <joint name="hand_connect_joint" type="fixed">
+    <!-- <origin xyz="0 0 0" rpy="-1.57 0 -1.57" /> -->
+    <origin xyz="0 0 0" rpy="-1.57 0 0" />
+    <parent link="link-Rtool"/>
+    <child link="R_hand_base_link"/>
+  </joint>
+
 </robot>

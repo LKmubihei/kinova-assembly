@@ -198,7 +198,7 @@ def generate_launch_description():
         arguments=['hyy_external_device_controller',"-c", "/controller_manager"],
         condition= IfCondition(if_add_external_device)
     )
-    
+
     # Delay loading and activation of `joint_state_broadcaster` after start of ros2_control_node
     delay_joint_state_broadcaster_spawner_after_spawn_master_driver_node = RegisterEventHandler(
         event_handler=OnProcessStart(
