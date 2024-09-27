@@ -33,6 +33,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/Getcurrentact.srv"
   "srv/Geterror.srv"
   "srv/Gettemp.srv"
+  "srv/MovePose.srv"
   "msg/Detect.msg"
   "msg/JointPose.msg"
   "msg/JointPoseS.msg"

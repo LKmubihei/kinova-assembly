@@ -67,7 +67,7 @@ def generate_launch_description():
     declared_arguments.append( 
         DeclareLaunchArgument(
             'if_add_external_device', 
-            default_value='false', 
+            default_value='true', 
             description='if true, then add external devices'
         )
     )

@@ -17,6 +17,8 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(moveit_visual_tools REQUIRED)
+find_package(geometry_msgs REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
@@ -85,6 +87,7 @@ add_executable(moveXYZW_action scripts/moveXYZW_action.cpp)
 ament_target_dependencies(
   moveXYZW_action
   moveit_ros_planning_interface
+  moveit_visual_tools
   std_msgs
   rclcpp
   rclcpp_action

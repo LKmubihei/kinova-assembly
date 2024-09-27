@@ -61,33 +61,56 @@ class MoveXYZWClient(Node):
         else:
             self.get_logger().error(f'MoveXYZW ACTION failed with result: {RES}')
 
-        # After receiving the result, shut down the node
-        rclpy.shutdown()
+        # Send the next goal after receiving result
+        if goal_queue:
+            next_goal = goal_queue.pop(0)
+            self.get_logger().info(f"Sending next goal: {next_goal}")
+            self.send_goal(**next_goal)
+        else:
+            self.get_logger().info("All goals have been processed. Shutting down.")
+            # After receiving the result, shut down the node
+            rclpy.shutdown()
 
     def feedback_callback(self, feedback_msg):
         feedback = feedback_msg.feedback
         self.get_logger().info(f'Received feedback: {feedback}')
+
 
 def main(args=None):
     rclpy.init(args=args)
     
     move_xyzw_client = MoveXYZWClient()
     
-    # Define the specific values for the goal
-    goal_values = {
-        "positionx": 0.1559,
-        "positiony": 0.5634,
-        "positionz": -0.204,
-        "roll": 1.4539,
-        "pitch": -0.3917, 
-        "yaw": 1.5427,
-        "speed": 0.1
-    }
+    # Define a queue of goals
+    global goal_queue
+    goal_queue = [
+        {
+            "positionx": 0.1559,
+            "positiony": 0.5634,
+            "positionz": -0.204,
+            "roll": 1.4539,
+            "pitch": -0.3917,
+            "yaw": 1.5427,
+            "speed": 0.1
+        },
+        {
+            "positionx": 0.3332,
+            "positiony": 0.1913,
+            "positionz": -0.1332,
+            "roll": -2.3236,
+            "pitch": -0.1375,
+            "yaw": -2.7368,
+            "speed": 0.1
+        },
+        # Add more goals as needed
+    ]
     
-    # Send the goal with the specific values
-    move_xyzw_client.send_goal(**goal_values)
+    # Send the first goal
+    if goal_queue:
+        first_goal = goal_queue.pop(0)
+        move_xyzw_client.send_goal(**first_goal)
 
-    # Keep the node running to receive feedback and result
+    # Keep the node running to receive feedback and results
     rclpy.spin(move_xyzw_client)
 
     # Cleanup and shutdown (handled in get_result_callback)

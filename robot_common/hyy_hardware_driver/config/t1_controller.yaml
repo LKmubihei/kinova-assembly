@@ -222,10 +222,10 @@ hyy_external_device_controller:
       - right_sensor
       - left_sensor
     if_add_hand: 1
-    port_hand: /dev/ttyUSB1
+    port_hand: /dev/ttyUSB0
     baudrate_hand: 115200
     if_add_gripper: 1
-    port_gripper: /dev/ttyUSB0
+    port_gripper: /dev/ttyUSB1
     baudrate_gripper: 115200
 
 

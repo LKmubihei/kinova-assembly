@@ -1111,6 +1111,8 @@ void HyyRobotControl::RMultVec(double(*R)[3], double* v, double * vres)
 HyyExternalDevicesControl::HyyExternalDevicesControl(std::shared_ptr<rclcpp::Node> node) :
 init_flag(false)
 {
+	node_ = node;
+
 	SetangleReq = std::make_shared<hyySetangleMsg::Request>();
     SetposReq = std::make_shared<hyySetposMsg::Request>();
     SetspeedReq = std::make_shared<hyySetspeedMsg::Request>();

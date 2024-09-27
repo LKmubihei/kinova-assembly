@@ -110,65 +110,29 @@ int main(int argc, char **argv){
     );
     sleep(2);
 
-    gripperHandControl->Gripper_initialize();
-    
     /***************************************************************************/
     /*                                                                         */
-    /*   Standard application structure   Get Variables!!                      */
-    /*                                                                         */
-    /***************************************************************************/
-	
-    string R0_VEL = "R0_PERCENT10";
-    string R1_VEL = "R0_PERCENT10";
-    string R0_VEL_SHAKE = "R0_PERCENT10";
-    string A0_VEL = "A0_PERCENT01";
-    string A1_VEL = "A1_PERCENT1";
-
-    vector<int> angle_grip = {600, 700, 800, 900, 800, 500};
-
-    /***************************************************************************/
-    /*                                                                         */
-    /*   Standard application structure   Robot Movement!!                     */
+    /*   Standard application structure   Ros2 code !!                         */
     /*                                                                         */
     /***************************************************************************/
 
-    rightArmControl->isblock(false);
-    leftArmControl->isblock(false);
-    bodyControl->isblock(false);
-    headControl->isblock(false);
-
-    //  STEP 1 (RESET)
-    rightArmControl->moveA("R0_T1_INITIAL", R0_VEL);
-    leftArmControl->moveA("R1_T1_INITIAL", R1_VEL);
-    bodyControl->moveA("A0_T1_INITIAL", A0_VEL);    
-    headControl->moveA("A1_T1_INITIAL", A1_VEL);
-    blockhere(4, leftArmControl->ask_status(), rightArmControl->ask_status(), bodyControl->ask_status(), headControl->ask_status());
-
+    // gripperHandControl->Gripper_initialize();
     gripperHandControl->Gripper_fullopen();
     gripperHandControl->hand_fullopen();
+    gripperHandControl->Gripper_SetForce(150);
+    
+    vector<int> speed_hand = {800, 800, 800, 800, 800, 800};
+    vector<int> force_hand = {300, 300, 300, 300, 300, 300};
+    gripperHandControl->hand_SetSpeed(speed_hand);
+    gripperHandControl->hand_SetForce(speed_hand);
+    vector<int> angle_hand_1 = {1000, 1000, 1000, 1000, 1000, 5};
+    vector<int> angle_hand_2 = {450, 450, 450, 450, 620, 5};
+    int angle_gripper = 105;
 
-    //  STEP 2 (INITIAL POSITION)
-    bodyControl->moveA("A0_T1_SHAKE", A0_VEL);    
-    headControl->moveA("A1_T1_SHAKE", A1_VEL);
-    blockhere(2, bodyControl->ask_status(), headControl->ask_status());
-
-    rightArmControl->isblock(true);
-    rightArmControl->moveA("R0_T1_SHAKE_INITIAL", R0_VEL);
-
-    //  STEP 4 (SHAKE HAND LOOP)
-    int count = 0;
-    while (rightArmControl->robot_ok())
-    {
-        usleep(250000);
-        rightArmControl->moveA("R0_T1_SHAKE_FINAL", R0_VEL_SHAKE);
-        usleep(250000);
-        rightArmControl->moveA("R0_T1_SHAKE_INITIAL", R0_VEL_SHAKE);
-        if (count++ >= 2){
-            break;
-        }
-    }
-
-    gripperHandControl->hand_SetAngle(angle_grip);
+    gripperHandControl->hand_SetAngle(angle_hand_1);
+    sleep(10);
+    gripperHandControl->hand_SetAngle(angle_hand_2);
+    gripperHandControl->Gripper_goto(angle_gripper);
 
     /***************************************************************************/
     /*                                                                         */

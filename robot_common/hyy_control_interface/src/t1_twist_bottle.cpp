@@ -119,13 +119,17 @@ int main(int argc, char **argv){
     /***************************************************************************/
 	
     string R0_VEL = "R0_PERCENT10";
+    string R0_CATCH_VEL = "R0_PERCENT5";
     string R1_VEL = "R0_PERCENT10";
+    string R1_TWIST_VEL = "R0_PERCENT30";
     string R0_VEL_SHAKE = "R0_PERCENT10";
     string A0_VEL = "A0_PERCENT01";
     string A1_VEL = "A1_PERCENT1";
 
-    vector<int> angle_grip = {600, 700, 800, 900, 800, 500};
-
+    vector<int> force_hand = {800, 800, 800, 800, 800, 800};
+    vector<int> angle_hand_entry = {1000, 1000, 1000, 1000, 1000, 5};
+    vector<int> angle_hand_catch = {400, 400, 400, 400, 600, 5};
+    int angle_gripper = 100;
     /***************************************************************************/
     /*                                                                         */
     /*   Standard application structure   Robot Movement!!                     */
@@ -137,39 +141,66 @@ int main(int argc, char **argv){
     bodyControl->isblock(false);
     headControl->isblock(false);
 
-    //  STEP 1 (RESET)
+    //  STEP 1 (INITIAL)
+    gripperHandControl->hand_SetForce(force_hand);
+    gripperHandControl->Gripper_fullopen();
+    gripperHandControl->hand_fullopen();
     rightArmControl->moveA("R0_T1_INITIAL", R0_VEL);
     leftArmControl->moveA("R1_T1_INITIAL", R1_VEL);
     bodyControl->moveA("A0_T1_INITIAL", A0_VEL);    
     headControl->moveA("A1_T1_INITIAL", A1_VEL);
     blockhere(4, leftArmControl->ask_status(), rightArmControl->ask_status(), bodyControl->ask_status(), headControl->ask_status());
 
+    //  STEP 2 (GOTO BOTTLE)
+    rightArmControl->isblock(true);
+    rightArmControl->moveA("R0_T1_CATCH_ENTRY", R0_VEL);
+    gripperHandControl->hand_SetAngle(angle_hand_entry);
+    rightArmControl->moveA("R0_T1_CATCH", R0_CATCH_VEL);
+
+    //  STEP 3 (CATCH BOTTLE)
+    usleep(500000);
+    gripperHandControl->hand_SetAngle(angle_hand_catch);
+    usleep(500000);
+
+    //  STEP 4 (LIFT BOTTLE)
+    rightArmControl->moveA("R0_T1_LIFT", R0_CATCH_VEL);
+    usleep(500000);
+    
+    //  STEP 5 (TAKE BACK BOTTLE)
+    rightArmControl->moveA("R0_T1_CATCH_ENTRY", R0_VEL);
+    
+    //  STEP 6 (HOLD BOTTLE AND TWIST BOTTLE CAP)
+    rightArmControl->isblock(false);
+    rightArmControl->moveA("R0_T1_HOLD", R0_VEL);
+    leftArmControl->isblock(true);
+    leftArmControl->moveA("R1_T1_TWIST_ENTRY", R1_VEL);
+    leftArmControl->moveA("R1_T1_TWIST", R1_VEL);
+    usleep(500000);
+    // sleep(500);
+    gripperHandControl->Gripper_goto(angle_gripper);
+    usleep(500000);
+    leftArmControl->moveA("R1_T1_TWIST_END", R1_TWIST_VEL);
+    leftArmControl->moveA("R1_T1_TWIST_END_BACK", R1_VEL);
+
+    // STEP 7 (HOLD BOTTLE CAP AND PLACE BOTTLE)
+    leftArmControl->isblock(false);
+    leftArmControl->moveA("R1_T1_HOLD_CAP", R1_VEL);
+    rightArmControl->isblock(true);
+    rightArmControl->moveA("R0_T1_CATCH_ENTRY", R0_VEL);
+    rightArmControl->moveA("R0_T1_LIFT", R0_VEL);
+    usleep(250000);
+    rightArmControl->moveA("R0_T1_PLACE", R0_CATCH_VEL);
+    usleep(500000);
+    gripperHandControl->hand_SetAngle(angle_hand_entry);
+    usleep(500000);
+    rightArmControl->moveA("R0_T1_CATCH_ENTRY", R0_CATCH_VEL);
+    
+    // STEP 7 (BACK TO INTIAL POSITION)
+    rightArmControl->isblock(false);
+    rightArmControl->moveA("R0_T1_INITIAL", R0_VEL);
+    leftArmControl->moveA("R1_T1_INITIAL", R1_VEL);
     gripperHandControl->Gripper_fullopen();
     gripperHandControl->hand_fullopen();
-
-    //  STEP 2 (INITIAL POSITION)
-    bodyControl->moveA("A0_T1_SHAKE", A0_VEL);    
-    headControl->moveA("A1_T1_SHAKE", A1_VEL);
-    blockhere(2, bodyControl->ask_status(), headControl->ask_status());
-
-    rightArmControl->isblock(true);
-    rightArmControl->moveA("R0_T1_SHAKE_INITIAL", R0_VEL);
-
-    //  STEP 4 (SHAKE HAND LOOP)
-    int count = 0;
-    while (rightArmControl->robot_ok())
-    {
-        usleep(250000);
-        rightArmControl->moveA("R0_T1_SHAKE_FINAL", R0_VEL_SHAKE);
-        usleep(250000);
-        rightArmControl->moveA("R0_T1_SHAKE_INITIAL", R0_VEL_SHAKE);
-        if (count++ >= 2){
-            break;
-        }
-    }
-
-    gripperHandControl->hand_SetAngle(angle_grip);
-
     /***************************************************************************/
     /*                                                                         */
     /*   Standard application structure   Ros2 destroy!!                       */
@@ -181,4 +212,4 @@ int main(int argc, char **argv){
     spinner.join();
     rclcpp::shutdown();
     return 0;
-}
+}   

@@ -73,6 +73,18 @@ $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 $<INSTALL_INTERFACE:include>)
 ament_target_dependencies(t1_demo_pos PUBLIC rclcpp hyy_message)
 
+add_executable(t1_external_devices_demo src/hyy_control_interface.cpp src/t1_external_devices_demo.cpp)
+target_include_directories(t1_external_devices_demo PUBLIC
+$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+$<INSTALL_INTERFACE:include>)
+ament_target_dependencies(t1_external_devices_demo PUBLIC rclcpp hyy_message)
+
+add_executable(t1_twist_bottle src/hyy_control_interface.cpp src/t1_twist_bottle.cpp)
+target_include_directories(t1_twist_bottle PUBLIC
+$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+$<INSTALL_INTERFACE:include>)
+ament_target_dependencies(t1_twist_bottle PUBLIC rclcpp hyy_message)
+
 #***************************************************************************/
 #*                                                                         */
 #*   Standard application structure - Collision detection                  */
@@ -135,6 +147,8 @@ target_compile_features(h1_demo_pos  PUBLIC c_std_99 cxx_std_17)
 target_compile_features(h1_separate_cart  PUBLIC c_std_99 cxx_std_17)
 target_compile_features(h1_demo_home  PUBLIC c_std_99 cxx_std_17)
 target_compile_features(t1_demo_pos  PUBLIC c_std_99 cxx_std_17)
+target_compile_features(t1_external_devices_demo  PUBLIC c_std_99 cxx_std_17)
+target_compile_features(t1_twist_bottle  PUBLIC c_std_99 cxx_std_17)
 target_compile_features(collision_detect PUBLIC c_std_99 cxx_std_17)
 target_compile_features(motion_plan_demo PUBLIC c_std_99 cxx_std_17)
 
@@ -160,6 +174,8 @@ install(
   h1_separate_cart
   h1_demo_home
   t1_demo_pos 
+  t1_external_devices_demo 
+  t1_twist_bottle 
   collision_detect  
   motion_plan_demo
   RUNTIME DESTINATION lib/${PROJECT_NAME}

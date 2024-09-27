@@ -5,8 +5,6 @@ float64 yaw
 float64 pitch
 float64 roll
 float64 speed
-float64 accel
 ---
-string result
----
-string feedback
+# 是否发出成功
+bool goal_accepted
