@@ -1,9 +1,0 @@
-<library path="hyy_hardware_interface">
-  <class name="hyy_hardware_interface/HyyHardwareInterface"
-         type="hyy_hardware_interface::HyyHardwareInterface"
-         base_class_type="hardware_interface::SystemInterface">
-    <description>
-      The ros2_control hardware interface for multi arms robot include addition groups.
-    </description>
-  </class>
-</library>

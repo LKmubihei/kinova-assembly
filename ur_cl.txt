@@ -1,0 +1,12 @@
+0.ur_calibration
+ros2 launch ur_calibration calibration_correction.launch.py robot_ip:=192.168.1.101 target_filename:="/home/slam/ur_ros2_ws/src/my_robot_calibration.yaml"
+
+1.ur_driver
+real robot:
+ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur10e robot_ip:=192.168.1.101 launch_rviz:=false initial_joint_controller:=joint_trajectory_controller kinematics_params_file:="/home/slam/ur_ros2_ws/src/my_robot_calibration.yaml"
+
+fake hardware:
+ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur10e robot_ip:=dont-care launch_rviz:=false initial_joint_controller:=joint_trajectory_controller kinematics_params_file:="/home/slam/ur_ros2_ws/src/my_robot_calibration.yaml" use_fake_hardware:=true
+
+2.moveit_driver
+ros2 launch ur_moveit_config ur_moveit.launch.py ur_type:=ur10e launch_rviz:=true

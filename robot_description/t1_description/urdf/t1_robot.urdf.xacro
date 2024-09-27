@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<robot name="t1_robot" xmlns:xacro="http://wiki.ros.org/xacro" >
-    <xacro:include filename="$(find t1_description)/urdf/t1.urdf.xacro"/>
-    <xacro:include filename="$(find inspire_hand_description)/urdf/inspire_hand.urdf.xacro"/>
-    <xacro:include filename="$(find robotiq_gripper_description)/urdf/robotiq_gripper.urdf.xacro"/>
-    <xacro:include filename="$(find t1_description)/urdf/external_devices_config.xacro"/>
-</robot>

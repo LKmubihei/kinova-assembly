@@ -1,9 +1,0 @@
-<library path="hyy_external_controller">
-  <class name="hyy_external_controller/HyyExternalController"
-         type="hyy_external_controller::HyyExternalController"
-         base_class_type="controller_interface::ControllerInterface">
-    <description>
-      The ros2_control controller for robot external device(sensor/grip/hand).
-    </description>
-  </class>
-</library>

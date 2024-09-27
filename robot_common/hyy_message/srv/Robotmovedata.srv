@@ -1,6 +1,0 @@
-string type
-string datastr
-string tool
-string wobj
----
-float64[] result
