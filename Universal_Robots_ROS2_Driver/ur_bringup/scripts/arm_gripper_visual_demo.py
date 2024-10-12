@@ -360,9 +360,9 @@ def main(args=None):
     time.sleep(2)
     robot_move_node.send_goal(move_cmd3)
     robot_move_node.send_goal(move_cmd4)
-    robot_move_node.send_goal(move_cmd5)
-    time.sleep(2)
     gripper_cmd_node.send_gripper_command(gripper_open)
+    time.sleep(2)
+    robot_move_node.send_goal(move_cmd5)
     
     #**********************#
     #    action line end   #

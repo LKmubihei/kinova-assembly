@@ -13,6 +13,7 @@ install(PROGRAMS
   scripts/arm_gripper_demo.py
   scripts/arm_gripper_visual_demo.py
   scripts/ur_base_tf_pub.py
+  scripts/gripper_server_test.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
