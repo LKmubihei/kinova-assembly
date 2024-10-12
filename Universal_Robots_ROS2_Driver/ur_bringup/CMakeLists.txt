@@ -9,7 +9,9 @@ install(DIRECTORY config launch
 
 install(PROGRAMS
   scripts/start_ursim.sh
-  scripts/action_demo.py
+  scripts/arm_demo.py
+  scripts/arm_gripper_demo.py
+  scripts/arm_gripper_visual_demo.py
   scripts/ur_base_tf_pub.py
   DESTINATION lib/${PROJECT_NAME}
 )

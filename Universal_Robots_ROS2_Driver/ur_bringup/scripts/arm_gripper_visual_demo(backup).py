@@ -19,6 +19,17 @@ from geometry_msgs.msg import TransformStamped, Quaternion
 from scipy.spatial.transform import Rotation as R
 import time
 
+class Pose:
+    def __init__(self, positionx, positiony, positionz, roll, pitch, yaw, speed, accel):
+        self.positionx = positionx
+        self.positiony = positiony
+        self.positionz = positionz
+        self.roll = roll
+        self.pitch = pitch
+        self.yaw = yaw
+        self.speed = speed
+        self.accel = accel
+
 def pixel_to_camera(u, v, K, Z):
     """将像素坐标转换为相机坐标系中的4x4齐次坐标形式"""
     fx, fy = K[0, 0], K[1, 1]
@@ -62,58 +73,45 @@ class MoveXYZWClient(Node):
         self._action_client.wait_for_server()
         self.get_logger().info('MoveXYZW action server is available.')
 
-    def send_goal(self, positionx, positiony, positionz, yaw, pitch, roll, speed, accel):
-        # Validate and assign values from the function arguments
-        if not (0 < speed <= 1):
-            self.get_logger().warn(f'Joint speed {speed} is not valid. Must be (0,1]. Assigned: 0.01')
-            speed = 0.01
+    def send_goal(self, pose):
+        # 验证并分配速度值
+        if not (0 < pose.speed <= 0.2):
+            self.get_logger().warn(f'speed {pose.speed} 不合法,设为0.05')
+            pose.speed = 0.05
+        if not (0 < pose.accel <= 0.2):
+            self.get_logger().warn(f'accel {pose.accel} 不合法,设为0.03')
+            pose.accel = 0.03
 
         goal_msg = MoveXYZW.Goal()
-        goal_msg.positionx = positionx
-        goal_msg.positiony = positiony
-        goal_msg.positionz = positionz
-        goal_msg.yaw = yaw
-        goal_msg.pitch = pitch
-        goal_msg.roll = roll
-        goal_msg.speed = speed
-        goal_msg.accel = accel
+        goal_msg.positionx = pose.positionx
+        goal_msg.positiony = pose.positiony
+        goal_msg.positionz = pose.positionz
+        goal_msg.yaw = pose.yaw
+        goal_msg.pitch = pose.pitch
+        goal_msg.roll = pose.roll
+        goal_msg.speed = pose.speed
+        goal_msg.accel = pose.accel
 
-        self.get_logger().info(f'Sending goal: x={goal_msg.positionx}, y={goal_msg.positiony}, z={goal_msg.positionz}, '
+        self.get_logger().info(f'发送目标:x={goal_msg.positionx}, y={goal_msg.positiony}, z={goal_msg.positionz}, '
                                f'roll={goal_msg.roll}, pitch={goal_msg.pitch}, yaw={goal_msg.yaw}, speed={goal_msg.speed}')
         
-        self._send_goal_future = self._action_client.send_goal(goal_msg, feedback_callback=self.feedback_callback)
-        self._send_goal_future.add_done_callback(self.goal_response_callback)
+        self._send_goal_future = self._action_client.send_goal_async(goal_msg, feedback_callback=self.feedback_callback)
+        rclpy.spin_until_future_complete(self, self._send_goal_future)
 
-    def goal_response_callback(self, future):
-        self.get_logger().info('55555555')
-        goal_handle = future.result()
+        goal_handle = self._send_goal_future.result()
         if not goal_handle.accepted:
             self.get_logger().error('Goal was rejected.')
-            rclpy.shutdown()  # Shutdown if goal was rejected
             return
 
         self.get_logger().info('Goal accepted.')
         self._get_result_future = goal_handle.get_result_async()
-        self._get_result_future.add_done_callback(self.get_result_callback)
+        rclpy.spin_until_future_complete(self, self._get_result_future)
 
-    def get_result_callback(self, future):
-        global RES
-        result = future.result().result
-        RES = result.result
-        if RES == "MoveXYZW:SUCCESS":
-            self.get_logger().info(f'MoveXYZW ACTION succeeded with result: {RES}')
+        result = self._get_result_future.result().result
+        if result.result == "MoveXYZW:SUCCESS":
+            self.get_logger().info('MoveXYZW ACTION succeeded.')
         else:
-            self.get_logger().error(f'MoveXYZW ACTION failed with result: {RES}')
-
-        # # Send the next goal after receiving result
-        # if goal_queue:
-        #     next_goal = goal_queue.pop(0)
-        #     self.get_logger().info(f"Sending next goal: {next_goal}")
-        #     self.send_goal(**next_goal)
-        # else:
-        #     self.get_logger().info("All goals have been processed. Shutting down.")
-        #     # After receiving the result, shut down the node
-        #     rclpy.shutdown()
+            self.get_logger().error(f'MoveXYZW ACTION failed with result: {result.result}')
 
     def feedback_callback(self, feedback_msg):
         feedback = feedback_msg.feedback
@@ -268,26 +266,26 @@ def main(args=None):
     rclpy.init(args=args)
 
     # 初始化 action 客户端
-    move_xyzw_client = MoveXYZWClient()
-    gripper_cmd = GripperCmdClient()
+    robot_move_node = MoveXYZWClient()
+    gripper_cmd_node = GripperCmdClient()
     
     # 测试：设置 force 和 pos
     force = 50  # 示例力值，范围 20-100
     pos = 730   # 示例位置值，范围 0-1000
     
-    node = rclpy.create_node('tf_listener_node')
+    tf_listener_node = rclpy.create_node('tf_listener_node')
     
     tf_buffer = Buffer()
-    tf_listener = TransformListener(tf_buffer, node)
+    tf_listener = TransformListener(tf_buffer, tf_listener_node)
     
     from_frame = 'tool0'
     to_frame = 'ur_real_base'
 
-    base_to_flange = tf_transformation(tf_buffer, from_frame, to_frame, node)
+    base_to_flange = tf_transformation(tf_buffer, from_frame, to_frame, tf_listener_node)
 
     if base_to_flange is None:
-        node.get_logger().info('获取位姿失败')
-        node.destroy_node()
+        tf_listener_node.get_logger().info('获取位姿失败')
+        tf_listener_node.destroy_node()
         rclpy.shutdown()
         return
     
@@ -318,78 +316,41 @@ def main(args=None):
     else:
         print("未能获取到 target_to_base")
     
-    # 定义目标队列
-    global goal_queue
-    goal_queue = [
-        {
-            "positionx": target_to_base[0],
-            "positiony": target_to_base[1],
-            "positionz": target_to_base[2] + 0.2,
-            "roll": euler_in_base[0],
-            "pitch": euler_in_base[1],
-            "yaw": euler_in_base[2],
-            "speed": 0.05,
-            "accel": 0.03
-        },
-        {
-            "positionx": P_flange_world[0],
-            "positiony": P_flange_world[1],
-            "positionz": P_flange_world[2],
-            "roll": euler_in_base[0],
-            "pitch": euler_in_base[1],
-            "yaw": euler_in_base[2],
-            "speed": 0.05,
-            "accel": 0.03
-        },
-        {
-            "positionx": target_to_base[0],
-            "positiony": target_to_base[1],
-            "positionz": target_to_base[2] + 0.2,
-            "roll": euler_in_base[0],
-            "pitch": euler_in_base[1],
-            "yaw": euler_in_base[2],
-            "speed": 0.05,
-            "accel": 0.03
-        },
-        {
-            "positionx": P_flange_world[0],
-            "positiony": P_flange_world[1],
-            "positionz": P_flange_world[2],
-            "roll": euler_in_base[0],
-            "pitch": euler_in_base[1],
-            "yaw": euler_in_base[2],
-            "speed": 0.05,
-            "accel": 0.03
-        } 
-    ]
+
+    # Define the poses in main
+    pose1 = Pose(target_to_base[0], target_to_base[1], target_to_base[2] + 0.2, euler_in_base[0], euler_in_base[1], euler_in_base[2], 0.1, 0.2)
+    pose2 = Pose(P_flange_world[0], P_flange_world[1], P_flange_world[2], euler_in_base[0], euler_in_base[1], euler_in_base[2], 0.1, 0.2)
+    pose3 = Pose(target_to_base[0], target_to_base[1], target_to_base[2] + 0.2, euler_in_base[0], euler_in_base[1], euler_in_base[2], 0.1, 0.2)
+    pose4 = Pose(P_flange_world[0], P_flange_world[1], P_flange_world[2], euler_in_base[0], euler_in_base[1], euler_in_base[2], 0.1, 0.2)
 
     #*******************#
     #    action line    #
     #*******************#
 
-    gripper_cmd.send_gripper_command(force, 1000)
-    move_xyzw_client.send_goal(**goal_queue.pop(0))
+    gripper_cmd_node.send_gripper_command(force, 1000)
+    robot_move_node.send_goal(pose1)
     time.sleep(0.5)
-    gripper_cmd.send_gripper_command(force, 730)
+    gripper_cmd_node.send_gripper_command(force, 730)
     time.sleep(0.5)
-    move_xyzw_client.send_goal(**goal_queue.pop(0))
+    robot_move_node.send_goal(pose2)
     time.sleep(0.5)
-    move_xyzw_client.send_goal(**goal_queue.pop(0))
+    robot_move_node.send_goal(pose3)
     time.sleep(0.5)
-    gripper_cmd.send_gripper_command(force, 1000)
+    gripper_cmd_node.send_gripper_command(force, 1000)
     time.sleep(0.5)
-    move_xyzw_client.send_goal(**goal_queue.pop(0))
+    robot_move_node.send_goal(pose4)
     
     #**********************#
     #    action line end   #
     #**********************#
 
     # 保持节点运行以接收反馈和结果
-    rclpy.spin(move_xyzw_client)
+    # rclpy.spin(robot_move_node)
 
     # 清理并关闭节点
-    move_xyzw_client.destroy_node()
-    node.destroy_node()
+    robot_move_node.destroy_node()
+    gripper_cmd_node.destroy_node()
+    tf_listener_node.destroy_node()
     rclpy.shutdown()
 
 if __name__ == '__main__':
