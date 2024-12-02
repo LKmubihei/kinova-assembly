@@ -1,0 +1,32 @@
+仿真使用
+
+1. 启动rviz和moveit
+ros2 launch kinova_gen3_7dof_robotiq_2f_85_moveit_config kinova_moveit_driver.launch.py robot_ip:=dont-care use_fake_hardware:=true
+
+2. 运行一个demo 
+ros2 run kortex_bringup arm_demo.py 
+
+
+
+真机使用 （实际操作需要真机验证一下）
+
+# 1.启动真机
+ros2 launch kinova_gen3_7dof_robotiq_2f_85_moveit_config kinova_moveit_driver.launch.py robot_ip:=192.168.1.10
+
+
+# 2.订阅相机
+ros2 launch kinova_vision kinova_vision.launch.py 
+
+# 3.视觉处理
+ros2 run langsam_vision vision_node
+
+# 4. 抓取服务
+ros2 run ros2_ggcnn ggcnn_servicec
+
+
+# 5.最终根据提示抓取
+ros2 run move_panda move_panda_client --ros-args -p prompt:='Pick up the toothed  gear'
+
+
+使用夹爪需要先给串口一个权限
+sudo chmod 777 /dev/ttyUSB0 

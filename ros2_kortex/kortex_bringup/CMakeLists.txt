@@ -9,7 +9,9 @@ install(PROGRAMS
   scripts/arm_demo.py
   scripts/arm_gripper_demo.py
   scripts/arm_gripper_visual_demo.py
+  scripts/arm_objectdet_demo.py
   scripts/gripper_server_test.py
+  scripts/topic_visual.py
   scripts/test_huge_joint_space_jump.py
   DESTINATION lib/${PROJECT_NAME}
 )

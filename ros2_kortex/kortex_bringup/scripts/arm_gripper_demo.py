@@ -97,7 +97,7 @@ class GripperCmdClient(Node):
     def __init__(self):
         super().__init__('gripper_cmd_client')
         # Create service client to communicate with the gripper command service
-        self.client = self.create_client(Setangle, '/gripper_cmd_node/ur_gripper_cmd_server')
+        self.client = self.create_client(Setangle, '/gripper_cmd_Node/ur_gripper_cmd_server')
 
         # Wait for the service to be available
         while not self.client.wait_for_service(timeout_sec=1.0):
@@ -141,27 +141,33 @@ def main(args=None):
     # 初始化 action 客户端
     robot_move_node = MoveXYZWClient()
     gripper_cmd_node = GripperCmdClient()
-
-    move_cmd1 = Move_cmd(0.4561, 0.0020, 0.4341, 1.57, 0.00119, 1.57, 0.2, 0.2)
-    move_cmd2 = Move_cmd(0.4561, 0.0020, 0.2341, 1.57, 0.00119, 1.57, 0.2, 0.2)
-    move_cmd3 = Move_cmd(0.4561, 0.0020, 0.6341, 1.57, 0.00119, 1.57, 0.2, 0.2)
+    
+    move_cmd1 = Move_cmd(0.1, 0.5, 0.8, 3.137, 0.0, 1.58, 0.05, 0.1)
+    move_cmd2 = Move_cmd(0.1, 0.5, 0.6, 3.137, 0.0, 1.58, 0.05, 0.1)
+    move_cmd3 = Move_cmd(0.1, 0.7, 0.6, 3.137, 0.0, 1.58, 0.05, 0.1)
 
     gripper_open= Gripper_cmd(50, 1000)
-    gripper_grab = Gripper_cmd(50, 730)
+    gripper_grab = Gripper_cmd(50, 500)
 
     #*******************#
     #    action line    #
     #*******************#
 
-    robot_move_node.send_goal(move_cmd1)
+    # robot_move_node.send_goal(move_cmd1)
     gripper_cmd_node.send_gripper_command(gripper_open)
-    robot_move_node.send_goal(move_cmd2)
-    time.sleep(2)
+    # robot_move_node.send_goal(move_cmd2)
+    time.sleep(1)
     gripper_cmd_node.send_gripper_command(gripper_grab)
-    time.sleep(2)
-    robot_move_node.send_goal(move_cmd3)
-    time.sleep(2)
+    time.sleep(1)
+    # robot_move_node.send_goal(move_cmd3)
+    time.sleep(1)
     gripper_cmd_node.send_gripper_command(gripper_open)
+    time.sleep(1)
+    gripper_cmd_node.send_gripper_command(gripper_grab)
+    time.sleep(1)
+    gripper_cmd_node.send_gripper_command(gripper_open)
+    time.sleep(1)
+    gripper_cmd_node.send_gripper_command(gripper_grab)
     
     #**********************#
     #    action line end   #

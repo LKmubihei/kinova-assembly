@@ -95,10 +95,10 @@ def main(args=None):
     move_xyzw_client = MoveXYZWClient()
 
     # Define the poses that the robot should move to
-    pose1 = Pose(0.4561, 0.0020, 0.4341, 1.57, 0.00119, 1.57, 0.2, 0.2)
-    pose2 = Pose(0.4561, 0.0020, 0.2341, 1.57, 0.00119, 1.57, 0.2, 0.2)
-    pose3 = Pose(0.4561, 0.0020, 0.6341, 1.57, 0.00119, 1.57, 0.2, 0.2)
-    
+    pose1 = Pose(0.46, 0.00, 0.43, 1.57, 0.0, 1.57, 0.1, 0.2)
+    pose2 = Pose(0.3, 0.00, 0.6, 1.57, 0.0, 1.57, 0.1, 0.2)
+    pose3 = Pose(0.5, 0.00, 0.4, 1.57, 0.0, 1.57, 0.1, 0.2)
+
     # Send goals one by one, blocking until each goal completes
     move_xyzw_client.send_goal(pose1)
     move_xyzw_client.send_goal(pose2)

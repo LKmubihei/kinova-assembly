@@ -18,6 +18,7 @@ from tf2_ros.transform_listener import TransformListener
 from geometry_msgs.msg import TransformStamped, Quaternion
 from scipy.spatial.transform import Rotation as R
 import time
+from ultralytics import YOLO
 
 # Global variable to store transformation
 RES = "null"
@@ -56,8 +57,9 @@ def tf_transformation(tf_buffer, from_frame, to_frame, node):
     return transformation
 
 # Visual module to handle camera input and circle detection
-def visualmodule(base_to_flange):
+def visualmodule(flange_in_base, model, phase):
     """Initialize the camera stream, detect circles, and calculate their positions in the base frame."""
+    print(f"phase is {phase}!!!!")
     # Camera intrinsic parameters for ur10e
     K = np.array([[911.1848, 0.0, 646.01928],
                   [0.0, 910.3735, 358.92736],
@@ -103,50 +105,86 @@ def visualmodule(base_to_flange):
 
             # Convert color and depth frames to numpy arrays
             color_image = np.asanyarray(color_frame.get_data())
+            # cv2.rectangle(color_image, (10, 10), (100, 100), (0, 255, 0), 2)
             depth_image = np.asanyarray(depth_frame.get_data())
 
-            # Convert color image to grayscale
-            gray = cv2.cvtColor(color_image, cv2.COLOR_BGR2GRAY)
+            results = model(color_image, imgsz=640, conf=0.3)
 
-            # Apply Gaussian blur to reduce noise
-            gray_blurred = cv2.GaussianBlur(gray, (9, 9), 2)
+            boxes = results[0].boxes.xywh.cpu().numpy()
+            # print(boxes)
+            # print(len(boxes))
+            boxes_xyxy = results[0].boxes.xyxy.cpu().numpy()
+            classes = results[0].boxes.cls.cpu().numpy()
 
-            # Use Hough Circle Transform to detect circles
-            circles = cv2.HoughCircles(
-                gray_blurred,
-                cv2.HOUGH_GRADIENT,
-                dp=1,
-                minDist=4000,
-                param1=20,
-                param2=40,
-                minRadius=10,
-                maxRadius=50
-            )
-
-            # If circles are detected
-            if circles is not None:
-                circles = np.uint16(np.around(circles))
-                for i in circles[0, :]:
-                    # Draw the outer circle
-                    cv2.circle(color_image, (i[0], i[1]), i[2], (0, 255, 0), 2)
-                    # Draw the center of the circle
-                    cv2.circle(color_image, (i[0], i[1]), 2, (0, 0, 255), 3)
-                    # Print the center coordinates of the circle
-                    circle_x = i[0]
-                    circle_y = i[1]
-                    print("Circle center coordinates: ", circle_x, circle_y)
-                    # Get the depth value of the circle center
-                    depth_value = depth_frame.get_distance(i[0], i[1])
-                    print('Depth value: ', depth_value)
-                    print(f"Circle depth value: {depth_value} meters")
-                    # Calculate the object's position in the base frame
-                    pixel_cam = pixel_to_camera(circle_x, circle_y, K, depth_value)
-                    target_to_base = base_to_flange @ camera_to_flange @ pixel_cam
-                    print('base_to_flange:', base_to_flange)
-                    print('camera_to_flange:', camera_to_flange)
-                    print('pixel_to_camera:', pixel_cam)
-                    print("target_to_base:", target_to_base)
-                    break  # Exit loop after detecting one circle
+            if phase == 1 or phase == 2:  ## find redgear
+                if len(boxes) > 0:
+                    for box, box_xyxy, cls_ in zip(boxes, boxes_xyxy, classes):
+                        if int(cls_) == 0:      ## redgear
+                            print(box_xyxy[0], box_xyxy[1], box_xyxy[2], box_xyxy[3])
+                            # cv2.rectangle(color_image, (box_xyxy[0], box_xyxy[1]), (box_xyxy[2], box_xyxy[3]), (0, 255, 0), 2)
+                            circle_x = int(box[0])
+                            circle_y = int(box[1])
+                            print("object center coordinates: ", circle_x, circle_y)
+                            # Draw the center of the circle
+                            cv2.circle(color_image, (circle_x, circle_y), 2, (0, 255, 0), 3)
+                            # Get the depth value of the circle center
+                            depth_value = depth_frame.get_distance(circle_x, circle_y)
+                            print('Depth value: ', depth_value)
+                            print(f"Circle depth value: {depth_value} meters")
+                            # Calculate the object's position in the base frame
+                            pixel_cam = pixel_to_camera(circle_x, circle_y, K, depth_value)
+                            target_to_base = flange_in_base @ camera_to_flange @ pixel_cam
+                            print('flange_in_base:', flange_in_base)
+                            print('camera_to_flange:', camera_to_flange)
+                            print('pixel_to_camera:', pixel_cam)
+                            print("target_to_base:", target_to_base)
+                            break  # Exit loop after detecting one circle
+            elif phase == 3:  ## find redshaftseat
+                if len(boxes) > 0:
+                    for box, box_xyxy, cls_ in zip(boxes, boxes_xyxy, classes):
+                        if int(cls_) == 1:      ## redshaftseat
+                            # cv2.rectangle(color_image, (box_xyxy[0], box_xyxy[1]), (box_xyxy[2], box_xyxy[3]), (0, 255, 0), 2)
+                            circle_x = int(box[0]) 
+                            circle_y = int(box[1])
+                            print("object center coordinates: ", circle_x, circle_y)
+                            # Draw the center of the circle
+                            cv2.circle(color_image, (circle_x, circle_y), 2, (0, 255, 0), 3)
+                            # Get the depth value of the circle center
+                            depth_value = depth_frame.get_distance(circle_x, circle_y)
+                            print('Depth value: ', depth_value)
+                            print(f"Circle depth value: {depth_value} meters")
+                            # Calculate the object's position in the base frame
+                            pixel_cam = pixel_to_camera(circle_x, circle_y, K, depth_value)
+                            target_to_base = flange_in_base @ camera_to_flange @ pixel_cam
+                            print('flange_in_base:', flange_in_base)
+                            print('camera_to_flange:', camera_to_flange)
+                            print('pixel_to_camera:', pixel_cam)
+                            print("target_to_base:", target_to_base)
+                            break  # Exit loop after detecting one circle
+            elif phase == 4:  ## find redcircle
+                print(boxes)
+                if len(boxes) > 0:
+                    for box, box_xyxy, cls_ in zip(boxes, boxes_xyxy, classes):
+                        if int(cls_) == 2:      ## redcircle
+                            # cv2.rectangle(color_image, (box_xyxy[0], box_xyxy[1]), (box_xyxy[2], box_xyxy[3]), (0, 255, 0), 2)
+                            circle_x = int(box[0])
+                            circle_y = int(box[1])
+                            print("object center coordinates: ", circle_x, circle_y)
+                            # Draw the center of the circle
+                            cv2.circle(color_image, (circle_x, circle_y), 2, (0, 255, 0), 3)
+                            # Get the depth value of the circle center
+                            depth_value = depth_frame.get_distance(circle_x, circle_y)
+                            print('Depth value: ', depth_value)
+                            print(f"Circle depth value: {depth_value} meters")
+                            # Calculate the object's position in the base frame
+                            pixel_cam = pixel_to_camera(circle_x, circle_y, K, depth_value)
+                            target_to_base = flange_in_base @ camera_to_flange @ pixel_cam
+                            print('flange_in_base:', flange_in_base)
+                            print('camera_to_flange:', camera_to_flange)
+                            print('pixel_to_camera:', pixel_cam)
+                            print("target_to_base:", target_to_base)
+                            break  # Exit loop after detecting one circle
+            
 
             # Display the color image
             cv2.imshow('Color Image', color_image)
@@ -159,6 +197,12 @@ def visualmodule(base_to_flange):
         # Stop the camera stream
         pipeline.stop()
         cv2.destroyAllWindows()
+        
+        if target_to_base is not None:
+            print("Target position in base frame from camera:", target_to_base)
+        else:
+            print("Failed to get target position from camera")
+
         # Return the calculated target_to_base
         return target_to_base
 
@@ -310,14 +354,14 @@ def get_flange_pose(tf_buffer, tf_listener_node, from_frame='tool0', to_frame='u
     ]).as_matrix()
 
     # Convert rotation matrix to Euler angles
-    flange_flange_Euler_in_base = R.from_matrix(flange_R_in_base).as_euler('xyz', degrees=False)
+    flange_Euler_in_base = R.from_matrix(flange_R_in_base).as_euler('xyz', degrees=False)
 
     # 打印结果
     print("位置(Translation Vector):\n", flange_P_in_base)
     print("旋转矩阵(Rotation Matrix):\n", flange_R_in_base)
-    print("欧拉角(Euler Angles):\n", flange_flange_Euler_in_base)
+    print("欧拉角(Euler Angles):\n", flange_Euler_in_base)
 
-    return flange_P_in_base, flange_R_in_base, flange_flange_Euler_in_base
+    return flange_P_in_base, flange_R_in_base, flange_Euler_in_base
 
 def create_homogeneous_transform(translation_vector, rotation_matrix):
 
@@ -339,51 +383,90 @@ def main(args=None):
     # Initialize action and service clients
     robot_move_node = MoveXYZWClient()
     gripper_cmd_node = GripperCmdClient()
-    
     tf_listener_node = rclpy.create_node('tf_listener_node')
-    tf_buffer = Buffer()
-    tf_listener = TransformListener(tf_buffer, tf_listener_node)
-    
+
+    # 运动到指定位姿
+    # move_cmd= Move_cmd(flange_P_in_base[0], flange_P_in_base[1], flange_P_in_base[2], flange_Euler_in_base[0], flange_Euler_in_base[1], flange_Euler_in_base[2], 0.1, 0.2)
+    # robot_move_node.send_goal(move_cmd)
+
     vel = 0.05
     acc = 0.1
+    calibraoffset_x = -0.000
+    cameraoffset = -0.14
+    gripperoffset = 0.2
     gripper_open= Gripper_cmd(50, 1000)
     gripper_grab = Gripper_cmd(50, 730)
-    
+    model = YOLO('/home/slam/ur_ros2_ws/src/Universal_Robots_ROS2_Driver/ur_bringup/scripts/best.pt')
+
+    #************************#
+    #    action line start   #
+    #************************#
+
+    # 第一次，识别齿轮位置，移动到齿轮上方，并打开夹爪
+
     # 获取法兰盘位姿
+    tf_buffer = Buffer()
+    tf_listener = TransformListener(tf_buffer, tf_listener_node)
+    gripper_cmd_node.send_gripper_command(gripper_open)
+    flange_P_in_base, flange_R_in_base, flange_Euler_in_base = get_flange_pose(tf_buffer, tf_listener_node)
+    move_cmd_initial = Move_cmd(flange_P_in_base[0], flange_P_in_base[1], flange_P_in_base[2], flange_Euler_in_base[0], flange_Euler_in_base[1], flange_Euler_in_base[2], vel, acc)    
+    # 生成法兰盘在基座坐标系中的齐次变换矩阵
+    flange_Transfor_in_base = create_homogeneous_transform(flange_P_in_base, flange_R_in_base)
+    # 调用视觉模块，传入齐次变换矩阵和模型
+    target_to_base = visualmodule(flange_Transfor_in_base, model, 1)
+    # Define the poses for robot movement
+    move_cmd = Move_cmd(target_to_base[0], target_to_base[1] + cameraoffset, flange_P_in_base[2], flange_Euler_in_base[0], flange_Euler_in_base[1], flange_Euler_in_base[2],vel, acc)    
+    robot_move_node.send_goal(move_cmd)
+
+    # 第二次，识别齿轮，进行抓取，并抬起机械臂到识别位置
+
+    # 获取法兰盘位姿
+    tf_buffer = Buffer()
+    tf_listener = TransformListener(tf_buffer, tf_listener_node)
     flange_P_in_base, flange_R_in_base, flange_Euler_in_base = get_flange_pose(tf_buffer, tf_listener_node)
     # 生成法兰盘在基座坐标系中的齐次变换矩阵
     flange_Transfor_in_base = create_homogeneous_transform(flange_P_in_base, flange_R_in_base)
     # 调用视觉模块，传入齐次变换矩阵和模型
-    target_to_base = visualmodule(flange_Transfor_in_base)
-
-    if target_to_base is not None:
-        print("Target position in base frame from camera:", target_to_base)
-    else:
-        print("Failed to get target position from camera")
-    
-
+    target_to_base = visualmodule(flange_Transfor_in_base, model, 2)
     # Define the poses for robot movement
-    move_cmd1 = Move_cmd(flange_P_in_base[0], flange_P_in_base[1], flange_P_in_base[2], flange_Euler_in_base[0], flange_Euler_in_base[1], flange_Euler_in_base[2], vel, acc)
-    move_cmd2 = Move_cmd(target_to_base[0], target_to_base[1], target_to_base[2] + 0.2, flange_Euler_in_base[0], flange_Euler_in_base[1], flange_Euler_in_base[2], vel, acc)
-    move_cmd3 = Move_cmd(flange_P_in_base[0], flange_P_in_base[1], flange_P_in_base[2], flange_Euler_in_base[0], flange_Euler_in_base[1], flange_Euler_in_base[2], vel, acc)
-    move_cmd4 = Move_cmd(target_to_base[0], target_to_base[1], target_to_base[2] + 0.2, flange_Euler_in_base[0], flange_Euler_in_base[1], flange_Euler_in_base[2], vel, acc)
-    move_cmd5 = Move_cmd(flange_P_in_base[0], flange_P_in_base[1], flange_P_in_base[2], flange_Euler_in_base[0], flange_Euler_in_base[1], flange_Euler_in_base[2], vel, acc)
-
-    #*******************#
-    #    action line    #
-    #*******************#
-
-    robot_move_node.send_goal(move_cmd1)
-    gripper_cmd_node.send_gripper_command(gripper_open)
-    robot_move_node.send_goal(move_cmd2)
+    move_cmd = Move_cmd(target_to_base[0] + calibraoffset_x, target_to_base[1], target_to_base[2] + gripperoffset, flange_Euler_in_base[0], flange_Euler_in_base[1], flange_Euler_in_base[2], vel, acc)
+    robot_move_node.send_goal(move_cmd)
     time.sleep(2)
     gripper_cmd_node.send_gripper_command(gripper_grab)
     time.sleep(2)
-    robot_move_node.send_goal(move_cmd3)
-    robot_move_node.send_goal(move_cmd4)
+    robot_move_node.send_goal(move_cmd_initial)
+
+    # # 第三次，识别齿轮轴，运动到齿轮轴的上方
+
+    # # 获取法兰盘位姿
+    tf_buffer = Buffer()
+    tf_listener = TransformListener(tf_buffer, tf_listener_node)
+    flange_P_in_base, flange_R_in_base, flange_Euler_in_base = get_flange_pose(tf_buffer, tf_listener_node)
+    # 生成法兰盘在基座坐标系中的齐次变换矩阵
+    flange_Transfor_in_base = create_homogeneous_transform(flange_P_in_base, flange_R_in_base)
+    # 调用视觉模块，传入齐次变换矩阵和模型
+    target_to_base = visualmodule(flange_Transfor_in_base, model, 3)
+    # Define the poses for robot movement
+    move_cmd = Move_cmd(target_to_base[0], target_to_base[1] + cameraoffset, flange_P_in_base[2], flange_Euler_in_base[0], flange_Euler_in_base[1], flange_Euler_in_base[2], vel, acc)
+    robot_move_node.send_goal(move_cmd)
+
+    # 第四次，识别齿轮轴，移动齿轮到齿轮轴中, 松开夹爪，完成轴孔装配，并回到初始位置 
+
+    # 获取法兰盘位姿
+    tf_buffer = Buffer()
+    tf_listener = TransformListener(tf_buffer, tf_listener_node)
+    flange_P_in_base, flange_R_in_base, flange_Euler_in_base = get_flange_pose(tf_buffer, tf_listener_node)
+    # 生成法兰盘在基座坐标系中的齐次变换矩阵
+    flange_Transfor_in_base = create_homogeneous_transform(flange_P_in_base, flange_R_in_base)
+    # 调用视觉模块，传入齐次变换矩阵和模型
+    target_to_base = visualmodule(flange_Transfor_in_base, model, 4)
+    # Define the poses for robot movement
+    move_cmd = Move_cmd(target_to_base[0] + calibraoffset_x, target_to_base[1], target_to_base[2] + gripperoffset + 0.005, flange_Euler_in_base[0], flange_Euler_in_base[1], flange_Euler_in_base[2], vel, acc)
+    robot_move_node.send_goal(move_cmd)
+    time.sleep(2)
     gripper_cmd_node.send_gripper_command(gripper_open)
     time.sleep(2)
-    robot_move_node.send_goal(move_cmd5)
+    robot_move_node.send_goal(move_cmd_initial)
     
     #**********************#
     #    action line end   #
