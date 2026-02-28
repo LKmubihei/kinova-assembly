@@ -1,0 +1,9 @@
+    <!-- ========== Include pump model on the table ========== -->
+    <!-- 只有在你有 ~/.gazebo/models/pump 模型时才这样写；否则见下方“没有 pump 模型怎么办” -->
+    <include>
+      <uri>model://pump</uri>
+      <name>pump</name>
+      <pose>-0.25 0.10 1.05 0 0 0</pose>
+      <!-- 若需要横放：<pose>-0.42 0.10 1.05 1.5708 0 0</pose> -->
+    </include>
+

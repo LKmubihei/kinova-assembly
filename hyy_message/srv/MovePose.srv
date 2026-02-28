@@ -1,0 +1,10 @@
+float64 positionx
+float64 positiony
+float64 positionz
+float64 yaw
+float64 pitch
+float64 roll
+float64 speed
+---
+# 是否发出成功
+bool goal_accepted

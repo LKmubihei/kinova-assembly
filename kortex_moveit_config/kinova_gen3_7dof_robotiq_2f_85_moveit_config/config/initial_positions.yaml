@@ -1,0 +1,11 @@
+# Default initial positions for gen3's ros2_control fake system
+
+# initial_positions:
+joint_1: 1.57
+joint_2: 0.10
+joint_3: -3.14
+joint_4: -1.19
+joint_5: 0.0
+joint_6: -1.87
+joint_7: 1.55
+robotiq_85_left_knuckle_joint: 0
