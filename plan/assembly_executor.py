@@ -148,7 +148,7 @@ class YOLOInterface:
         """
         [fasten_screw] 后置验收（辅助）
         外观验收：螺丝头是否在位、是否歪斜、是否漏打。
-        主判断依靠电批扭矩曲线，YOLO 做二次确认。
+        主判断依靠电批扭矩曲线，以及YOLO 做二次确认。
         """
         # TODO: 检测螺丝头外观（形态 / 角度偏差）
         return True

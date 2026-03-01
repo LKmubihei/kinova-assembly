@@ -51,6 +51,11 @@ def launch_setup(context, *args, **kwargs):
     robot_hand_controller = LaunchConfiguration("robot_hand_controller")
     gripper = LaunchConfiguration("gripper")
     use_fake_hardware = LaunchConfiguration("use_fake_hardware")
+    launch_rviz = LaunchConfiguration("launch_rviz")
+
+    # OpaqueFunction 内必须用 perform(context) 将 substitution 解析为字符串，
+    # 否则跨 IncludeLaunchDescription 边界传递时 IfCondition 无法正确求值。
+    launch_rviz_str = launch_rviz.perform(context)
 
 
     kinova_control_launch = IncludeLaunchDescription(
@@ -85,7 +90,7 @@ def launch_setup(context, *args, **kwargs):
             "sim_gazebo": sim_gazebo,
             "use_fake_hardware": use_fake_hardware, 
             "use_sim_time": "true",
-            "launch_rviz": "false",     ## 起决定性因素
+            "launch_rviz": launch_rviz_str,     ## 起决定性因素
         }.items(),
     )
 
@@ -222,6 +227,13 @@ def generate_launch_description():
             "use_fake_hardware",
             default_value="false",
             description="Start robot with fake hardware mirroring command to its states.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "launch_rviz",
+            default_value="false",
+            description="Launch RViz with MoveIt. Pass launch_rviz:=true to enable.",
         )
     )
     return LaunchDescription(declared_arguments + [OpaqueFunction(function=launch_setup)])
