@@ -27,7 +27,7 @@ sudo mv /home/lk/workspace/src/move_group_interface_improved.h \
 
 ---
 
-# 启动机器人界面
+# 启动机器人gazebo仿真
 
 gazebo + moveit 仿真（gen3 机械臂 + robotiq85 + vision）：
 
@@ -41,11 +41,6 @@ ros2 launch kortex_bringup kortex_sim_moveit_control.launch.py launch_rviz:=true
 ![alt text](image.png)
 勾选 Query Goal State
 
-单 gazebo 仿真环境：
-
-```bash
-ros2 launch kortex_bringup kortex_sim_control.launch.py
-```
 
 真机使用：
 
