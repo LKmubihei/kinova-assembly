@@ -23,7 +23,10 @@ moveit/move_group_interface/move_group_interface_improved.h: 没有那个文件�
 sudo mv /home/lk/workspace/src/move_group_interface_improved.h \
         /opt/ros/humble/include/moveit/move_group_interface/
 ```
-
+3. gazbo 如果进不去，把
+export PATH=/usr/bin:$PATH
+source /usr/share/gazebo-11/setup.sh
+放到  .bashrc 文件中
 
 ---
 
