@@ -28,4 +28,8 @@ install(DIRECTORY config launch
   DESTINATION share/${PROJECT_NAME}
 )
 
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../models
+  DESTINATION share/${PROJECT_NAME}
+)
+
 ament_package()

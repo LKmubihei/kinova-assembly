@@ -9,6 +9,7 @@ import yaml
 
 import rclpy
 from rclpy.node import Node
+from ament_index_python.packages import get_package_share_directory
 
 from geometry_msgs.msg import Pose, Quaternion
 from gazebo_msgs.srv import SpawnEntity
@@ -56,7 +57,10 @@ class AssemblyPartSpawner(Node):
     def __init__(self) -> None:
         super().__init__("assembly_part_spawner")
 
-        self.declare_parameter("models_path", "/home/lk/workspace/src/models")
+        self.declare_parameter(
+            "models_path",
+            os.path.join(get_package_share_directory("kortex_bringup"), "models"),
+        )
         self.declare_parameter("parts_yaml", "")
 
         self.spawn_client = self.create_client(SpawnEntity, "/spawn_entity")

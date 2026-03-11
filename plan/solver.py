@@ -1,4 +1,5 @@
 # --------------- 0) 导入与静音（可选） ---------------
+import os
 import unified_planning as up
 from unified_planning.shortcuts import *
 from unified_planning.io import PDDLReader
@@ -7,8 +8,9 @@ from unified_planning.io import PDDLReader
 up.shortcuts.get_environment().credits_stream = None
 
 # --------------- 1) 从文件加载 PDDL：domain + problem ---------------
-domain_file = "/home/lk/workspace/src/plan/domain.pddl"
-problem_file = "/home/lk/workspace/src/plan/p_real.pddl"
+_PLAN_DIR = os.path.dirname(os.path.abspath(__file__))
+domain_file = os.path.join(_PLAN_DIR, "domain.pddl")
+problem_file = os.path.join(_PLAN_DIR, "p_real.pddl")
 
 reader = PDDLReader()
 problem = reader.parse_problem(domain_file, problem_file)  # ← 从文件解析

@@ -22,6 +22,7 @@ TV装配执行器 (Assembly Executor)
 
 import time
 import math
+import os
 
 import rclpy
 from rclpy.action import ActionClient
@@ -37,8 +38,9 @@ from unified_planning.io import PDDLReader
 up.shortcuts.get_environment().credits_stream = None
 
 # PDDL 文件路径
-DOMAIN_FILE  = "/home/lk/workspace/src/plan/domain.pddl"
-PROBLEM_FILE = "/home/lk/workspace/src/plan/p_real.pddl"
+_PLAN_DIR    = os.path.dirname(os.path.abspath(__file__))
+DOMAIN_FILE  = os.path.join(_PLAN_DIR, "domain.pddl")
+PROBLEM_FILE = os.path.join(_PLAN_DIR, "p_real.pddl")
 
 # =============================================================================
 # 位姿配置表

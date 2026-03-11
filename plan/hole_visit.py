@@ -46,7 +46,7 @@ B_Z =   12.6 * _CM   # 0.026 m  孔面高度
 APPROACH_OFFSET_Z = 50.0 * _MM   # 孔正上方 50 mm 接近高度
 
 # 安全归位点 (x, y, z, roll, pitch, yaw)
-HOME = (0.30, 0.00, 0.40, -math.pi, 0.0, 0.0)
+HOME = (0.30, -0.42, 0.12, -math.pi, 0.0, 0.0)
 
 # 速度
 SPEED_FAST, ACCEL_FAST = 0.20, 0.10
@@ -70,8 +70,6 @@ HOLE_OFFSETS = {
 
 VISIT_ORDER = ["B", "A", "C", "D", "G", "F", "E"]
 # VISIT_ORDER = ["B"]
-
-
 
 # =============================================================================
 # 机械臂节点（独立，不依赖 assembly_executor）
@@ -150,44 +148,44 @@ def visit_holes(arm: ArmClient):
     arm.go_home("初始归位")
     # arm.gripper(0, label="初始-夹爪闭合")   # 确保初始闭合
 
-    for idx, name in enumerate(VISIT_ORDER, 1):
-        dx, dy = HOLE_OFFSETS[name]
-        hx = B_X + dx
-        hy = B_Y + dy
-        hz = B_Z
+    # for idx, name in enumerate(VISIT_ORDER, 1):
+    #     dx, dy = HOLE_OFFSETS[name]
+    #     hx = B_X + dx
+    #     hy = B_Y + dy
+    #     hz = B_Z
 
-        log.info(
-            f"\n{'─'*50}\n"
-            f"[{idx}/{len(VISIT_ORDER)}] 孔位 {name}"
-            f"  abs=({hx:.4f}, {hy:.4f}, {hz:.4f})\n"
-            f"{'─'*50}"
-        )
+    #     log.info(
+    #         f"\n{'─'*50}\n"
+    #         f"[{idx}/{len(VISIT_ORDER)}] 孔位 {name}"
+    #         f"  abs=({hx:.4f}, {hy:.4f}, {hz:.4f})\n"
+    #         f"{'─'*50}"
+    #     )
 
-        # 1. 快速到孔正上方（夹爪保持闭合）
-        ok = arm.move(hx, hy, hz + APPROACH_OFFSET_Z,
-                      _R, _P, _Y, SPEED_FAST, ACCEL_FAST, f"孔{name}-接近")
-        if not ok:
-            log.error(f"孔 {name} 接近失败，跳过")
-            continue
+    #     # 1. 快速到孔正上方（夹爪保持闭合）
+    #     ok = arm.move(hx, hy, hz + APPROACH_OFFSET_Z,
+    #                   _R, _P, _Y, SPEED_FAST, ACCEL_FAST, f"孔{name}-接近")
+    #     if not ok:
+    #         log.error(f"孔 {name} 接近失败，跳过")
+    #         continue
 
-        # 2. 慢速下降到孔面（夹爪保持闭合）
-        ok = arm.move(hx, hy, hz, _R, _P, _Y, SPEED_SLOW, ACCEL_SLOW, f"孔{name}-到位")
-        if not ok:
-            log.error(f"孔 {name} 到位失败，退出")
-            break
+    #     # 2. 慢速下降到孔面（夹爪保持闭合）
+    #     ok = arm.move(hx, hy, hz, _R, _P, _Y, SPEED_SLOW, ACCEL_SLOW, f"孔{name}-到位")
+    #     if not ok:
+    #         log.error(f"孔 {name} 到位失败，退出")
+    #         break
 
-        # # 3. 到位后夹爪开 10%
-        # arm.gripper(100, label=f"孔{name}-开10%")
+    #     # # 3. 到位后夹爪开 10%
+    #     # arm.gripper(100, label=f"孔{name}-开10%")
 
-        # # 4. 抬回接近高度，夹爪关闭备用
-        # arm.gripper(0, label=f"孔{name}-夹爪复位")
-        arm.move(hx, hy, hz + APPROACH_OFFSET_Z,
-                 _R, _P, _Y, SPEED_FAST, ACCEL_FAST, f"孔{name}-抬起")
+    #     # # 4. 抬回接近高度，夹爪关闭备用
+    #     # arm.gripper(0, label=f"孔{name}-夹爪复位")
+    #     arm.move(hx, hy, hz + APPROACH_OFFSET_Z,
+    #              _R, _P, _Y, SPEED_FAST, ACCEL_FAST, f"孔{name}-抬起")
 
-    # arm.go_home("完成归位")
-    log.info("=" * 50)
-    log.info("  ✓ 所有孔位访问完成！")
-    log.info("=" * 50)
+    # # arm.go_home("完成归位")
+    # log.info("=" * 50)
+    # log.info("  ✓ 所有孔位访问完成！")
+    # log.info("=" * 50)
 
 
 def main():

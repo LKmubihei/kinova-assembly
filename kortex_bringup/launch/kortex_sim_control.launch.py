@@ -36,6 +36,7 @@ from launch.substitutions import (
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 import os
+from ament_index_python.packages import get_package_share_directory, get_package_prefix
 
 
 def launch_setup(context, *args, **kwargs):
@@ -166,7 +167,7 @@ def launch_setup(context, *args, **kwargs):
             "gui": "true",
             # "world": "/home/robotck/kinova_ws/src/ros2_kortex/kortex_bringup/worlds/geer17.world",
             # "world": "/home/lk/kinova_ws/src/ros2_kortex/kortex_bringup/worlds/assembly.world",
-            "world": "/home/lk/workspace/src/models/ee.world",
+            "world": os.path.join(get_package_share_directory("kortex_bringup"), "models", "ee.world"),
             # "verbose": "True"
         }.items(),
     )
@@ -198,7 +199,7 @@ def launch_setup(context, *args, **kwargs):
         output="screen",
         parameters=[
             {
-                "models_path": "/home/lk/workspace/src/models",
+                "models_path": os.path.join(get_package_share_directory("kortex_bringup"), "models"),
                 "parts_yaml": "\n".join(
                     [
                         "green_battery: [-0.95, 0.35, 1.025, 0.0, 0.0, 0.0]",
@@ -228,7 +229,7 @@ def launch_setup(context, *args, **kwargs):
 
 def generate_launch_description():
     # 设置 Gazebo 模型路径，添加自定义模型目录
-    models_path = "/home/lk/workspace/src/models"
+    models_path = os.path.join(get_package_share_directory("kortex_bringup"), "models")
     current_gazebo_model_path = os.environ.get('GAZEBO_MODEL_PATH', '')
     if current_gazebo_model_path:
         new_gazebo_model_path = models_path + ':' + current_gazebo_model_path
@@ -241,7 +242,9 @@ def generate_launch_description():
     )
 
     # 设置 Gazebo 插件路径，确保 libgazebo_grasp_fix.so 可以被加载
-    plugin_path = "/home/lk/workspace/install/gazebo_grasp_plugin/lib"
+    # gazebo_grasp_plugin 与 kortex_bringup 在同一 workspace，通过 install 目录推导
+    _install_base = os.path.dirname(get_package_prefix("kortex_bringup"))
+    plugin_path = os.path.join(_install_base, "gazebo_grasp_plugin", "lib")
     current_gazebo_plugin_path = os.environ.get('GAZEBO_PLUGIN_PATH', '')
     if current_gazebo_plugin_path:
         new_gazebo_plugin_path = plugin_path + ':' + current_gazebo_plugin_path
