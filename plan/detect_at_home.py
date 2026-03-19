@@ -9,6 +9,7 @@ detect_at_home.py
 5. 保存原始图像和带标注图像
 """
 
+import json
 import math
 import time
 from pathlib import Path
@@ -25,8 +26,19 @@ from hyy_message.action import MoveXYZW
 YOLO_DIR = Path(__file__).resolve().parent.parent / "yolo"
 BEST_PT = YOLO_DIR / "best.pt"
 
+# 模板 JSON（用于确定螺丝孔分组）
+TEMPLATE_JSON = YOLO_DIR / "template.json"
+
+# G编号 -> 螺丝字母 映射
+_GROUP_TO_LETTER = {1: "A", 2: "B", 3: "C", 4: "D", 5: "E", 6: "F", 7: "G"}
+
+# zhun/buzhun 检测类名（与模型 names 一致）
+_SCREW_STATUS_LABELS = {"zhun", "buzhun"}
+
 # HOME 点
 HOME = (0.30, -0.38, 0.1, -math.pi, 0.0, 0.0)
+BIN_SPECT = (-0.40, 0.25, 0.2, -math.pi, 0.0, 0.0)
+MID = (0.00, -0.38, 0.1, -math.pi, 0.0, 0.0)   # 基座正上方高位过渡点
 SPEED, ACCEL = 0.20, 0.10
 
 
@@ -205,10 +217,106 @@ def capture_frame() -> np.ndarray:
 
 
 # =============================================================================
-# YOLO 推理并打印结果
+# 螺丝孔分组与状态汇总
 # =============================================================================
-def yolo_detect(image: np.ndarray):
-    """对 BGR numpy 图像做 YOLO 推理，打印检测结果，返回 (detections, annotated_image)。"""
+def _load_template_hole_groups(template_json: Path) -> list[tuple[int, tuple[float, float]]]:
+    """从模板 JSON 中加载 Hole_pcb 中心点，返回 [(group_id, (cx, cy)), ...]。"""
+    with open(template_json, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    centers = []
+    for shape in data.get("shapes", []):
+        if shape.get("label") != "Hole_pcb":
+            continue
+        points = shape.get("points", [])
+        if len(points) < 2:
+            continue
+        xs = [p[0] for p in points]
+        ys = [p[1] for p in points]
+        centers.append(((min(xs) + max(xs)) / 2.0, (min(ys) + max(ys)) / 2.0))
+
+    if not centers:
+        raise RuntimeError("模板中未找到 Hole_pcb")
+
+    sorted_centers = sorted(centers, key=lambda c: (c[1], c[0]))
+    desired_order = [3, 5, 2, 7, 1, 6, 4]
+
+    if len(sorted_centers) != len(desired_order):
+        raise RuntimeError(
+            f"模板孔位数量({len(sorted_centers)})与预期顺序({len(desired_order)})不一致"
+        )
+
+    return [(desired_order[i], center) for i, center in enumerate(sorted_centers)]
+
+
+def _assign_group(center: tuple[float, float], groups: list[tuple[int, tuple[float, float]]]) -> int:
+    """将中心点分配到最近的模板孔组，返回 group_id。"""
+    cx, cy = center
+    return min(groups, key=lambda g: math.hypot(cx - g[1][0], cy - g[1][1]))[0]
+
+
+def _summarize_hole_status(
+    detections: list[dict],
+    groups: list[tuple[int, tuple[float, float]]],
+) -> dict[str, dict]:
+    """
+    从 yolo_detect 返回的 detections 中提取每个螺丝孔的位置和螺丝状态。
+    跳过 Peg_pcb（凸包）。所有 7 个孔始终出现在结果中。
+
+    返回:
+        {
+          "hole_A": {"position": (cx, cy), "status": "zhun" | "buzhun" | None},
+          ...
+        }
+    """
+    # 预填充全部 7 个孔，位置先用模板参考坐标，状态为 None
+    holes: dict[str, dict] = {}
+    for group_id, ref_center in groups:
+        letter = _GROUP_TO_LETTER.get(group_id)
+        if letter is not None:
+            holes[f"hole_{letter}"] = {"position": ref_center, "status": None}
+
+    for det in detections:
+        label = det["class"]
+        if label == "Peg_pcb":
+            continue
+
+        cx, cy = det["center_px"]
+        group_id = _assign_group((cx, cy), groups)
+        letter = _GROUP_TO_LETTER.get(group_id)
+        if letter is None:
+            continue
+
+        hole_name = f"hole_{letter}"
+
+        if label == "Hole_pcb":
+            # 用实测坐标覆盖模板参考坐标
+            holes[hole_name]["position"] = (cx, cy)
+        elif label in _SCREW_STATUS_LABELS:
+            holes[hole_name]["status"] = label
+            # 如果还没有实测坐标，用螺丝框中心补充
+            if holes[hole_name]["position"] is None:
+                holes[hole_name]["position"] = (cx, cy)
+
+    return holes
+
+
+def _print_hole_summary(holes: dict[str, dict]):
+    print("\n===== 螺丝孔检测结果 =====")
+    for hole_name in sorted(holes.keys()):
+        info = holes[hole_name]
+        pos = info["position"]
+        status = info["status"] if info["status"] is not None else "未检测到"
+        pos_str = f"({pos[0]:.1f}, {pos[1]:.1f})" if pos else "未知"
+        print(f"  {hole_name}: position={pos_str}, status={status}")
+    print("==========================\n")
+
+
+
+def yolo_detect(image: np.ndarray, template_groups: list[tuple[int, tuple[float, float]]] | None = None):
+    """对 BGR numpy 图像做 YOLO 推理，打印检测结果，返回 (detections, annotated_image)。
+    若传入 template_groups，标注框文字改为 hole_X 格式，并跳过 Peg_pcb 框。
+    """
     from ultralytics import YOLO
 
     if not BEST_PT.exists():
@@ -256,13 +364,24 @@ def yolo_detect(image: np.ndarray):
                 f"  xyxy=({x1},{y1},{x2},{y2})"
             )
 
+            # 凸包不画框
+            if label == "Peg_pcb":
+                continue
+
+            # 确定显示文字
+            if template_groups is not None:
+                group_id = _assign_group((cx, cy), template_groups)
+                letter = _GROUP_TO_LETTER.get(group_id, "?")
+                display_text = f"hole_{letter} {conf:.2f}"
+            else:
+                display_text = f"{label} {conf:.2f}"
+
             # 画框
             cv2.rectangle(annotated, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
             # 标签背景
-            text = f"{label} {conf:.2f}"
             (tw, th), baseline = cv2.getTextSize(
-                text, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2
+                display_text, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2
             )
             ty = max(y1 - 4, th + baseline)
             cv2.rectangle(
@@ -274,7 +393,7 @@ def yolo_detect(image: np.ndarray):
             )
             cv2.putText(
                 annotated,
-                text,
+                display_text,
                 (x1, ty - baseline),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.6,
@@ -300,35 +419,18 @@ def main():
     arm = ArmClient()
 
     try:
-        # 1. 运动到 HOME
+        # BIN_SPECT -> MID -> HOME
+        x, y, z, roll, pitch, yaw = MID
+        ok = arm.move(x, y, z, roll, pitch, yaw, SPEED, ACCEL, "MID")
+        if not ok:
+            arm.get_logger().error("运动到 MID 失败，退出")
+            return
         x, y, z, roll, pitch, yaw = HOME
         ok = arm.move(x, y, z, roll, pitch, yaw, SPEED, ACCEL, "HOME")
         if not ok:
             arm.get_logger().error("运动到 HOME 失败，退出")
             return
-
-        # 2. 采集图像
-        arm.get_logger().info("开始采集 D415 图像（Viewer 风格参数）…")
-        image = capture_frame()
-
-        # 3. 保存原始图像，方便和 Viewer 对比
-        raw_save_path = Path(__file__).parent / "capture_at_home_raw.png"
-        cv2.imwrite(str(raw_save_path), image)
-        arm.get_logger().info(f"原始图像已保存: {raw_save_path}")
-
-        # 4. YOLO 推理
-        arm.get_logger().info("开始 YOLO 推理 …")
-        detections, annotated = yolo_detect(image)
-
-        # 5. 保存带标注框的图像
-        anno_save_path = Path(__file__).parent / "capture_at_home_annotated.png"
-        cv2.imwrite(str(anno_save_path), annotated)
-        arm.get_logger().info(f"标注图像已保存: {anno_save_path}")
-
-        if not detections:
-            arm.get_logger().warn("未检测到目标")
-        else:
-            arm.get_logger().info(f"检测完成，共 {len(detections)} 个目标")
+        print("\n已到达 HOME 点\n")
 
     finally:
         arm.destroy_node()
