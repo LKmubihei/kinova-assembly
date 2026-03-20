@@ -1,0 +1,20 @@
+# 物料箱PCB检测数据集
+# 项目: bin_pcb_detection
+
+# 数据集根目录
+path: /home/pb/Hisense_pcb_inspection/src/Hisense_assemble-main/bin_pcb_detection/data
+train: images/train
+val: images/val
+
+# 类别信息
+nc: 1
+names: ['pcb']
+
+# 数据集统计信息
+total_images: 168
+train_images: 134
+val_images: 34
+train_pcb_instances: 275
+val_pcb_instances: 74
+empty_boxes: 6
+training_size: 800

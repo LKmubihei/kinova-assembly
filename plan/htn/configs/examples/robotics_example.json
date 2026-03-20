@@ -1,0 +1,57 @@
+{
+  "version": "2.0",
+  "created": "2024-01-01T00:00:00",
+  "operators": {
+    "pickup": {
+      "params": ["obj", "place"],
+      "preconditions": "state.pos[obj] == place and state.pos[\"robot\"] == place and state.clear[obj] == True and state.holding == False",
+      "effects": "state.pos[obj] = 'hand'\nstate.clear[obj] = False\nstate.holding = obj"
+    },
+    "moveto": {
+      "params": ["placeA", "placeB"],
+      "preconditions": "state.pos[\"robot\"] == placeA and state.clear[placeB] == True",
+      "effects": "state.clear[placeA] = True\nstate.clear[placeB] = False\nstate.pos[\"robot\"] = placeB"
+    },
+    "putdown": {
+      "params": ["obj", "place"],
+      "preconditions": "state.pos[obj] == 'hand' and state.pos[\"robot\"] == place",
+      "effects": "state.pos[obj] = place\nstate.clear[obj] = True\nstate.holding = False"
+    }
+  },
+  "methods": {
+    "get_obj": {
+      "task": "get_obj",
+      "name": "get_by_pickup",
+      "params": ["obj", "place"],
+      "preconditions": "state.pos[obj] == place",
+      "subtasks": "[(\"moveto\", \"initial\", place), (\"pickup\", obj, place)]"
+    },
+    "put_obj": {
+      "task": "put_obj",
+      "name": "put_by_putdown",
+      "params": ["obj", "place"],
+      "preconditions": "state.holding == obj",
+      "subtasks": "[(\"moveto\", state.pos[\"robot\"], place), (\"putdown\", obj, place)]"
+    },
+    "assemble": {
+      "task": "assemble",
+      "name": "assemble_parts",
+      "params": ["part", "target"],
+      "preconditions": "True",
+      "subtasks": "[(\"get_obj\", part, state.pos[part]), (\"put_obj\", part, target)]"
+    }
+  },
+  "planning": {
+    "initial_state": {
+      "name": "initial_state",
+      "pos": {"robot": "initial", "regulator": "table"},
+      "clear": {"regulator": true, "table": true, "placement_regulator": true},
+      "holding": false
+    },
+    "tasks": "[(\"assemble\", \"regulator\", \"placement_regulator\")]"
+  },
+  "metadata": {
+    "author": "HTN Team",
+    "description": "Example configuration for robotic assembly tasks"
+  }
+}

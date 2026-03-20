@@ -1,0 +1,9 @@
+display_name = "Robot HTN Planner"
+library_name = "robot_htn"
+version = "2.0"
+author = "Guangxi Wan"
+author_email = "wanguangxi@sia.cn"
+license = "Apache License, Version 2.0"
+description = "SHOP-like planner written in Python."
+long_description = description
+requires = []

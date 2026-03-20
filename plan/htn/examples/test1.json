@@ -1,0 +1,60 @@
+{
+  "operators": {
+    "pickup": {
+      "params": [
+        "obj",
+        "place"
+      ],
+      "preconditions": "state.pos[obj] == place and \nstate.pos[\"robot\"] == place and \nstate.clear[obj] == True and \nstate.holding == False",
+      "effects": "state.pos[obj] = 'hand'\nstate.clear[obj] = False\nstate.holding = obj"
+    },
+    "moveto": {
+      "params": [
+        "placeA",
+        "placeB"
+      ],
+      "preconditions": "state.pos[\"robot\"] == placeA and \nstate.clear[placeB] == True",
+      "effects": "state.clear[placeA] = True\nstate.clear[placeB] = False\nstate.pos[\"robot\"] = placeB"
+    },
+    "putdown": {
+      "params": [
+        "obj",
+        "place"
+      ],
+      "preconditions": "state.pos[obj] == 'hand' and \nstate.pos[\"robot\"] == place",
+      "effects": "state.pos[obj] = place\nstate.clear[obj] = True\nstate.holding = False"
+    }
+  },
+  "methods": {
+    "get_obj": {
+      "task": "get_obj",
+      "name": "get_by_pickup",
+      "params": [
+        "obj",
+        "place"
+      ],
+      "preconditions": "state.pos[obj] == place",
+      "subtasks": "[(\"moveto\", \"initial\", place), (\"pickup\", obj, place)]"
+    },
+    "put_obj": {
+      "task": "put_obj",
+      "name": "put_by_putdown",
+      "params": [
+        "obj",
+        "place"
+      ],
+      "preconditions": "state.holding == obj",
+      "subtasks": "[(\"moveto\", state.pos[\"robot\"], place), (\"putdown\", obj, place)]"
+    },
+    "assemble": {
+      "task": "assemble",
+      "name": "assemble_parts",
+      "params": [
+        "part",
+        "target"
+      ],
+      "preconditions": "True",
+      "subtasks": "[(\"get_obj\", part, state.pos[part]), (\"put_obj\", part, target)]"
+    }
+  }
+}

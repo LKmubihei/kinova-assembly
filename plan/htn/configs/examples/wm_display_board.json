@@ -1,0 +1,141 @@
+{
+  "version": "2.0",
+  "created": "2026-03-04T00:00:00",
+  "operators": {
+    "inspect_conveyor": {
+      "params": [],
+      "preconditions": "state.robot_pos in ['initial', 'conveyor']",
+      "effects": "state.board_available = state.board_on_conveyor\nstate.inspected = True"
+    },
+    "pick": {
+      "params": ["obj", "location"],
+      "preconditions": "state.obj_pos.get(obj) == location and state.robot_pos == location and state.holding == False and state.inspected and state.board_available",
+      "effects": "state.obj_pos[obj] = 'hand'\nstate.holding = obj"
+    },
+    "place": {
+      "params": ["obj", "location"],
+      "preconditions": "state.holding == obj and state.robot_pos == location",
+      "effects": "state.obj_pos[obj] = location\nstate.holding = False\nif location == 'work_platform':\n    state.placement_done = True\n    state.placement_ok = True\nif location == 'conveyor':\n    state.board_returned = True"
+    },
+    "repick": {
+      "params": ["obj", "location"],
+      "preconditions": "state.obj_pos.get(obj) == location and state.robot_pos == location and state.all_screws_done == True and state.holding == False",
+      "effects": "state.obj_pos[obj] = 'hand'\nstate.holding = obj"
+    },
+    "move": {
+      "params": ["obj", "destination"],
+      "preconditions": "state.holding == obj",
+      "effects": "state.robot_pos = destination"
+    },
+    "moveto": {
+      "params": ["destination"],
+      "preconditions": "True",
+      "effects": "state.robot_pos = destination"
+    },
+    "fetch_screw": {
+      "params": [],
+      "preconditions": "state.holding == False and state.screws_available > 0",
+      "effects": "state.holding = 'screw'\nstate.screws_available -= 1"
+    },
+    "locating_screw": {
+      "params": ["screw", "hole"],
+      "preconditions": "state.holding == 'screw' and state.placement_ok == True and hole not in state.screws_tightened",
+      "effects": "state.screw_aligned = hole\nstate.current_screw = screw"
+    },
+    "insert_screw": {
+      "params": ["screw", "hole"],
+      "preconditions": "state.screw_aligned == hole and state.current_screw == screw",
+      "effects": "state.screw_inserted = hole"
+    },
+    "fasten_screw": {
+      "params": ["screw", "hole"],
+      "preconditions": "state.screw_inserted == hole",
+      "effects": "state.screws_tightened.append(hole)\nstate.holding = False\nstate.screw_aligned = None\nstate.screw_inserted = None\nstate.current_screw = None\nif len(state.screws_tightened) >= 9:\n    state.all_screws_done = True"
+    }
+  },
+  "methods": {
+    "install_wm_display_board": {
+      "task": "install_wm_display_board",
+      "name": "install_wm_display_board",
+      "params": ["board"],
+      "preconditions": "state.board_returned == False",
+      "subtasks": "[(\"inspect_and_pickup\", board, \"conveyor\"), (\"transport_and_place\", board, \"work_platform\"), (\"fasten_all_screws\",), (\"return_to_conveyor\", board)]"
+    },
+    "inspect_and_pickup_method": {
+      "task": "inspect_and_pickup",
+      "name": "inspect_and_pickup_method",
+      "params": ["board", "location"],
+      "preconditions": "state.holding == False and state.obj_pos.get(board) == location",
+      "subtasks": "[(\"moveto\", location), (\"inspect_conveyor\",), (\"pick\", board, location)]"
+    },
+    "transport_and_place_method": {
+      "task": "transport_and_place",
+      "name": "transport_and_place_method",
+      "params": ["board", "destination"],
+      "preconditions": "state.holding == board",
+      "subtasks": "[(\"move\", board, destination), (\"place\", board, destination)]"
+    },
+    "fasten_all_screws_method": {
+      "task": "fasten_all_screws",
+      "name": "fasten_all_screws_method",
+      "params": [],
+      "preconditions": "state.placement_ok == True",
+      "subtasks": "[(\"tighten_screw\", \"screw_1\", \"hole_1\"), (\"tighten_screw\", \"screw_2\", \"hole_2\"), (\"tighten_screw\", \"screw_3\", \"hole_3\"), (\"tighten_screw\", \"screw_4\", \"hole_4\"), (\"tighten_screw\", \"screw_5\", \"hole_5\"), (\"tighten_screw\", \"screw_6\", \"hole_6\"), (\"tighten_screw\", \"screw_7\", \"hole_7\"), (\"tighten_screw\", \"screw_8\", \"hole_8\"), (\"tighten_screw\", \"screw_9\", \"hole_9\")]"
+    },
+    "tighten_screw_already_done": {
+      "task": "tighten_screw",
+      "name": "tighten_screw_already_done",
+      "params": ["screw", "hole"],
+      "preconditions": "hole in state.screws_tightened",
+      "subtasks": "[]"
+    },
+    "tighten_screw_method": {
+      "task": "tighten_screw",
+      "name": "tighten_screw_method",
+      "params": ["screw", "hole"],
+      "preconditions": "state.placement_ok == True and hole not in state.screws_tightened",
+      "subtasks": "[(\"fetch_screw\",), (\"locating_screw\", screw, hole), (\"insert_screw\", screw, hole), (\"fasten_screw\", screw, hole)]"
+    },
+    "return_to_conveyor_holding": {
+      "task": "return_to_conveyor",
+      "name": "return_to_conveyor_holding",
+      "params": ["board"],
+      "preconditions": "state.all_screws_done == True and state.holding == board",
+      "subtasks": "[(\"move\", board, \"conveyor\"), (\"place\", board, \"conveyor\")]"
+    },
+    "return_to_conveyor_method": {
+      "task": "return_to_conveyor",
+      "name": "return_to_conveyor_method",
+      "params": ["board"],
+      "preconditions": "state.all_screws_done == True and state.obj_pos.get(board) == 'work_platform' and state.holding == False",
+      "subtasks": "[(\"repick\", board, \"work_platform\"), (\"move\", board, \"conveyor\"), (\"place\", board, \"conveyor\")]"
+    }
+  },
+  "planning": {
+    "initial_state": {
+      "name": "wm_display_board_installation",
+      "robot_pos": "initial",
+      "obj_pos": {"wm_board": "conveyor"},
+      "holding": false,
+      "board_on_conveyor": true,
+      "board_available": false,
+      "inspected": false,
+      "placement_done": false,
+      "placement_ok": false,
+      "screws_available": 9,
+      "screws_tightened": [],
+      "screw_aligned": null,
+      "screw_inserted": null,
+      "current_screw": null,
+      "all_screws_done": false,
+      "board_returned": false
+    },
+    "tasks": "[(\"install_wm_display_board\", \"wm_board\")]"
+  },
+  "metadata": {
+    "author": "HTN Team",
+    "description": "洗衣机显示面板安装 - Washing Machine Display Board Installation HTN Configuration",
+    "scenario": "wm_display_board"
+  }
+}
+

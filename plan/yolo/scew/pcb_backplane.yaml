@@ -1,0 +1,9 @@
+path: /data/taosen/data/screw_buzhun_2/yolo_dataset
+train: images/train
+val: images/val
+
+names:
+  0: Peg_pcb
+  1: Hole_pcb
+  2: buzhun
+  3: zhun

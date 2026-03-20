@@ -1,0 +1,164 @@
+{
+  "statistics": {
+    "total": 22,
+    "no_panel": 3,
+    "correct": 3,
+    "incorrect": 16
+  },
+  "details": [
+    {
+      "image": "0004.png",
+      "power_panel": 1,
+      "peg": 3,
+      "status": "未正确放置",
+      "status_code": "incorrect"
+    },
+    {
+      "image": "0005.png",
+      "power_panel": 1,
+      "peg": 3,
+      "status": "未正确放置",
+      "status_code": "incorrect"
+    },
+    {
+      "image": "0012.png",
+      "power_panel": 1,
+      "peg": 3,
+      "status": "未正确放置",
+      "status_code": "incorrect"
+    },
+    {
+      "image": "0014.png",
+      "power_panel": 1,
+      "peg": 2,
+      "status": "未正确放置",
+      "status_code": "incorrect"
+    },
+    {
+      "image": "0015.png",
+      "power_panel": 1,
+      "peg": 3,
+      "status": "未正确放置",
+      "status_code": "incorrect"
+    },
+    {
+      "image": "0018.png",
+      "power_panel": 1,
+      "peg": 3,
+      "status": "未正确放置",
+      "status_code": "incorrect"
+    },
+    {
+      "image": "0028.png",
+      "power_panel": 1,
+      "peg": 2,
+      "status": "未正确放置",
+      "status_code": "incorrect"
+    },
+    {
+      "image": "0029.png",
+      "power_panel": 1,
+      "peg": 3,
+      "status": "未正确放置",
+      "status_code": "incorrect"
+    },
+    {
+      "image": "0030.png",
+      "power_panel": 1,
+      "peg": 3,
+      "status": "未正确放置",
+      "status_code": "incorrect"
+    },
+    {
+      "image": "0032.png",
+      "power_panel": 1,
+      "peg": 2,
+      "status": "未正确放置",
+      "status_code": "incorrect"
+    },
+    {
+      "image": "0036.png",
+      "power_panel": 1,
+      "peg": 3,
+      "status": "未正确放置",
+      "status_code": "incorrect"
+    },
+    {
+      "image": "0055.png",
+      "power_panel": 1,
+      "peg": 4,
+      "status": "正确放置",
+      "status_code": "correct"
+    },
+    {
+      "image": "0065.png",
+      "power_panel": 1,
+      "peg": 5,
+      "status": "未正确放置",
+      "status_code": "incorrect"
+    },
+    {
+      "image": "0070.png",
+      "power_panel": 1,
+      "peg": 5,
+      "status": "未正确放置",
+      "status_code": "incorrect"
+    },
+    {
+      "image": "0076.png",
+      "power_panel": 1,
+      "peg": 4,
+      "status": "正确放置",
+      "status_code": "correct"
+    },
+    {
+      "image": "0082.png",
+      "power_panel": 1,
+      "peg": 4,
+      "status": "正确放置",
+      "status_code": "correct"
+    },
+    {
+      "image": "0087.png",
+      "power_panel": 1,
+      "peg": 6,
+      "status": "未正确放置",
+      "status_code": "incorrect"
+    },
+    {
+      "image": "0095.png",
+      "power_panel": 1,
+      "peg": 6,
+      "status": "未正确放置",
+      "status_code": "incorrect"
+    },
+    {
+      "image": "0097.png",
+      "power_panel": 1,
+      "peg": 5,
+      "status": "未正确放置",
+      "status_code": "incorrect"
+    },
+    {
+      "image": "0102.png",
+      "power_panel": 0,
+      "peg": 5,
+      "status": "没有电源板",
+      "status_code": "no_panel"
+    },
+    {
+      "image": "0107.png",
+      "power_panel": 0,
+      "peg": 4,
+      "status": "没有电源板",
+      "status_code": "no_panel"
+    },
+    {
+      "image": "0108.png",
+      "power_panel": 0,
+      "peg": 4,
+      "status": "没有电源板",
+      "status_code": "no_panel"
+    }
+  ]
+}

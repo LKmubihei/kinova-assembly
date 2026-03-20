@@ -1,0 +1,138 @@
+{
+  "version": "2.0",
+  "created": "2026-02-25T00:00:00",
+  "operators": {
+    "inspect_power_com": {
+      "params": [],
+      "preconditions": "state.robot_pos in ['initial', 'material_box']",
+      "effects": "state.power_com_available = state.power_com_in_box\nstate.inspected = True"
+    },
+    "pick": {
+      "params": ["obj", "location"],
+      "preconditions": "state.obj_pos.get(obj) == location and state.robot_pos == location and state.holding == False and state.inspected and state.power_com_available",
+      "effects": "state.obj_pos[obj] = 'hand'\nstate.holding = obj"
+    },
+    "place": {
+      "params": ["obj", "location"],
+      "preconditions": "state.holding == obj and state.robot_pos == location and state.locating_done == True",
+      "effects": "state.obj_pos[obj] = location\nstate.holding = False\nstate.placement_done = True\nstate.placement_ok = True"
+    },
+    "repick": {
+      "params": ["obj", "location"],
+      "preconditions": "state.obj_pos.get(obj) == location and state.robot_pos == location and state.placement_done == True and state.placement_ok == False and state.holding == False",
+      "effects": "state.obj_pos[obj] = 'hand'\nstate.holding = obj\nstate.locating_done = False\nstate.placement_done = False"
+    },
+    "move": {
+      "params": ["obj", "destination"],
+      "preconditions": "state.holding == obj",
+      "effects": "state.robot_pos = destination"
+    },
+    "moveto": {
+      "params": ["destination"],
+      "preconditions": "True",
+      "effects": "state.robot_pos = destination"
+    },
+    "locating": {
+      "params": ["obj", "target"],
+      "preconditions": "state.holding == obj and state.robot_pos == target",
+      "effects": "state.locating_done = True"
+    },
+    "fetch_screw": {
+      "params": [],
+      "preconditions": "state.holding == False and state.screws_available > 0",
+      "effects": "state.holding = 'screw'\nstate.screws_available -= 1"
+    },
+    "locating_screw": {
+      "params": ["screw", "hole"],
+      "preconditions": "state.holding == 'screw' and state.placement_ok == True and hole not in state.screws_tightened",
+      "effects": "state.screw_aligned = hole\nstate.current_screw = screw"
+    },
+    "insert_screw": {
+      "params": ["screw", "hole"],
+      "preconditions": "state.screw_aligned == hole and state.current_screw == screw",
+      "effects": "state.screw_inserted = hole"
+    },
+    "fasten_screw": {
+      "params": ["screw", "hole"],
+      "preconditions": "state.screw_inserted == hole",
+      "effects": "state.screws_tightened.append(hole)\nstate.holding = False\nstate.screw_aligned = None\nstate.screw_inserted = None\nstate.current_screw = None"
+    }
+  },
+  "methods": {
+    "install_power_module": {
+      "task": "install_power_module",
+      "name": "install_power_module",
+      "params": ["component", "target"],
+      "preconditions": "state.obj_pos.get(component) != target",
+      "subtasks": "[(\"check_and_pickup\", component, \"material_box\"), (\"position_and_place\", component, target), (\"fasten_all_screws\",)]"
+    },
+    "check_and_pickup_method": {
+      "task": "check_and_pickup",
+      "name": "check_and_pickup_method",
+      "params": ["component", "location"],
+      "preconditions": "state.holding == False and state.obj_pos.get(component) == location",
+      "subtasks": "[(\"moveto\", location), (\"inspect_power_com\",), (\"pick\", component, location)]"
+    },
+    "position_and_place_success": {
+      "task": "position_and_place",
+      "name": "position_and_place_success",
+      "params": ["component", "target"],
+      "preconditions": "state.holding == component",
+      "subtasks": "[(\"move\", component, target), (\"locating\", component, target), (\"place\", component, target)]"
+    },
+    "retry_placement_method": {
+      "task": "retry_placement",
+      "name": "retry_placement_method",
+      "params": ["component", "target"],
+      "preconditions": "state.placement_ok == False and state.obj_pos.get(component) == target and state.holding == False",
+      "subtasks": "[(\"repick\", component, target), (\"locating\", component, target), (\"place\", component, target)]"
+    },
+    "fasten_all_screws_method": {
+      "task": "fasten_all_screws",
+      "name": "fasten_all_screws_method",
+      "params": [],
+      "preconditions": "state.placement_ok == True",
+      "subtasks": "[(\"tighten_screw\", \"screw_A\", \"hole_A\"), (\"tighten_screw\", \"screw_B\", \"hole_B\"), (\"tighten_screw\", \"screw_C\", \"hole_C\"), (\"tighten_screw\", \"screw_D\", \"hole_D\"), (\"tighten_screw\", \"screw_E\", \"hole_E\"), (\"tighten_screw\", \"screw_F\", \"hole_F\"), (\"tighten_screw\", \"screw_G\", \"hole_G\")]"
+    },
+    "tighten_screw_already_done": {
+      "task": "tighten_screw",
+      "name": "tighten_screw_already_done",
+      "params": ["screw", "hole"],
+      "preconditions": "hole in state.screws_tightened",
+      "subtasks": "[]"
+    },
+    "tighten_screw_method": {
+      "task": "tighten_screw",
+      "name": "tighten_screw_method",
+      "params": ["screw", "hole"],
+      "preconditions": "state.placement_ok == True and hole not in state.screws_tightened",
+      "subtasks": "[(\"fetch_screw\",), (\"locating_screw\", screw, hole), (\"insert_screw\", screw, hole), (\"fasten_screw\", screw, hole)]"
+    }
+  },
+  "planning": {
+    "initial_state": {
+      "name": "tv_power_module_installation",
+      "robot_pos": "initial",
+      "obj_pos": {"power_com": "material_box"},
+      "holding": false,
+      "power_com_in_box": true,
+      "power_com_available": false,
+      "inspected": false,
+      "locating_done": false,
+      "placement_done": false,
+      "placement_ok": false,
+      "screws_available": 10,
+      "screws_tightened": [],
+      "screw_aligned": null,
+      "screw_inserted": null,
+      "current_screw": null,
+      "all_screws_done": false
+    },
+    "tasks": "[(\"install_power_module\", \"power_com\", \"TV_panel\")]"
+  },
+  "metadata": {
+    "author": "HTN Team",
+    "description": "电视机电源模块安装 - TV Power Module Installation HTN Configuration",
+    "scenario": "tv_power_module"
+  }
+}
