@@ -11,8 +11,6 @@
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "hyy_message/action/move_xyzw.hpp"
 #include <moveit/move_group_interface/move_group_interface_improved.h>
-#include <moveit/robot_trajectory/robot_trajectory.h>
-#include <moveit/trajectory_processing/iterative_time_parameterization.h>
 
 // Global variables for control group and base frame, and the MoveGroupInterface instance
 std::string control_group = "none";
@@ -101,9 +99,6 @@ class ActionServer : public rclcpp::Node
             RCLCPP_INFO(this->get_logger(), "Starting MoveXYZW motion to desired waypoint...");
             auto result_ = std::make_shared<MoveXYZW::Result>();
 
-            // Create a vector of waypoints for the robot to follow
-            std::vector<geometry_msgs::msg::Pose> waypoints;
-
             // Get the goal and convert it into a Pose message
             const auto goal = goal_handle->get_goal();
             geometry_msgs::msg::Pose pose;
@@ -116,46 +111,39 @@ class ActionServer : public rclcpp::Node
             q.setRPY(goal->roll, goal->pitch, goal->yaw);
             pose.orientation = tf2::toMsg(q);
 
-            waypoints.push_back(pose);
-
-            // Set up the reference frame, current state, and speed/acceleration
-            auto speed_ = goal->speed;
-            auto accel_ = goal->accel;
-            move_group_interface.setPoseReferenceFrame(base_frame); 
+            // Set up the reference frame, current state, speed/acceleration
+            move_group_interface.setPoseReferenceFrame(base_frame);
             move_group_interface.setStartStateToCurrentState();
-            
-            // Plan the Cartesian path with waypoints
-            moveit_msgs::msg::RobotTrajectory trajectory;
-            double fraction = move_group_interface.computeCartesianPath(waypoints, 0.005, 0.0, trajectory);
-            
-            // Check if the path planning was successful
-            if (fraction < 0.99) {
-                RCLCPP_WARN(this->get_logger(), "Only %.2f%% of the planned path has been completed, planning may fail.", fraction * 100.0);
+            move_group_interface.setMaxVelocityScalingFactor(goal->speed);
+            move_group_interface.setMaxAccelerationScalingFactor(goal->accel);
+
+            // Use OMPL to plan to the target pose
+            move_group_interface.setPoseTarget(pose);
+            moveit::planning_interface::MoveGroupInterface::Plan ompl_plan;
+            bool planned = (move_group_interface.plan(ompl_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+
+            if (!planned) {
+                RCLCPP_WARN(this->get_logger(), "%s - MoveXYZW: OMPL planning failed!", control_group.c_str());
+                result_->result = "MoveXYZW:FAILED";
+                goal_handle->abort(result_);
+                move_group_interface.clearPoseTargets();
+                return;
             }
 
-            // Use time parameterization to adjust the trajectory for speed and acceleration
-            robot_trajectory::RobotTrajectory rt(move_group_interface.getRobotModel(), move_group_interface.getName());
-            rt.setRobotTrajectoryMsg(*move_group_interface.getCurrentState(), trajectory);
-            trajectory_processing::IterativeParabolicTimeParameterization iptp;
-            iptp.computeTimeStamps(rt, speed_, accel_);
-            rt.getRobotTrajectoryMsg(trajectory);
-
             // Execute the planned trajectory
-            moveit::planning_interface::MoveGroupInterface::Plan cartesian_plan;
-            cartesian_plan.trajectory_ = trajectory;
-
-            bool success = (move_group_interface.execute(cartesian_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+            bool success = (move_group_interface.execute(ompl_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+            move_group_interface.clearPoseTargets();
 
             // Report success or failure of the action
             if (success) {
-                RCLCPP_INFO(this->get_logger(), "%s - MoveXYZW: Cartesian path execution successful!", control_group.c_str());
+                RCLCPP_INFO(this->get_logger(), "%s - MoveXYZW: OMPL execution successful!", control_group.c_str());
                 result_->result = "MoveXYZW:SUCCESS";
                 goal_handle->succeed(result_);
             } else {
-                RCLCPP_WARN(this->get_logger(), "%s - MoveXYZW: Cartesian path execution failed!", control_group.c_str());
+                RCLCPP_WARN(this->get_logger(), "%s - MoveXYZW: OMPL execution failed!", control_group.c_str());
                 result_->result = "MoveXYZW:FAILED";
                 goal_handle->abort(result_);
-            } 
+            }
         }
 };
 
