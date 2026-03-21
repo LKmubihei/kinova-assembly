@@ -44,6 +44,30 @@ HOME      = (0.30, -0.38, 0.15, -math.pi, 0.0, 0.0)
 BIN_SPECT = (-0.40, 0.25, 0.25, -math.pi, 0.0, 0.0)
 SPEED, ACCEL = 0.20, 0.10
 
+# ---------------------------------------------------------------------------
+# 像素→工作平面坐标 映射参数（HOME 视角，单位：米）
+# ---------------------------------------------------------------------------
+IMAGE_W, IMAGE_H = 1280, 720
+
+# HOME 视角下，图像左上角相对相机光心在工作平面上的偏移
+# 正方向：x 朝机器人前方，y 朝机器人左方（与机器人基坐标系一致）
+# 若实测后符号有偏差，在此处修改
+X_LEFT_TOP = +0.25   # 图像左上角 x 偏移 [m]
+Y_LEFT_TOP = -0.13   # 图像左上角 y 偏移 [m]
+
+# HOME 视角下图像覆盖的实际工作平面尺寸
+X_SPAN = 0.51        # x 方向覆盖范围 [m]
+Y_SPAN = 0.278       # y 方向覆盖范围 [m]
+
+KX = X_SPAN / IMAGE_W   # [m/pixel]
+KY = Y_SPAN / IMAGE_H   # [m/pixel]
+
+# 相机光心相对 TCP 的固定偏移（手动测量后填入，单位：米）
+# 定义：camera_world = TCP_world + (DX_TCP, DY_TCP, DZ_TCP)
+DX_TCP = -0.0458
+DY_TCP = -0.082
+DZ_TCP = 0.0
+
 
 # ---------------------------------------------------------------------------
 # 机械臂客户端
@@ -148,7 +172,7 @@ def perceive_panel(image: np.ndarray, save_dir=None) -> bool:
     tmp = Path("/tmp/task_step2.png")
     cv2.imwrite(str(tmp), image)
     res = PanelDetector().detect(tmp, save_dir=save_dir)
-    print(f"  [安装验证] installed={res['installed']}  count={res['count']}")
+    print(f"  [安装验证] status={res['status']}  power_panel={res['power_panel_count']}  peg={res['peg_count']}")
     return res["installed"]
 
 
@@ -165,28 +189,38 @@ def perceive_screws(image: np.ndarray, save_dir=None) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# 螺丝孔定位：像素坐标 → TCP 目标 pose
+# ---------------------------------------------------------------------------
+def compute_hole_poses(screw_holes: dict) -> dict:
+    from plan.tasks.workflow import compute_hole_poses as _compute_hole_poses
+
+    poses = _compute_hole_poses(screw_holes)
+    for label, pos in screw_holes.items():
+        if pos is None or label not in poses:
+            continue
+        u, v = pos
+        x_target, y_target, z_target, _, _, _ = poses[label]
+        x_hole_cam = x_target - HOME[0] - DX_TCP
+        y_hole_cam = y_target - HOME[1] - DY_TCP
+        print(f"  [{label}] pixel=({u:.0f}, {v:.0f}) "
+              f"→ cam_offset=({x_hole_cam*100:.1f}, {y_hole_cam*100:.1f}) cm "
+              f"→ TCP=({x_target:.3f}, {y_target:.3f}, {z_target:.3f})")
+    return poses
+
+
+# ---------------------------------------------------------------------------
 # HTN 状态 & 规划
 # ---------------------------------------------------------------------------
 def make_state(bin_result: bool, panel_result: bool, screw_result: dict) -> State:
-    s = State("power_panel_install")
-    s.robot_at                 = "home"
-    s._perception_bin_result   = bin_result
-    s.bin_inspected            = False
-    s.bin_has_panel            = False
-    s.holding_panel            = False
-    s._perception_panel_result = panel_result
-    s.panel_placed             = False
-    s.placement_verified       = False
-    s.placement_ok             = False
-    s._perception_screw_result = screw_result
-    s.holes_detected           = False
-    s.hole_positions           = {}
-    s.holding_screw            = False
-    s.screw_aligned_to         = None
-    s.screw_inserted_at        = None
-    s.screws_available         = 10
-    s.screws_fastened          = []
-    return s
+    from plan.tasks.workflow import build_state
+
+    return build_state(
+        bin_result=bin_result,
+        panel_result=panel_result,
+        screw_holes=screw_result,
+        panel_sequence=[bool(panel_result)],
+        max_placement_attempts=2,
+    )
 
 
 def print_plan(plan):
@@ -236,17 +270,18 @@ def main():
 
         try:
             # --- 阶段1：BIN_SPECT 点采集（料箱检测）---
-            # print("\n[阶段 1] 移动到 BIN_SPECT 点 …")
-            # if not arm.move(BIN_SPECT, "BIN_SPECT"):
-            #     arm.get_logger().error("移动到 BIN_SPECT 失败，退出")
-            #     return
+            bin_result = True  # 阶段1暂时跳过，默认料箱有料
+            print("\n[阶段 1] 移动到 BIN_SPECT 点 …")
+            if not arm.move(BIN_SPECT, "BIN_SPECT"):
+                arm.get_logger().error("移动到 BIN_SPECT 失败，退出")
+                return
 
-            # print("[阶段 1] 采集图像 …")
-            # image_bin = capture_frame()
-            # cv2.imwrite(str(save_dir / "step1_raw.png"), image_bin)
+            print("[阶段 1] 采集图像 …")
+            image_bin = capture_frame()
+            cv2.imwrite(str(save_dir / "step1_raw.png"), image_bin)
 
-            # print("[阶段 1] 感知：料箱检测")
-            # bin_result = perceive_bin(image_bin, save_dir=save_dir / "step1")
+            print("[阶段 1] 感知：料箱检测")
+            bin_result = perceive_bin(image_bin, save_dir=save_dir / "step1")
 
             # --- 阶段2：返回 HOME 采集（背板安装验证 + 螺丝孔）---
             print("\n[阶段 2] 返回 HOME 点 …")
@@ -263,28 +298,52 @@ def main():
             panel_result = perceive_panel(image_home, save_dir=save_dir / "step2")
             screw_holes  = perceive_screws(image_home, save_dir=save_dir / "step3")
 
+            # --- 阶段3：HTN 规划 ---
+            if not bin_result:
+                print("\n[中止] 料箱中未检测到 power_panel，无法继续规划。")
+                return
+
+            state = make_state(bin_result, panel_result, screw_holes)
+            print("\n初始状态:")
+            print_state(state)
+
+            plan = htn.plan(
+                state,
+                [("install_power_panel",)],
+                htn.get_operators(),
+                htn.get_methods(),
+                verbose=args.verbose,
+            )
+            print_plan(plan)
+
+            # --- 阶段4：螺丝孔定位，按 A→G 顺序移动，每孔停留 3 秒 ---
+            if screw_holes:
+                print("\n[阶段 4] 计算各螺丝孔 TCP 目标位姿 …")
+                hole_poses = compute_hole_poses(screw_holes)
+
+                print("\n[阶段 4] 按 A→G 顺序移动到螺丝孔正上方 …")
+                for label in [f"hole_{c}" for c in "ABCDEFG"]:
+                    if label not in hole_poses:
+                        print(f"  [跳过] {label} 未检测到")
+                        continue
+                    if arm.move(hole_poses[label], label):
+                        print(f"  [{label}] 停留 3 秒 …")
+                        time.sleep(3.0)
+                    else:
+                        arm.get_logger().error(f"移动到 {label} 失败，继续下一个")
+
+                print("\n[阶段 4] 完成，返回 HOME …")
+                arm.move(HOME, "HOME")
+            else:
+                print("\n[警告] 未检测到任何螺丝孔，跳过阶段 4")
+
+            return plan
+
         finally:
             arm.destroy_node()
             rclpy.shutdown()
 
-    # --- HTN 规划 ---
-    if not bin_result:
-        print("\n[中止] 料箱中未检测到 power_panel，无法继续规划。")
-        sys.exit(1)
-
-    state = make_state(bin_result, panel_result, screw_holes)
-    print("\n初始状态:")
-    print_state(state)
-
-    plan = htn.plan(
-        state,
-        [("install_power_panel",)],
-        htn.get_operators(),
-        htn.get_methods(),
-        verbose=args.verbose,
-    )
-    print_plan(plan)
-    return plan
+    # mock 路径：仅做规划，不执行运动
 
 
 if __name__ == "__main__":

@@ -19,16 +19,36 @@ class State:
     """A state is a collection of variable bindings with efficient comparison."""
     name: str
     bindings: Dict[str, Any] = field(default_factory=dict)
+
+    def _freeze_value(self, value: Any) -> Any:
+        """Convert nested containers into hashable structures."""
+        if isinstance(value, dict):
+            return tuple(sorted((k, self._freeze_value(v)) for k, v in value.items()))
+        if isinstance(value, (list, tuple)):
+            return tuple(self._freeze_value(v) for v in value)
+        if isinstance(value, set):
+            return tuple(sorted(self._freeze_value(v) for v in value))
+        return value
+
+    def _comparison_items(self) -> Tuple[Tuple[str, Any], ...]:
+        """Include dynamic attributes so planner caches remain correct."""
+        return tuple(
+            sorted(
+                (key, self._freeze_value(value))
+                for key, value in vars(self).items()
+                if not callable(value)
+            )
+        )
     
     def __hash__(self):
         """Make State hashable for caching."""
-        return hash((self.name, tuple(sorted(self.bindings.items()))))
+        return hash(self._comparison_items())
     
     def __eq__(self, other):
         """Efficient equality comparison."""
         if not isinstance(other, State):
             return False
-        return self.name == other.name and self.bindings == other.bindings
+        return self._comparison_items() == other._comparison_items()
     
     def copy(self):
         """Deep copy that preserves all dynamic attributes."""

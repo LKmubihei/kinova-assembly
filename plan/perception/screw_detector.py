@@ -6,6 +6,8 @@ Step 3 - 螺丝孔检测
 import json
 import math
 from pathlib import Path
+from functools import lru_cache
+import numpy as np
 from ultralytics import YOLO
 
 _SCREW_DIR = Path(__file__).parent.parent / "yolo/scew"
@@ -46,14 +48,62 @@ def _load_template_groups(template_json: Path) -> list:
     return [(desired_order[i], sorted_centers[i]) for i in range(len(sorted_centers))]
 
 
-def _assign_group(center: tuple, groups: list) -> int:
-    cx, cy = center
-    best_id, best_dist = -1, float("inf")
-    for gid, (gx, gy) in groups:
-        d = math.hypot(cx - gx, cy - gy)
-        if d < best_dist:
-            best_dist, best_id = d, gid
-    return best_id
+def _linear_sum_assignment(cost_matrix: np.ndarray):
+    """SciPy-free exact assignment for the small screw/template matching problem."""
+    cost = np.asarray(cost_matrix, dtype=float)
+    if cost.ndim != 2:
+        raise ValueError("cost_matrix must be 2-dimensional")
+
+    n_det, n_tmpl = cost.shape
+    if n_det == 0 or n_tmpl == 0:
+        empty = np.array([], dtype=int)
+        return empty, empty
+
+    target = min(n_det, n_tmpl)
+
+    @lru_cache(maxsize=None)
+    def _solve(det_idx: int, used_mask: int):
+        assigned = used_mask.bit_count()
+        if assigned == target:
+            return 0.0, ()
+        if det_idx == n_det:
+            return float("inf"), ()
+
+        remaining_det = n_det - det_idx
+        remaining_slots = target - assigned
+        if remaining_det < remaining_slots:
+            return float("inf"), ()
+
+        best_cost = float("inf")
+        best_pairs = ()
+
+        # When detections outnumber templates, allow skipping extras.
+        if remaining_det > remaining_slots:
+            skip_cost, skip_pairs = _solve(det_idx + 1, used_mask)
+            if skip_cost < best_cost:
+                best_cost = skip_cost
+                best_pairs = skip_pairs
+
+        for tmpl_idx in range(n_tmpl):
+            if used_mask & (1 << tmpl_idx):
+                continue
+            next_cost, next_pairs = _solve(det_idx + 1, used_mask | (1 << tmpl_idx))
+            total_cost = cost[det_idx, tmpl_idx] + next_cost
+            if total_cost < best_cost:
+                best_cost = total_cost
+                best_pairs = ((det_idx, tmpl_idx),) + next_pairs
+
+        return best_cost, best_pairs
+
+    _, pairs = _solve(0, 0)
+    if not pairs:
+        empty = np.array([], dtype=int)
+        return empty, empty
+
+    row_ind = np.array([i for i, _ in pairs], dtype=int)
+    col_ind = np.array([j for _, j in pairs], dtype=int)
+    return row_ind, col_ind
+
 
 
 class ScrewDetector:
@@ -97,29 +147,46 @@ class ScrewDetector:
             return {"holes": holes, "all_ready": False, "annotated": annotated}
 
         names = r.names
-        for box, cls in zip(r.boxes.xyxy.tolist(), r.boxes.cls.tolist()):
+
+        # 收集候选框（过滤 Peg_pcb）
+        raw_detections = []
+        for box, cls, conf in zip(r.boxes.xyxy.tolist(), r.boxes.cls.tolist(), r.boxes.conf.tolist()):
             x1, y1, x2, y2 = box
             label = names[int(cls)]
-            cx, cy = (x1 + x2) / 2.0, (y1 + y2) / 2.0
-
             if label == "Peg_pcb":
                 continue
+            cx, cy = (x1 + x2) / 2.0, (y1 + y2) / 2.0
+            raw_detections.append({"label": label, "cx": cx, "cy": cy, "conf": conf})
 
-            gid = _assign_group((cx, cy), groups)
+        print(f"  [螺丝调试] 原始框数量（去除Peg_pcb后）: {len(raw_detections)}")
+        for d in raw_detections:
+            print(f"    label={d['label']}  conf={d['conf']:.3f}  center=({d['cx']:.1f}, {d['cy']:.1f})")
+
+        if not raw_detections:
+            return {"holes": holes, "all_ready": False, "annotated": annotated}
+
+        # 匈牙利算法全局一对一匹配，代价矩阵为欧氏距离
+        n_det = len(raw_detections)
+        n_tmpl = len(groups)
+        cost = np.zeros((n_det, n_tmpl))
+        for i, d in enumerate(raw_detections):
+            for j, (gid, (gx, gy)) in enumerate(groups):
+                cost[i, j] = math.hypot(d["cx"] - gx, d["cy"] - gy)
+
+        det_idx, tmpl_idx = _linear_sum_assignment(cost)
+
+        for i, j in zip(det_idx, tmpl_idx):
+            d = raw_detections[i]
+            gid, (gx, gy) = groups[j]
+            dist = cost[i, j]
             letter = _GROUP_TO_LETTER.get(gid)
             if letter is None:
                 continue
-
             hole_name = f"hole_{letter}"
-            if hole_name not in holes:
-                holes[hole_name] = {"position": None, "status": None}
-
-            if label == "Hole_pcb" and holes[hole_name]["position"] is None:
-                holes[hole_name]["position"] = (cx, cy)
-            elif label in _SCREW_STATUS_LABELS:
-                holes[hole_name]["status"] = label
-                if holes[hole_name]["position"] is None:
-                    holes[hole_name]["position"] = (cx, cy)
+            holes[hole_name] = {"position": (d["cx"], d["cy"]), "status": None}
+            if d["label"] in _SCREW_STATUS_LABELS:
+                holes[hole_name]["status"] = d["label"]
+            print(f"  [螺丝调试] {hole_name} ← label={d['label']}  conf={d['conf']:.3f}  dist={dist:.1f}  center=({d['cx']:.1f}, {d['cy']:.1f})")
 
         if save_dir is not None:
             save_dir = Path(save_dir)

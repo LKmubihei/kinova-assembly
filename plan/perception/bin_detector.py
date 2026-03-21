@@ -11,7 +11,7 @@ _MODEL_PATH = Path(__file__).parent.parent / "yolo/bin_pcb_detection/models/bin_
 
 
 class BinDetector:
-    def __init__(self, model_path=None, conf=0.7):
+    def __init__(self, model_path=None, conf=0.25):
         path = model_path or _MODEL_PATH
         self.model = YOLO(str(path))
         self.conf = conf
@@ -60,7 +60,6 @@ if __name__ == "__main__":
     # )
     # result = det.detect(img, save_dir="/tmp/bin_detect")
     # print(f"found={result['found']}  count={result['count']}")
-    img = '/home/pc/kinova_ws/src/plan/yolo/step1.png'
-    result = det.detect(img, save_dir="/home/pc/kinova_ws/src/plan/yolo/step1_out.png")
+    img = str(Path(__file__).parent.parent / 'yolo/step1.png')
+    result = det.detect(img, save_dir="/tmp/bin_detect")
     print(f"found={result['found']}  count={result['count']}")
-
